@@ -1,13 +1,16 @@
+#region
+
 using System.Text;
 using DeckPersonalisationApi.Exceptions;
 using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+
+#endregion
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -1,8 +1,12 @@
-﻿using System.Text.Json.Serialization;
+﻿#region
 
-namespace DeckPersonalisationApi.Model.Dto;
+using System.Text.Json.Serialization;
 
-public class DiscordUserResponse
+#endregion
+
+namespace DeckPersonalisationApi.Model.Dto.Internal.GET;
+
+public class DiscordUserGetResponse
 {
     [JsonPropertyName("username")]
     public string Username { get; set; }

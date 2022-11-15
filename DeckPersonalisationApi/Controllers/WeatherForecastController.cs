@@ -1,9 +1,12 @@
-using DeckPersonalisationApi.Exceptions;
+#region
+
 using DeckPersonalisationApi.Model.Dto;
+using DeckPersonalisationApi.Model.Dto.External.GET;
 using DeckPersonalisationApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.OpenApi.Validations.Rules;
+
+#endregion
 
 namespace DeckPersonalisationApi.Controllers
 {
@@ -29,7 +32,7 @@ namespace DeckPersonalisationApi.Controllers
         [Authorize]
         public IEnumerable<WeatherForecast> Get()
         {
-            DiscordUserJwtDto? dto = _jwt.DecodeToken(Request);
+            UserJwtDto? dto = _jwt.DecodeToken(Request);
             
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {

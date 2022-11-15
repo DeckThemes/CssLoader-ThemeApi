@@ -6,6 +6,6 @@ public class User
     public string Username { get; set; } = "";
     public Permissions Permissions { get; set; }
     public DateTimeOffset LastLoginDate { get; set; }
-    public string? SteamId { get; set; }
+    public string? ApiToken { get; set; }
     public bool Active { get; set; } = true;
 }

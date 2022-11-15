@@ -1,12 +1,15 @@
-﻿using System.ComponentModel;
-using DeckPersonalisationApi.Extensions;
+﻿#region
+
+using System.ComponentModel;
 using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Model.Dto;
+using DeckPersonalisationApi.Model.Dto.External.GET;
+using DeckPersonalisationApi.Model.Dto.External.POST;
 using DeckPersonalisationApi.Services;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+
+#endregion
 
 namespace DeckPersonalisationApi.Controllers;
 
@@ -26,13 +29,38 @@ public class AuthenticationController : Controller
     [HttpGet("oauth_redirect")]
     public IActionResult GetDiscordUrl(string redirect = "https://localhost/")
     {
-        return new OkObjectResult(new DiscordUrlDto(_user.BuildDiscordOauthUri(redirect)));
+        return new OkObjectResult(new UriDto(_user.BuildDiscordOauthUri(redirect)));
     }
 
-    [HttpPost("get_token")]
-    public IActionResult GetToken(DiscordAuthenticateDto authenticate)
+    [HttpPost("authenticate_discord")]
+    public IActionResult GetToken(DiscordAuthenticatePostDto auth)
     {
-        return new OkObjectResult(new TokenDto(_user.GenerateTokenViaDiscord(authenticate.Code, authenticate.RedirectUrl)));
+        return new OkObjectResult(new TokenGetDto(_user.GenerateTokenViaDiscord(auth.Code, auth.RedirectUrl)));
+    }
+
+    [HttpPost("authenticate_token")]
+    public IActionResult GetTokenViaApiToken(ApiTokenPostDto auth)
+    {
+        return new OkObjectResult(new TokenGetDto(_user.GenerateTokenViaApiToken(auth.Token)));
+    }
+
+    [HttpGet("token")]
+    [Authorize]
+    public IActionResult GetApiToken()
+    {
+        UserJwtDto? dto = _jwt.DecodeToken(Request);
+        
+        if (dto == null)
+            return new BadRequestResult();
+        
+        dto.RejectPermission(Permissions.FromApiToken);
+
+        string? token = _user.GetApiToken(dto.Id);
+
+        if (token == null)
+            return new BadRequestResult();
+
+        return new ObjectResult(new TokenGetDto(token));
     }
 
     [HttpGet("me_full")]
@@ -40,7 +68,7 @@ public class AuthenticationController : Controller
     [Authorize]
     public IActionResult GetFullUser()
     {
-        DiscordUserJwtDto? token = _jwt.DecodeToken(Request);
+        UserJwtDto? token = _jwt.DecodeToken(Request);
 
         if (token == null)
             return new NotFoundResult();
@@ -50,7 +78,7 @@ public class AuthenticationController : Controller
         if (user == null)
             return new NotFoundResult();
 
-        return new ObjectResult(new UserDto(user));
+        return new ObjectResult(new UserGetDto(user));
     }
     
     [HttpGet("me")]
@@ -58,7 +86,7 @@ public class AuthenticationController : Controller
     [Authorize]
     public IActionResult GetUser()
     {
-        DiscordUserJwtDto? token = _jwt.DecodeToken(Request);
+        UserJwtDto? token = _jwt.DecodeToken(Request);
 
         if (token == null)
             return new NotFoundResult();

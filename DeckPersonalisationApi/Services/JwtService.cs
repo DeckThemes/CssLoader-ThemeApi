@@ -1,10 +1,14 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿#region
+
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Model.Dto;
-using Microsoft.IdentityModel.JsonWebTokens;
+using DeckPersonalisationApi.Model.Dto.External.GET;
 using Microsoft.IdentityModel.Tokens;
+
+#endregion
 
 namespace DeckPersonalisationApi.Services;
 
@@ -17,7 +21,7 @@ public class JwtService
         _config = config;
     }
 
-    public string CreateToken(DiscordUserJwtDto user)
+    public string CreateToken(UserJwtDto user)
     {
         string issuer = _config["Jwt:Issuer"]!;
         string audience = _config["Jwt:Audience"]!;
@@ -41,7 +45,7 @@ public class JwtService
         return handler.WriteToken(handler.CreateToken(descriptor));
     }
 
-    public DiscordUserJwtDto? DecodeToken(HttpRequest request)
+    public UserJwtDto? DecodeToken(HttpRequest request)
     {
         string? auth = request.Headers.Authorization;
 
@@ -52,7 +56,7 @@ public class JwtService
         return DecodeToken(key);
     }
     
-    public DiscordUserJwtDto? DecodeToken(string key)
+    public UserJwtDto? DecodeToken(string key)
     {
         JwtSecurityTokenHandler handler = new();
         JwtSecurityToken? token = handler.ReadToken(key) as JwtSecurityToken;
