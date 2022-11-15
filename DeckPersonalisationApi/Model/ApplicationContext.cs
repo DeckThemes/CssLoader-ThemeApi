@@ -13,8 +13,9 @@ public class ApplicationContext : DbContext
     }
     
     public DbSet<User> Users { get; set; }
-    
-    
+    public DbSet<SavedImage> Image { get; set; }
+
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>();

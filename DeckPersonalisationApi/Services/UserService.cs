@@ -134,6 +134,7 @@ public class UserService
     }
 
     public User? GetUserById(string id) => _ctx.Users.FirstOrDefault(x => x.Id == id);
+    public User? GetActiveUserById(string id) => _ctx.Users.FirstOrDefault(x => x.Id == id && x.Active == true);
     
     private static string GetFixedLengthString(int len)
     {

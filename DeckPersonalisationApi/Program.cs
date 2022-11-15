@@ -44,6 +44,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddSingleton(configuration);
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<ImageService>();
 builder.Services.AddDbContext<ApplicationContext>(x =>
 {
     string? conn = configuration.GetConnectionString("DbPath");
