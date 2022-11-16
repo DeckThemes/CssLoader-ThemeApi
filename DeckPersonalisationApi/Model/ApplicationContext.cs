@@ -20,6 +20,7 @@ public class ApplicationContext : DbContext
     {
         modelBuilder.Entity<User>();
         modelBuilder.Entity<SavedImage>();
+        modelBuilder.Entity<CssThemeImage>();
         modelBuilder.Entity<CssTheme>();
     }
 }

@@ -17,7 +17,7 @@ public class CloneGitTask : ITaskPart
     {
         try
         {
-            Git.Clone(_url, _workDir).RunSynchronously();
+            Git.Clone(_url, _workDir).GetAwaiter().GetResult();
         }
         catch (Exception _)
         {
@@ -30,7 +30,7 @@ public class CloneGitTask : ITaskPart
         {
             try
             {
-                Repo.ResetHard(_commit).RunSynchronously();
+                Repo.ResetHard(_commit).GetAwaiter().GetResult();
             }
             catch (Exception _)
             {
@@ -44,7 +44,8 @@ public class CloneGitTask : ITaskPart
         }
         catch (Exception _)
         {
-            throw new TaskFailureException("Deletion of .git failed");
+            // TODO: Gracefully handle error
+            //throw new TaskFailureException("Deletion of .git failed");
         }
     }
 

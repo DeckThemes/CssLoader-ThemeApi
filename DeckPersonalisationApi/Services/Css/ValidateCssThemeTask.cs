@@ -7,7 +7,7 @@ namespace DeckPersonalisationApi.Services.Css;
 
 public class ValidateCssThemeTask : ITaskPart
 {
-    public string Name => "Validating theme...";
+    public string Name => "Validating css theme";
     private PathTransformTask _path;
     private GetJsonTask _json;
     private User _user;

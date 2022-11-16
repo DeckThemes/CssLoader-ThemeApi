@@ -39,7 +39,7 @@ public class CssManifestV1Validator
         if (!File.Exists(Path.Join(_themePath, key)))
             throw new Exception($"File {key} does not exist");
 
-        if (key.EndsWith(".css"))
+        if (!key.EndsWith(".css"))
             throw new Exception($"File {key} is not a .css file");
         
         //TODO: Check css files for syntax errors?

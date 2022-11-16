@@ -4,7 +4,7 @@ public class CssTheme
 {
     public string Id { get; set; }
     public string Name { get; set; }
-    public List<string> Images { get; set; }
+    public List<CssThemeImage> Images { get; set; }
     public string Version { get; set; }
     public string? Source { get; set; }
     public User Author { get; set; }
