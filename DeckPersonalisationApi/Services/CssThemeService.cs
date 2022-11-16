@@ -1,6 +1,6 @@
 ﻿namespace DeckPersonalisationApi.Services;
 
-public class ThemeService
+public class CssThemeService
 {
     
 }

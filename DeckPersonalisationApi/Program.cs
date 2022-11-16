@@ -1,7 +1,9 @@
 #region
 
 using System.Text;
+using DeckPersonalisationApi;
 using DeckPersonalisationApi.Exceptions;
+using DeckPersonalisationApi.Middleware.JwtRole;
 using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -45,6 +47,7 @@ builder.Services.AddSingleton(configuration);
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<ImageService>();
+builder.Services.AddSingleton<TaskService>();
 builder.Services.AddDbContext<ApplicationContext>(x =>
 {
     string? conn = configuration.GetConnectionString("DbPath");
@@ -109,5 +112,6 @@ app.UseExceptionHandler(x =>
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseJwtRoleAttributes();
 app.MapControllers();
 app.Run();

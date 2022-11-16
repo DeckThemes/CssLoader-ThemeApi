@@ -1,4 +1,5 @@
-﻿using DeckPersonalisationApi.Model;
+﻿using DeckPersonalisationApi.Middleware.JwtRole;
+using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Model.Dto.External.GET;
 using DeckPersonalisationApi.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -12,7 +13,6 @@ public class ImageController : Controller
 {
     private ImageService _service;
     private JwtService _jwt;
-    
 
     public ImageController(ImageService service, JwtService jwt)
     {
@@ -35,14 +35,10 @@ public class ImageController : Controller
 
     [HttpPost]
     [Authorize]
+    [JwtRoleReject(Permissions.FromApiToken)]
     public IActionResult PostImage(IFormFile file)
     {
-        UserJwtDto? dto = _jwt.DecodeToken(Request);
-        
-        if (dto == null)
-            return new BadRequestResult();
-        
-        dto.RejectPermission(Permissions.FromApiToken);
+        UserJwtDto dto = _jwt.DecodeToken(Request)!;
 
         return new OkObjectResult(
             new TokenGetDto(_service.CreateImage(file.OpenReadStream(), file.FileName, dto.Id).Id));

@@ -32,7 +32,8 @@ public class JwtService
             {
                 new Claim("Id", user.Id),
                 new Claim("Name", user.Username),
-                new Claim("Permissions", ((int)user.Permissions).ToString())
+                new Claim("Permissions", ((int)user.Permissions).ToString()),
+                new Claim("Avatar", user.Avatar),
             }),
             Expires = DateTime.UtcNow.AddDays(7),
             Issuer = issuer,
@@ -67,10 +68,11 @@ public class JwtService
         string? id = token.Claims.FirstOrDefault(x => x.Type == "Id")?.Value;
         string? name = token.Claims.FirstOrDefault(x => x.Type == "Name")?.Value;
         string? permissions = token.Claims.FirstOrDefault(x => x.Type == "Permissions")?.Value;
+        string? avatar = token.Claims.FirstOrDefault(x => x.Type == "Avatar")?.Value;
 
-        if (id == null || name == null || permissions == null)
+        if (id == null || name == null || permissions == null || avatar == null)
             return null;
         
-        return new(id, name, int.Parse(permissions));
+        return new(id, name, avatar, int.Parse(permissions));
     }
 }

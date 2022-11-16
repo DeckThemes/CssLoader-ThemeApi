@@ -85,7 +85,8 @@ public class UserService
                 Id = id,
                 Permissions = Permissions.None,
                 Username = $"{userResponse.Username}#{userResponse.Discriminator}",
-                LastLoginDate = DateTimeOffset.Now
+                LastLoginDate = DateTimeOffset.Now,
+                AvatarToken = userResponse.Avatar
             };
 
             _ctx.Users.Add(user);
@@ -98,6 +99,7 @@ public class UserService
             
             user.Username = $"{userResponse.Username}#{userResponse.Discriminator}";
             user.LastLoginDate = DateTimeOffset.Now;
+            user.AvatarToken = userResponse.Avatar;
 
             _ctx.Users.Update(user);
             _ctx.SaveChanges();

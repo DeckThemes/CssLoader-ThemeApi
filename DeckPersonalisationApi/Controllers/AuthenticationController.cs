@@ -1,6 +1,7 @@
 ﻿#region
 
 using System.ComponentModel;
+using DeckPersonalisationApi.Middleware.JwtRole;
 using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Model.Dto;
 using DeckPersonalisationApi.Model.Dto.External.GET;
@@ -46,15 +47,10 @@ public class AuthenticationController : Controller
 
     [HttpGet("token")]
     [Authorize]
+    [JwtRoleReject(Permissions.FromApiToken)]
     public IActionResult GetApiToken()
     {
-        UserJwtDto? dto = _jwt.DecodeToken(Request);
-        
-        if (dto == null)
-            return new BadRequestResult();
-        
-        dto.RejectPermission(Permissions.FromApiToken);
-
+        UserJwtDto dto = _jwt.DecodeToken(Request)!;
         string? token = _user.GetApiToken(dto.Id);
 
         if (token == null)

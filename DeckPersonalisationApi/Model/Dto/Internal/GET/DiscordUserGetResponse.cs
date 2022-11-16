@@ -16,4 +16,7 @@ public class DiscordUserGetResponse
     
     [JsonPropertyName("id")]
     public string Id { get; set; }
+    
+    [JsonPropertyName("avatar")]
+    public string? Avatar { get; set; }
 }
