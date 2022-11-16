@@ -19,6 +19,7 @@ public class TaskController : Controller
     }
 
     [HttpGet("{id}")]
+    [Authorize]
     public IActionResult GetTask(string id)
     {
         AppTask? task = _service.GetTask(id);
@@ -28,7 +29,7 @@ public class TaskController : Controller
 
         return new OkObjectResult(new TaskGetDto(task));
     }
-
+/*
     [HttpPost]
     public IActionResult TestTask()
     {
@@ -45,4 +46,5 @@ public class TaskController : Controller
 
         return new OkObjectResult(new TaskIdGetDto(task.Id));
     }
+*/
 }

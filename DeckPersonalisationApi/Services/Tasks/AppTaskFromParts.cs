@@ -1,4 +1,5 @@
-﻿using DeckPersonalisationApi.Exceptions;
+﻿using System.Diagnostics;
+using DeckPersonalisationApi.Exceptions;
 using DeckPersonalisationApi.Model;
 
 namespace DeckPersonalisationApi.Services.Tasks;
@@ -26,6 +27,7 @@ public class AppTaskFromParts : AppTask
             {
                 taskName = task.Name;
                 Status = $"Task {taskIndex + 1}/{_tasks.Count}: {taskName}";
+                Console.WriteLine(Status);
                 task.Execute();
                 taskIndex++;
             }

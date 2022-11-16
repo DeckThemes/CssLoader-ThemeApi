@@ -20,13 +20,13 @@ public class ImageService
     }
 
     public SavedImage? GetImage(string? id)
-        => _ctx.Image.FirstOrDefault(x => x.Id == id);
+        => _ctx.Images.FirstOrDefault(x => x.Id == id);
 
     public List<SavedImage> GetImagesByUser(User user)
-        => _ctx.Image.Where(x => x.Owner == user).ToList();
+        => _ctx.Images.Where(x => x.Owner == user).ToList();
 
     public int GetImageCountByUser(User user)
-        => _ctx.Image.Count(x => x.Owner == user);
+        => _ctx.Images.Count(x => x.Owner == user);
 
     public string GetFullFilePath(SavedImage image)
         => Path.Join(ImageDir, image.Path);
@@ -64,7 +64,7 @@ public class ImageService
             Path = path
         };
         
-        _ctx.Image.Add(result);
+        _ctx.Images.Add(result);
         _ctx.SaveChanges();
 
         return result;

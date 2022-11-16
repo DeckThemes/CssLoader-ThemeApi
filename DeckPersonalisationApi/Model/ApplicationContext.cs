@@ -13,11 +13,13 @@ public class ApplicationContext : DbContext
     }
     
     public DbSet<User> Users { get; set; }
-    public DbSet<SavedImage> Image { get; set; }
-
-
+    public DbSet<SavedImage> Images { get; set; }
+    public DbSet<CssTheme> CssThemes { get; set; }
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>();
+        modelBuilder.Entity<SavedImage>();
+        modelBuilder.Entity<CssTheme>();
     }
 }
