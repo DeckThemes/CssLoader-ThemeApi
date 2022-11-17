@@ -46,7 +46,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddSingleton(configuration);
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<UserService>();
-builder.Services.AddScoped<ImageService>();
+builder.Services.AddScoped<BlobService>();
 builder.Services.AddScoped<CssThemeService>();
 builder.Services.AddSingleton<TaskService>();
 builder.Services.AddDbContext<ApplicationContext>(x =>

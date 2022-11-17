@@ -10,15 +10,15 @@ public class CssThemeService
 {
     private TaskService _task;
     private ApplicationContext _ctx;
-    private ImageService _image;
+    private BlobService _blob;
     private UserService _user;
     private IConfiguration _config;
 
-    public CssThemeService(TaskService task, ApplicationContext ctx, ImageService image, UserService user, IConfiguration config)
+    public CssThemeService(TaskService task, ApplicationContext ctx, BlobService blob, UserService user, IConfiguration config)
     {
         _task = task;
         _ctx = ctx;
-        _image = image;
+        _blob = blob;
         _user = user;
         _config = config;
     }

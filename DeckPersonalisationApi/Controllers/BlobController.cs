@@ -9,14 +9,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace DeckPersonalisationApi.Controllers;
 
 [ApiController]
-[Route("images")]
-public class ImageController : Controller
+[Route("blobs")]
+public class BlobController : Controller
 {
-    private ImageService _service;
+    private BlobService _service;
     private JwtService _jwt;
     private UserService _user;
 
-    public ImageController(ImageService service, JwtService jwt, UserService user)
+    public BlobController(BlobService service, JwtService jwt, UserService user)
     {
         _service = service;
         _jwt = jwt;
@@ -24,16 +24,16 @@ public class ImageController : Controller
     }
 
     [HttpGet("{id}")]
-    public IActionResult GetImage(string id)
+    public IActionResult GetBlob(string id)
     {
-        SavedImage? image = _service.GetImage(id);
+        SavedBlob? image = _service.GetBlob(id);
 
         if (image == null)
             return new NotFoundResult();
 
         string path = _service.GetFullFilePath(image);
         Stream stream = System.IO.File.OpenRead(path);
-        return new FileStreamResult(stream, "image/jpg");
+        return new FileStreamResult(stream, image.Type.GetContentType());
     }
 
     [HttpGet]
@@ -50,7 +50,7 @@ public class ImageController : Controller
         if (user == null)
             throw new UnauthorisedException("User does not exist");
 
-        return new OkObjectResult(_service.GetImagesByUser(user).Select(x => x.Id).ToList());
+        return new OkObjectResult(_service.GetBlobsByUser(user).Select(x => x.Id).ToList());
     }
 
     [HttpPost]
@@ -61,6 +61,6 @@ public class ImageController : Controller
         UserJwtDto dto = _jwt.DecodeToken(Request)!;
 
         return new OkObjectResult(
-            new TokenGetDto(_service.CreateImage(file.OpenReadStream(), file.FileName, dto.Id).Id));
+            new TokenGetDto(_service.CreateBlob(file.OpenReadStream(), file.FileName, dto.Id).Id));
     }
 }
