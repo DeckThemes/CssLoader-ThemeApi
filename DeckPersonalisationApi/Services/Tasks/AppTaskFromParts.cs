@@ -53,16 +53,17 @@ public class AppTaskFromParts : AppTask
             Status = $"Failed at task '{taskName}': Internal Server Error";
             Success = false;
         }
-
-        try
+        
+        for (int i = 0; i <= taskIndex; i++)
         {
-            for (int i = 0; i <= taskIndex; i++)
+            try
             {
                 _tasks[i].Cleanup(Success);
             }
+            catch (Exception _)
+            { }
         }
-        catch (Exception _){}
-
+        
         InvokeOnCompleted();
     }
 }

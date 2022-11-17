@@ -5,7 +5,7 @@ using DeckPersonalisationApi.Services.Tasks.Common;
 
 namespace DeckPersonalisationApi.Services.Css;
 
-public class ValidateCssThemeTask : ITaskPart
+public class ValidateCssThemeTask : IIdentifierTaskPart
 {
     public string Name => "Validating css theme";
     private PathTransformTask _path;
@@ -106,4 +106,6 @@ public class ValidateCssThemeTask : ITaskPart
     {
         _service = provider.GetRequiredService<CssThemeService>();
     }
+
+    public string Identifier => ThemeName;
 }

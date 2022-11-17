@@ -7,12 +7,13 @@ public class ZipTask : IFullPathTaskPart
 {
     public string Name => "Zipping folder";
     private IDirTaskPart _dir;
+    private IDirTaskPart _workDir;
     
     public string FullPath { get; private set; }
     
     public void Execute()
     {
-        FullPath = Path.Join(Path.GetTempPath(), $"{Path.GetRandomFileName()}.zip");
+        FullPath = Path.Join(_workDir.DirPath, $"{Path.GetRandomFileName()}.zip");
         try
         {
             ZipFile.CreateFromDirectory(_dir.DirPath, FullPath);
@@ -29,8 +30,9 @@ public class ZipTask : IFullPathTaskPart
             File.Delete(FullPath);
     }
 
-    public ZipTask(IDirTaskPart dir)
+    public ZipTask(IDirTaskPart dir, IDirTaskPart workDir)
     {
         _dir = dir;
+        _workDir = workDir;
     }
 }

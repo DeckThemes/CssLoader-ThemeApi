@@ -10,6 +10,14 @@ public class CopyFileTask : ITaskPart
     
     public void Execute()
     {
+        if (_file == "*")
+        {
+            if (Directory.Exists(_src.DirPath) && Directory.Exists(_dst.DirPath))
+            {
+                CopyFilesRecursively(_src.DirPath, _dst.DirPath);
+            }
+        }
+        
         string src = Path.Join(_src.DirPath, _file);
         string dst = Path.Join(_dst.DirPath, _file);
 
@@ -30,5 +38,20 @@ public class CopyFileTask : ITaskPart
         _dst = dst;
         _file = file;
         _overwrite = overwrite;
+    }
+    
+    private static void CopyFilesRecursively(string sourcePath, string targetPath)
+    {
+        //Now Create all of the directories
+        foreach (string dirPath in Directory.GetDirectories(sourcePath, "*", SearchOption.AllDirectories))
+        {
+            Directory.CreateDirectory(dirPath.Replace(sourcePath, targetPath));
+        }
+
+        //Copy all the files & Replaces any files with the same name
+        foreach (string newPath in Directory.GetFiles(sourcePath, "*.*",SearchOption.AllDirectories))
+        {
+            File.Copy(newPath, newPath.Replace(sourcePath, targetPath), true);
+        }
     }
 }

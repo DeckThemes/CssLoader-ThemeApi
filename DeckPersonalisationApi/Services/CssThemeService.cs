@@ -35,32 +35,42 @@ public class CssThemeService
             throw new UnauthorisedException("User not found");
 
         List<string> validThemeTargets = _config["Config:CssTargets"]!.Split(';').ToList();
-
-        CloneGitTask clone = new CloneGitTask(url, commit, true);
+        
+        CreateTempFolderTask gitContainer = new CreateTempFolderTask();
+        CloneGitTask clone = new CloneGitTask(url, commit, gitContainer, true);
         FolderSizeConstraintTask size = new FolderSizeConstraintTask(clone, MaxCssThemeSize);
         PathTransformTask folder = new PathTransformTask(clone, subfolder);
         CopyFileTask copy = new CopyFileTask(clone, folder, "LICENSE");
         GetJsonTask jsonGet = new GetJsonTask(folder, "theme.json");
         ValidateCssThemeTask css = new ValidateCssThemeTask(folder, jsonGet, user, validThemeTargets);
         WriteJsonTask jsonWrite = new WriteJsonTask(folder, "theme.json", jsonGet);
-        ZipTask zip = new ZipTask(folder);
+        CreateTempFolderTask themeContainer = new CreateTempFolderTask();
+        CreateFolderTask themeFolder = new CreateFolderTask(themeContainer, css);
+        CopyFileTask copyToThemeFolder = new CopyFileTask(folder, themeFolder, "*");
+        ZipTask zip = new ZipTask(themeContainer, gitContainer);
         WriteAsBlobTask blob = new WriteAsBlobTask(user, zip);
         // TODO: ImageIds
         CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blob, new(), url, user);
 
         List<ITaskPart> taskParts = new()
         {
-            clone, size, folder, copy, jsonGet, css, jsonWrite, zip, blob, submission
+            gitContainer, clone, size, folder, copy, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blob, submission
         };
 
         AppTaskFromParts task = new(taskParts, "Submit theme via git", user);
         return _task.RegisterTask(task);
     }
 
+    // TODO: Theme updates don't seem to work
     public CssSubmission CreateSubmission(string id, string name, List<string> imageIds, SavedBlob blob, string version,
         string? source, User author, string target, int manifestVersion, string description,
         List<string> dependencyNames)
     {
+        author = _user.GetActiveUserById(author.Id);
+
+        if (author == null)
+            throw new BadRequestException("Author is null");
+        
         CssTheme? theme = GetThemeById(id);
         List<CssTheme> dependencies = _ctx.CssThemes.Where(x => dependencyNames.Contains(x.Name)).ToList();
         List<SavedBlob> imageBlobs = _blob.GetBlobs(imageIds).ToList();

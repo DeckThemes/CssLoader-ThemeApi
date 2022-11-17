@@ -141,7 +141,7 @@ public class BlobService
 
         string id = Guid.NewGuid().ToString();
         string path = $"{id}.{ext}";
-        var file = File.Create(Path.Join(BlobDir, path));
+        var file = File.Create(Path.Join(TempBlobDir, path));
         blob.CopyTo(file);
         file.Close();
 

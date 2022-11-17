@@ -9,7 +9,7 @@ public class CloneGitTask : IDirTaskPart
 
     private string _url;
     private string? _commit;
-    private string _workDir;
+    private IDirTaskPart _workDir;
     private bool _removeGitFolder;
     public Git Repo { get; set; }
     public string DirPath => Repo.Path;
@@ -18,14 +18,14 @@ public class CloneGitTask : IDirTaskPart
     {
         try
         {
-            Git.Clone(_url, _workDir).GetAwaiter().GetResult();
+            Git.Clone(_url, _workDir.DirPath).GetAwaiter().GetResult();
         }
         catch (Exception _)
         {
             throw new TaskFailureException("Git clone failed");
         }
 
-        Repo = new(_workDir);
+        Repo = new(_workDir.DirPath);
 
         if (_commit != null)
         {
@@ -41,7 +41,7 @@ public class CloneGitTask : IDirTaskPart
 
         try
         {
-            Directory.Delete(Path.Join(_workDir, ".git"), true);
+            Directory.Delete(Path.Join(_workDir.DirPath, ".git"), true);
         }
         catch (Exception _)
         {
@@ -52,22 +52,13 @@ public class CloneGitTask : IDirTaskPart
 
     public void Cleanup(bool success)
     {
-        if (Directory.Exists(_workDir))
-            Directory.Delete(_workDir, true);
     }
 
-    public CloneGitTask(string url, string? commit, bool removeGitFolder = false)
+    public CloneGitTask(string url, string? commit, IDirTaskPart workDir, bool removeGitFolder = false)
     {
         _url = url;
         _commit = commit;
-        _workDir = GetTemporaryDirectory();
+        _workDir = workDir;
         _removeGitFolder = removeGitFolder;
-    }
-
-    private string GetTemporaryDirectory()
-    {
-        string tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-        Directory.CreateDirectory(tempDirectory);
-        return tempDirectory;
     }
 }
