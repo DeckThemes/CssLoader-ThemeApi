@@ -2,16 +2,16 @@
 
 namespace DeckPersonalisationApi.Services.Tasks.Common;
 
-public class PathTransformTask : ITaskPart
+public class PathTransformTask : IDirTaskPart
 {
     public string Name => "Path transform";
-    private CloneGitTask _git;
+    private IDirTaskPart _git;
     private string _subPath;
-    public string Path { get; set; }
+    public string DirPath { get; set; }
     public void Execute()
     {
-        Path = System.IO.Path.Join(_git.Repo.Path, _subPath);
-        if (!System.IO.Path.Exists(Path))
+        DirPath = Path.Join(_git.DirPath, _subPath);
+        if (!Path.Exists(DirPath))
             throw new TaskFailureException("Path does not exist");
     }
 
@@ -19,7 +19,7 @@ public class PathTransformTask : ITaskPart
     {
     }
 
-    public PathTransformTask(CloneGitTask git, string subPath)
+    public PathTransformTask(IDirTaskPart git, string subPath)
     {
         _git = git;
         _subPath = subPath;

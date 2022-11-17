@@ -15,12 +15,13 @@ public class ApplicationContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<SavedBlob> Blobs { get; set; }
     public DbSet<CssTheme> CssThemes { get; set; }
-    
+    public DbSet<CssSubmission> CssSubmissions { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>();
         modelBuilder.Entity<SavedBlob>();
-        modelBuilder.Entity<CssThemeImage>();
         modelBuilder.Entity<CssTheme>();
+        modelBuilder.Entity<CssSubmission>();
     }
 }

@@ -7,13 +7,13 @@ namespace DeckPersonalisationApi.Services.Tasks.Common;
 public class GetJsonTask : ITaskPart
 {
     public string Name => $"Reading data from {_fileName}";
-    private PathTransformTask _path;
+    private IDirTaskPart _path;
     private string _fileName;
     private bool _optional;
     public JObject? Json { get; private set; }
     public void Execute()
     {
-        string fullPath = Path.Join(_path.Path, _fileName);
+        string fullPath = Path.Join(_path.DirPath, _fileName);
         if (!File.Exists(fullPath))
         {
             if (_optional)
@@ -38,7 +38,7 @@ public class GetJsonTask : ITaskPart
     public void Cleanup(bool success)
     { }
 
-    public GetJsonTask(PathTransformTask basePath, string file, bool optional = false)
+    public GetJsonTask(IDirTaskPart basePath, string file, bool optional = false)
     {
         _path = basePath;
         _fileName = file;

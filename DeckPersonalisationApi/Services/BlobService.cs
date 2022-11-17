@@ -1,4 +1,5 @@
 ﻿using DeckPersonalisationApi.Exceptions;
+using DeckPersonalisationApi.Extensions;
 using DeckPersonalisationApi.Model;
 
 namespace DeckPersonalisationApi.Services;
@@ -106,7 +107,7 @@ public class BlobService
             throw new BadRequestException("File type is not supported");
 
         if (blob.Length > fileSizeLimits[ext])
-            throw new BadRequestException("File is too large");
+            throw new BadRequestException($"File is too large. Max filesize is {fileSizeLimits[ext].GetReadableFileSize()}");
 
         if (GetBlobCountByUser(user) > MaxBlobs)
             throw new BadRequestException("User has reached the max upload limit");

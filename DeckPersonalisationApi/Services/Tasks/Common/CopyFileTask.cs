@@ -3,15 +3,15 @@
 public class CopyFileTask : ITaskPart
 {
     public string Name => $"Copying {_file}";
-    private PathTransformTask _src;
-    private PathTransformTask _dst;
+    private IDirTaskPart _src;
+    private IDirTaskPart _dst;
     private string _file;
     private bool _overwrite;
     
     public void Execute()
     {
-        string src = Path.Join(_src.Path, _file);
-        string dst = Path.Join(_dst.Path, _file);
+        string src = Path.Join(_src.DirPath, _file);
+        string dst = Path.Join(_dst.DirPath, _file);
 
         if (File.Exists(dst) && !_overwrite)
             return;
@@ -24,7 +24,7 @@ public class CopyFileTask : ITaskPart
     {
     }
     
-    public CopyFileTask(PathTransformTask src, PathTransformTask dst, string file, bool overwrite = false)
+    public CopyFileTask(IDirTaskPart src, IDirTaskPart dst, string file, bool overwrite = false)
     {
         _src = src;
         _dst = dst;

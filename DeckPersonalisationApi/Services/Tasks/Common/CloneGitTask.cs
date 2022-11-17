@@ -3,7 +3,7 @@ using DeckPersonalisationApi.Utils;
 
 namespace DeckPersonalisationApi.Services.Tasks.Common;
 
-public class CloneGitTask : ITaskPart
+public class CloneGitTask : IDirTaskPart
 {
     public string Name => $"Cloning {_url}@{_commit ?? "Latest"}";
 
@@ -12,6 +12,7 @@ public class CloneGitTask : ITaskPart
     private string _workDir;
     private bool _removeGitFolder;
     public Git Repo { get; set; }
+    public string DirPath => Repo.Path;
 
     public void Execute()
     {

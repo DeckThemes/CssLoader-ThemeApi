@@ -11,7 +11,6 @@ public class ValidateCssThemeTask : ITaskPart
     private PathTransformTask _path;
     private GetJsonTask _json;
     private User _user;
-    private IConfiguration _config;
     private string _themeId;
     private List<string> _validThemeTargets = new();
     
@@ -26,8 +25,6 @@ public class ValidateCssThemeTask : ITaskPart
     
     public void Execute()
     {
-        _validThemeTargets = _config["Config:CssTargets"]!.Split(';').ToList();
-        
         CssManifestV1Validator validator;
 
         int manifestVersion = 1;
@@ -38,16 +35,16 @@ public class ValidateCssThemeTask : ITaskPart
         switch (manifestVersion)
         {
             case 1:
-                validator = new CssManifestV1Validator(_path.Path!, _json.Json!, _user, _validThemeTargets);
+                validator = new CssManifestV1Validator(_path.DirPath!, _json.Json!, _user, _validThemeTargets);
                 break;
             case 2:
-                validator = new CssManifestV2Validator(_path.Path!, _json.Json!, _user, _validThemeTargets);
+                validator = new CssManifestV2Validator(_path.DirPath!, _json.Json!, _user, _validThemeTargets);
                 break;
             case 3:
-                validator = new CssManifestV3Validator(_path.Path!, _json.Json!, _user, _validThemeTargets);
+                validator = new CssManifestV3Validator(_path.DirPath!, _json.Json!, _user, _validThemeTargets);
                 break;
             case 4:
-                validator = new CssManifestV4Validator(_path.Path!, _json.Json!, _user, _validThemeTargets);
+                validator = new CssManifestV4Validator(_path.DirPath!, _json.Json!, _user, _validThemeTargets);
                 break;
             default:
                 throw new TaskFailureException($"Invalid manifest version '{manifestVersion}'");
@@ -77,13 +74,13 @@ public class ValidateCssThemeTask : ITaskPart
     {
     }
 
-    public ValidateCssThemeTask(PathTransformTask path, GetJsonTask json, User user, IConfiguration config, string themeId)
+    public ValidateCssThemeTask(PathTransformTask path, GetJsonTask json, User user, List<string> validThemeTargets, string themeId)
     {
         // TODO: Validate dependencies' existence
         _path = path;
         _json = json;
         _user = user;
-        _config = config;
+        _validThemeTargets = validThemeTargets;
         _themeId = themeId;
     }
 }

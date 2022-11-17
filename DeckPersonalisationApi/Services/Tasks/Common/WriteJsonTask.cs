@@ -3,12 +3,12 @@
 public class WriteJsonTask : ITaskPart
 {
     public string Name => $"Reading data to {_fileName}";
-    private PathTransformTask _path;
+    private IDirTaskPart _path;
     private string _fileName;
     private GetJsonTask _json;
     public void Execute()
     {
-        string path = Path.Join(_path.Path, _fileName);
+        string path = Path.Join(_path.DirPath, _fileName);
         File.WriteAllText(path, _json.Json!.ToString());
     }
 
@@ -16,7 +16,7 @@ public class WriteJsonTask : ITaskPart
     {
     }
 
-    public WriteJsonTask(PathTransformTask path, string fileName, GetJsonTask json)
+    public WriteJsonTask(IDirTaskPart path, string fileName, GetJsonTask json)
     {
         _path = path;
         _fileName = fileName;

@@ -28,13 +28,15 @@ public class CssThemeService
         User? user = _user.GetActiveUserById(userId);
         string id = Guid.NewGuid().ToString();
 
+        List<string> validThemeTargets = _config["Config:CssTargets"]!.Split(';').ToList();
+
         if (user == null)
             throw new UnauthorisedException("User not found");
 
         CloneGitTask clone = new CloneGitTask(url, commit, true);
         PathTransformTask folder = new PathTransformTask(clone, subfolder);
         GetJsonTask jsonGet = new GetJsonTask(folder, "theme.json");
-        ValidateCssThemeTask css = new ValidateCssThemeTask(folder, jsonGet, user, _config, id);
+        ValidateCssThemeTask css = new ValidateCssThemeTask(folder, jsonGet, user, validThemeTargets, id);
         WriteJsonTask jsonWrite = new WriteJsonTask(folder, "theme.json", jsonGet);
 
         List<ITaskPart> taskParts = new()
