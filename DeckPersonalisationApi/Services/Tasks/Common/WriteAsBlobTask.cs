@@ -10,29 +10,27 @@ public class WriteAsBlobTask : ITaskPart
 
     private User _user;
     private BlobService _blob;
-    private IDirTaskPart _dir;
-    private string _filename;
-    
+    private IFullPathTaskPart _file;
+
     public void Execute()
     {
-        string path = Path.Join(_dir.DirPath, _filename);
+        string path = _file.FullPath;
 
         if (!File.Exists(path))
             throw new TaskFailureException("File does not exist");
 
         Stream file = File.OpenRead(path);
-        Blob = _blob.CreateBlob(file, _filename, _user.Id);
+        Blob = _blob.CreateBlob(file, Path.GetFileName(path), _user.Id);
     }
 
     public void Cleanup(bool success)
     {
     }
 
-    public WriteAsBlobTask(User user, BlobService blob, IDirTaskPart dir, string filename)
+    public WriteAsBlobTask(User user, BlobService blob, IFullPathTaskPart file)
     {
         _user = user;
         _blob = blob;
-        _dir = dir;
-        _filename = filename;
+        _file = file;
     }
 }

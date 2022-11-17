@@ -42,7 +42,7 @@ public class AppTaskFromParts : AppTask
         }
         catch (Exception e)
         {
-            Status = $"Failed at task '{taskName}: Internal Server Error";
+            Status = $"Failed at task '{taskName}': Internal Server Error";
             Success = false;
         }
 

@@ -10,7 +10,7 @@ public class CssTheme
     public string? Source { get; set; }
     public User Author { get; set; }
     public DateTimeOffset Submitted { get; set; }
-    public DateTimeOffset Updated { get; set; }
+    public DateTimeOffset? Updated { get; set; }
     public string Target { get; set; }
     public int ManifestVersion { get; set; }
     public string Description { get; set; }

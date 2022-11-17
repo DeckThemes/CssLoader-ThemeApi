@@ -63,6 +63,9 @@ public class BlobService
     public SavedBlob? GetBlob(string? id)
         => _ctx.Blobs.FirstOrDefault(x => x.Id == id);
 
+    public IEnumerable<SavedBlob> GetBlobs(List<string> ids)
+        => _ctx.Blobs.Where(x => ids.Contains(x.Id)).ToList();
+
     public List<SavedBlob> GetBlobsByUser(User user)
         => _ctx.Blobs.Where(x => x.Owner == user).ToList();
 
@@ -74,6 +77,18 @@ public class BlobService
 
     public void ConfirmBlob(SavedBlob blob)
     {
+        ConfirmBlobInternal(blob);
+        _ctx.SaveChanges();
+    }
+    
+    public void ConfirmBlobs(List<SavedBlob> blobs)
+    {
+        blobs.ForEach(ConfirmBlobInternal);
+        _ctx.SaveChanges();
+    }
+    
+    private void ConfirmBlobInternal(SavedBlob blob)
+    {
         if (blob.Confirmed)
             return;
 
@@ -84,7 +99,19 @@ public class BlobService
         File.Move(oldPath, newPath);
 
         _ctx.Blobs.Update(blob);
+
+    }
+
+    // TODO: Figure out how to at some point delete unused blobs
+    public void DeleteBlob(SavedBlob blob)
+    {
+        if (!blob.Confirmed)
+            return;
+
+        string path = GetFullFilePath(blob);
+        _ctx.Blobs.Remove(blob);
         _ctx.SaveChanges();
+        File.Delete(path);
     }
 
     public SavedBlob CreateBlob(Stream blob, string filename, string userId)

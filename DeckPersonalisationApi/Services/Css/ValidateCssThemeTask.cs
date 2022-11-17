@@ -11,9 +11,10 @@ public class ValidateCssThemeTask : ITaskPart
     private PathTransformTask _path;
     private GetJsonTask _json;
     private User _user;
-    private string _themeId;
     private List<string> _validThemeTargets = new();
+    private CssThemeService _service;
     
+    public string ThemeId { get; private set; }
     public string ThemeName { get; private set; }
     public string ThemeAuthor { get; private set; }
     public string ThemeVersion { get; private set; }
@@ -50,8 +51,6 @@ public class ValidateCssThemeTask : ITaskPart
                 throw new TaskFailureException($"Invalid manifest version '{manifestVersion}'");
         }
         
-        _json.Json!["id"] = _themeId;
-
         try
         {
             validator.FullVerify();
@@ -68,19 +67,39 @@ public class ValidateCssThemeTask : ITaskPart
         ThemeManifestVersion = manifestVersion;
         ThemeDescription = validator.Description;
         ThemeDependencies = validator.Dependencies;
+        
+        List<CssTheme> authorThemes = _service.GetUsersThemes(_user).ToList();
+        CssTheme? theme = authorThemes.FirstOrDefault(x => x.Name == ThemeName);
+
+        if (_service.ThemeNameExists(ThemeName) && theme == null)
+            throw new TaskFailureException($"Theme '{ThemeName}' already exists");
+
+        // These values can be changed separately from a theme upload, and only will be used for an initial submission if they exist
+        if (theme != null)
+        {
+            ThemeDescription = theme.Description;
+            ThemeTarget = theme.Target;
+        }
+        
+        List<CssTheme> dependencies = _service.GetThemesByName(ThemeDependencies).ToList();
+        if (dependencies.Count != ThemeDependencies.Count)
+            throw new TaskFailureException("Not all dependencies were found on this server");
+
+        ThemeId = theme?.Id ?? Guid.NewGuid().ToString();
+        
+        _json.Json!["id"] = ThemeId;
     }
 
     public void Cleanup(bool success)
     {
     }
 
-    public ValidateCssThemeTask(PathTransformTask path, GetJsonTask json, User user, List<string> validThemeTargets, string themeId)
+    public ValidateCssThemeTask(PathTransformTask path, GetJsonTask json, User user, List<string> validThemeTargets, CssThemeService service)
     {
-        // TODO: Validate dependencies' existence
         _path = path;
         _json = json;
         _user = user;
         _validThemeTargets = validThemeTargets;
-        _themeId = themeId;
+        _service = service;
     }
 }
