@@ -24,13 +24,17 @@ public class CreateCssSubmissionTask : ITaskPart
     {
     }
 
-    public CreateCssSubmissionTask(CssThemeService service, ValidateCssThemeTask validation, WriteAsBlobTask download, List<string> imageIds, string? source, User author)
+    public CreateCssSubmissionTask(ValidateCssThemeTask validation, WriteAsBlobTask download, List<string> imageIds, string? source, User author)
     {
-        _service = service;
         _validation = validation;
         _download = download;
         _imageIds = imageIds;
         _source = source;
         _author = author;
+    }
+    
+    public void SetupServices(IServiceProvider provider)
+    {
+        _service = provider.GetRequiredService<CssThemeService>();
     }
 }

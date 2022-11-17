@@ -37,5 +37,7 @@ public abstract class AppTask
         };
     }
 
+    public abstract void SetupServices(IServiceProvider provider);
+
     public abstract void Run();
 }

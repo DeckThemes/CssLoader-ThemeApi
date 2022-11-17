@@ -15,6 +15,14 @@ public class AppTaskFromParts : AppTask
         Name = name;
     }
 
+    public override void SetupServices(IServiceProvider provider)
+    {
+        foreach (var taskPart in _tasks)
+        {
+            taskPart.SetupServices(provider);
+        }
+    }
+
     public override void Run()
     {
         InvokeOnStarted();

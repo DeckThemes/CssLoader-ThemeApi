@@ -27,10 +27,14 @@ public class WriteAsBlobTask : ITaskPart
     {
     }
 
-    public WriteAsBlobTask(User user, BlobService blob, IFullPathTaskPart file)
+    public WriteAsBlobTask(User user, IFullPathTaskPart file)
     {
         _user = user;
-        _blob = blob;
         _file = file;
+    }
+    
+    public void SetupServices(IServiceProvider provider)
+    {
+        _blob = provider.GetRequiredService<BlobService>();
     }
 }

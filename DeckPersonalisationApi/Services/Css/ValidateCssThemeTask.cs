@@ -94,12 +94,16 @@ public class ValidateCssThemeTask : ITaskPart
     {
     }
 
-    public ValidateCssThemeTask(PathTransformTask path, GetJsonTask json, User user, List<string> validThemeTargets, CssThemeService service)
+    public ValidateCssThemeTask(PathTransformTask path, GetJsonTask json, User user, List<string> validThemeTargets)
     {
         _path = path;
         _json = json;
         _user = user;
         _validThemeTargets = validThemeTargets;
-        _service = service;
+    }
+    
+    public void SetupServices(IServiceProvider provider)
+    {
+        _service = provider.GetRequiredService<CssThemeService>();
     }
 }

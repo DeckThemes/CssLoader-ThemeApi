@@ -41,12 +41,12 @@ public class CssThemeService
         PathTransformTask folder = new PathTransformTask(clone, subfolder);
         CopyFileTask copy = new CopyFileTask(clone, folder, "LICENSE");
         GetJsonTask jsonGet = new GetJsonTask(folder, "theme.json");
-        ValidateCssThemeTask css = new ValidateCssThemeTask(folder, jsonGet, user, validThemeTargets, this);
+        ValidateCssThemeTask css = new ValidateCssThemeTask(folder, jsonGet, user, validThemeTargets);
         WriteJsonTask jsonWrite = new WriteJsonTask(folder, "theme.json", jsonGet);
         ZipTask zip = new ZipTask(folder);
-        WriteAsBlobTask blob = new WriteAsBlobTask(user, _blob, zip);
+        WriteAsBlobTask blob = new WriteAsBlobTask(user, zip);
         // TODO: ImageIds
-        CreateCssSubmissionTask submission = new CreateCssSubmissionTask(this, css, blob, new(), url, user);
+        CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blob, new(), url, user);
 
         List<ITaskPart> taskParts = new()
         {
