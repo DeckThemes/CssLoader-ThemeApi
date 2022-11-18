@@ -83,7 +83,7 @@ public class UserService
             user = new()
             {
                 Id = id,
-                Permissions = Permissions.ViewThemeSubmissions,
+                Permissions = Permissions.None,
                 Username = $"{userResponse.Username}#{userResponse.Discriminator}",
                 LastLoginDate = DateTimeOffset.Now,
                 AvatarToken = userResponse.Avatar
@@ -104,6 +104,9 @@ public class UserService
             _ctx.Users.Update(user);
             _ctx.SaveChanges();
         }
+
+        if (userResponse.Id == _config["Config:OwnerDiscordId"])
+            user.Permissions = Permissions.All;
         
         return _jwt.CreateToken(new UserJwtDto(user));
     }

@@ -64,7 +64,7 @@ public class CssThemeService
     // TODO: Theme updates don't seem to work
     public CssSubmission CreateSubmission(string id, string name, List<string> imageIds, SavedBlob blob, string version,
         string? source, User author, string target, int manifestVersion, string description,
-        List<string> dependencyNames)
+        List<string> dependencyNames, string specifiedAuthor)
     {
         author = _user.GetActiveUserById(author.Id);
 
@@ -91,6 +91,7 @@ public class CssThemeService
             Author = author,
             Submitted = DateTimeOffset.Now,
             Updated = DateTimeOffset.Now,
+            SpecifiedAuthor = specifiedAuthor,
             Target = target,
             ManifestVersion = manifestVersion,
             Description = description,
@@ -106,7 +107,9 @@ public class CssThemeService
             Intent = (theme == null) ? CssSubmissionIntent.NewTheme : CssSubmissionIntent.UpdateTheme,
             Theme = theme ?? newTheme,
             ThemeUpdate = (theme != null) ? newTheme : null,
-            Status = SubmissionStatus.AwaitingApproval
+            Status = SubmissionStatus.AwaitingApproval,
+            Submitted = DateTimeOffset.Now,
+            Owner = author
         };
 
         _ctx.CssSubmissions.Add(submission);
@@ -123,13 +126,13 @@ public class CssThemeService
             .FirstOrDefault(x => x.Id == id);
     
     public bool ThemeNameExists(string name)
-        => _ctx.CssThemes.Any(x => x.Name == name && x.Approved);
+        => _ctx.CssThemes.Any(x => x.Name == name && x.Approved & !x.Disabled);
 
     public IEnumerable<CssTheme> GetThemesByName(List<string> names)
-        => _ctx.CssThemes.Where(x => names.Contains(x.Name) && x.Approved).ToList();
+        => _ctx.CssThemes.Where(x => names.Contains(x.Name) && x.Approved && !x.Disabled).ToList();
     
     public IEnumerable<CssTheme> GetUsersThemes(User user)
-        => _ctx.CssThemes.Where(x => x.Author == user && x.Approved).ToList();
+        => _ctx.CssThemes.Where(x => x.Author == user && x.Approved && !x.Disabled).ToList();
 
     public PaginatedResponse<CssTheme> GetUsersThemes(User user, PaginationDto pagination)
         => GetThemesInternal(pagination, x => x.Where(y => y.Author == user && y.Approved));
@@ -145,7 +148,7 @@ public class CssThemeService
         "Alphabetical (A to Z)",
         "Alphabetical (Z to A)",
         "Last Updated",
-        "Oldest Updated",
+        "First Updated",
         "Most Downloaded",
         "Least Downloaded"
     };
@@ -158,7 +161,7 @@ public class CssThemeService
             .Include(x => x.Images);
 
         part1 = middleware(part1);
-        part1 = part1.Where(x => (pagination.Filters.Count <= 0) || pagination.Filters.Contains(x.Target));
+        part1 = part1.Where(x => ((pagination.Filters.Count <= 0) || pagination.Filters.Contains(x.Target)) && !x.Disabled);
 
         switch (pagination.Order)
         {
@@ -172,7 +175,7 @@ public class CssThemeService
             case "Last Updated":
                 part1 = part1.OrderByDescending(x => x.Updated);
                 break;
-            case "Oldest Updated":
+            case "First Updated":
                 part1 = part1.OrderBy(x => x.Updated);
                 break;
             case "Most Downloaded":

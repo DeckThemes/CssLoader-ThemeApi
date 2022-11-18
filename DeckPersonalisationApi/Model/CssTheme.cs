@@ -11,6 +11,7 @@ public class CssTheme : IToDto<PartialCssThemeDto>, IToDto<MinimalCssThemeDto>, 
     public string Version { get; set; }
     public string? Source { get; set; }
     public User Author { get; set; }
+    public string SpecifiedAuthor { get; set; }
     public DateTimeOffset Submitted { get; set; }
     public DateTimeOffset Updated { get; set; }
     public string Target { get; set; }
@@ -18,6 +19,7 @@ public class CssTheme : IToDto<PartialCssThemeDto>, IToDto<MinimalCssThemeDto>, 
     public string Description { get; set; }
     public List<CssTheme> Dependencies { get; set; }
     public bool Approved { get; set; }
+    public bool Disabled { get; set; }
 
     public PartialCssThemeDto ToDto()
         => new(this);

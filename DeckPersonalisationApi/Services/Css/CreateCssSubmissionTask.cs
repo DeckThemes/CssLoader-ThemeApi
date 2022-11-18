@@ -15,9 +15,9 @@ public class CreateCssSubmissionTask : ITaskPart
     private User _author;
     public void Execute()
     {
-        _service.CreateSubmission(_validation.ThemeId, _validation.Name, _imageIds, _download.Blob, _validation.ThemeVersion,
+        _service.CreateSubmission(_validation.ThemeId, _validation.ThemeName, _imageIds, _download.Blob, _validation.ThemeVersion,
             _source, _author, _validation.ThemeTarget, _validation.ThemeManifestVersion, _validation.ThemeDescription,
-            _validation.ThemeDependencies);
+            _validation.ThemeDependencies, _validation.ThemeAuthor);
     }
 
     public void Cleanup(bool success)

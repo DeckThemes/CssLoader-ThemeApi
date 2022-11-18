@@ -6,6 +6,7 @@ public class MinimalCssThemeDto
     public string Name { get; }
     public string Version { get; }
     public string Target { get; }
+    public string Author { get; }
     public int ManifestVersion { get; }
 
     public MinimalCssThemeDto(CssTheme theme)
@@ -15,5 +16,6 @@ public class MinimalCssThemeDto
         Version = theme.Version;
         Target = theme.Target;
         ManifestVersion = theme.ManifestVersion;
+        Author = theme.SpecifiedAuthor;
     }
 }

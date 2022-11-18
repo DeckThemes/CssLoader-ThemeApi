@@ -44,27 +44,20 @@ public class CssThemeController : Controller
     }
     
     [HttpGet("approved/filters")]
+    [HttpGet("awaiting_approval/filters")]
     public IActionResult GetThemesFilters()
     {
         return new OkObjectResult(new PaginationFilters(_service.Targets, _service.Orders().ToList()));
     }
 
-    [HttpGet("unapproved")]
+    [HttpGet("awaiting_approval")]
     [Authorize]
     [JwtRoleRequire(Permissions.ViewThemeSubmissions)]
-    public IActionResult GetUnapprovedThemes(int page = 1, int perPage = 50, string filters = "", string order = "")
+    public IActionResult GetAwaitingApprovalThemes(int page = 1, int perPage = 50, string filters = "", string order = "")
     {
         PaginationDto paginationDto = new(page, perPage, filters, order);
         PaginatedResponse<CssTheme> response = _service.GetNonApprovedThemes(paginationDto);
         return new OkObjectResult(response.ToDto());
-    }
-    
-    [HttpGet("unapproved/filters")]
-    [Authorize]
-    [JwtRoleRequire(Permissions.ViewThemeSubmissions)]
-    public IActionResult GetUnapprovedThemesFilters()
-    {
-        return new OkResult();
     }
 
     [HttpGet("{id}")]

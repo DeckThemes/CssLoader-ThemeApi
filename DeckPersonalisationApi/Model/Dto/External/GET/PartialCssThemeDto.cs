@@ -11,9 +11,9 @@ public class PartialCssThemeDto
     public int ManifestVersion { get; }
 
     public UserGetMinimalDto Author { get; }
+    public string SpecifiedAuthor { get; }
     public DateTimeOffset Submitted { get; }
     public DateTimeOffset Updated { get; }
-    public string Description { get; }
 
     public PartialCssThemeDto(CssTheme theme)
     {
@@ -27,6 +27,6 @@ public class PartialCssThemeDto
         Author = theme.Author.ToDto();
         Submitted = theme.Submitted;
         Updated = theme.Updated;
-        Description = theme.Description;
+        SpecifiedAuthor = theme.SpecifiedAuthor;
     }
 }

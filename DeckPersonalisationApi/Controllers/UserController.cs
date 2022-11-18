@@ -1,4 +1,5 @@
 ﻿using DeckPersonalisationApi.Model.Dto.Internal.GET;
+using DeckPersonalisationApi.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DeckPersonalisationApi.Controllers;
@@ -7,6 +8,15 @@ namespace DeckPersonalisationApi.Controllers;
 [Route("users")]
 public class UserController : Controller
 {
+    private UserService _service;
+    private CssThemeService _css;
+
+    public UserController(UserService service, CssThemeService css)
+    {
+        _service = service;
+        _css = css;
+    }
+
     [HttpGet("css_themes")]
     public IActionResult GetCssThemes(PaginationDto pagination)
     {
