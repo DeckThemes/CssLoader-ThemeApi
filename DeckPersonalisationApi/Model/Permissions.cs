@@ -8,4 +8,5 @@ public enum Permissions
     ApproveThemeSubmissions = 0x2,
     ManageApi = 0x4,
     FromApiToken = 0x8,
+    ViewThemeSubmissions = 0x10,
 }

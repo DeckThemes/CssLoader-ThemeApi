@@ -1,6 +1,8 @@
-﻿namespace DeckPersonalisationApi.Model;
+﻿using DeckPersonalisationApi.Model.Dto.External.GET;
 
-public class User
+namespace DeckPersonalisationApi.Model;
+
+public class User : IToDto<UserGetMinimalDto>, IToDto<UserGetDto>
 {
     public string Id { get; set; }
     public string Username { get; set; } = "";
@@ -23,4 +25,13 @@ public class User
 
         return null;
     }
+
+    public UserGetMinimalDto ToDto()
+        => new(this);
+
+    UserGetDto IToDto<UserGetDto>.ToDto()
+        => new(this);
+
+    public object ToDtoObject()
+        => ToDto();
 }

@@ -83,7 +83,7 @@ public class UserService
             user = new()
             {
                 Id = id,
-                Permissions = Permissions.None,
+                Permissions = Permissions.ViewThemeSubmissions,
                 Username = $"{userResponse.Username}#{userResponse.Discriminator}",
                 LastLoginDate = DateTimeOffset.Now,
                 AvatarToken = userResponse.Avatar

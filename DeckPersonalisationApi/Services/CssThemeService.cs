@@ -16,6 +16,8 @@ public class CssThemeService
     private UserService _user;
     private IConfiguration _config;
 
+    public List<string> Targets => _config["Config:CssTargets"]!.Split(';').ToList();
+
     public long MaxCssThemeSize => long.Parse(_config["Config:MaxCssThemeSize"]!);
 
     public CssThemeService(TaskService task, ApplicationContext ctx, BlobService blob, UserService user, IConfiguration config)
@@ -34,15 +36,13 @@ public class CssThemeService
         if (user == null)
             throw new UnauthorisedException("User not found");
 
-        List<string> validThemeTargets = _config["Config:CssTargets"]!.Split(';').ToList();
-        
         CreateTempFolderTask gitContainer = new CreateTempFolderTask();
         CloneGitTask clone = new CloneGitTask(url, commit, gitContainer, true);
         FolderSizeConstraintTask size = new FolderSizeConstraintTask(clone, MaxCssThemeSize);
         PathTransformTask folder = new PathTransformTask(clone, subfolder);
         CopyFileTask copy = new CopyFileTask(clone, folder, "LICENSE");
         GetJsonTask jsonGet = new GetJsonTask(folder, "theme.json");
-        ValidateCssThemeTask css = new ValidateCssThemeTask(folder, jsonGet, user, validThemeTargets);
+        ValidateCssThemeTask css = new ValidateCssThemeTask(folder, jsonGet, user, Targets);
         WriteJsonTask jsonWrite = new WriteJsonTask(folder, "theme.json", jsonGet);
         CreateTempFolderTask themeContainer = new CreateTempFolderTask();
         CreateFolderTask themeFolder = new CreateFolderTask(themeContainer, css);
@@ -90,6 +90,7 @@ public class CssThemeService
             Source = source,
             Author = author,
             Submitted = DateTimeOffset.Now,
+            Updated = DateTimeOffset.Now,
             Target = target,
             ManifestVersion = manifestVersion,
             Description = description,
@@ -129,7 +130,61 @@ public class CssThemeService
     
     public IEnumerable<CssTheme> GetUsersThemes(User user)
         => _ctx.CssThemes.Where(x => x.Author == user && x.Approved).ToList();
+
+    public PaginatedResponse<CssTheme> GetUsersThemes(User user, PaginationDto pagination)
+        => GetThemesInternal(pagination, x => x.Where(y => y.Author == user && y.Approved));
+
+    public PaginatedResponse<CssTheme> GetApprovedThemes(PaginationDto pagination)
+        => GetThemesInternal(pagination, x => x.Where(y => y.Approved));
     
-    public IEnumerable<CssTheme> GetUsersThemes(User user, PaginationDto pagination)
-        => _ctx.CssThemes.Where(x => x.Author == user && x.Approved).Skip((pagination.Page - 1) * pagination.PerPage).Take(pagination.PerPage).ToList();
+    public PaginatedResponse<CssTheme> GetNonApprovedThemes(PaginationDto pagination)
+        => GetThemesInternal(pagination, x => x.Where(y => !y.Approved));
+
+    public IEnumerable<string> Orders() => new List<string>()
+    {
+        "Alphabetical (A to Z)",
+        "Alphabetical (Z to A)",
+        "Last Updated",
+        "Oldest Updated",
+        "Most Downloaded",
+        "Least Downloaded"
+    };
+
+    private PaginatedResponse<CssTheme> GetThemesInternal(PaginationDto pagination, Func<IEnumerable<CssTheme>, IEnumerable<CssTheme>> middleware)
+    {
+        IEnumerable<CssTheme> part1 = _ctx.CssThemes
+            .Include(x => x.Author)
+            .Include(x => x.Download)
+            .Include(x => x.Images);
+
+        part1 = middleware(part1);
+        part1 = part1.Where(x => (pagination.Filters.Count <= 0) || pagination.Filters.Contains(x.Target));
+
+        switch (pagination.Order)
+        {
+            case "Alphabetical (A to Z)":
+                part1 = part1.OrderByDescending(x => x.Name);
+                break;
+            case "Alphabetical (Z to A)":
+                part1 = part1.OrderBy(x => x.Name);
+                break;
+            case "":
+            case "Last Updated":
+                part1 = part1.OrderByDescending(x => x.Updated);
+                break;
+            case "Oldest Updated":
+                part1 = part1.OrderBy(x => x.Updated);
+                break;
+            case "Most Downloaded":
+                part1 = part1.OrderByDescending(x => x.Download.DownloadCount);
+                break;
+            case "Least Downloaded":
+                part1 = part1.OrderByDescending(x => x.Download.DownloadCount);
+                break;
+            default:
+                throw new BadRequestException($"Order type '{pagination.Order}' not found");
+        }
+        
+        return new(part1.Count(), part1.Skip((pagination.Page - 1) * pagination.PerPage).Take(pagination.PerPage).ToList());
+    }
 }
