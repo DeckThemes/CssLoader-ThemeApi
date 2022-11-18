@@ -6,6 +6,7 @@ using DeckPersonalisationApi.Exceptions;
 using DeckPersonalisationApi.Middleware.JwtRole;
 using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Services;
+using DeckPersonalisationApi.Services.Css;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
@@ -49,6 +50,7 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<BlobService>();
 builder.Services.AddScoped<CssThemeService>();
 builder.Services.AddSingleton<TaskService>();
+builder.Services.AddScoped<VnuCssVerifier>();
 builder.Services.AddDbContext<ApplicationContext>(x =>
 {
     string? conn = configuration.GetConnectionString("DbPath");

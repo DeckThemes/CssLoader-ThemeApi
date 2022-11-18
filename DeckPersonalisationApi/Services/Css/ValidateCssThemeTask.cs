@@ -13,6 +13,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
     private User _user;
     private List<string> _validThemeTargets = new();
     private CssThemeService _service;
+    private VnuCssVerifier _vnu;
     
     public string ThemeId { get; private set; }
     public string ThemeName { get; private set; }
@@ -60,6 +61,9 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
             throw new TaskFailureException(e.Message);
         }
 
+        if (!_vnu.ValidateCss(validator.CssPaths, _path.DirPath))
+            throw new TaskFailureException("Some Css files contain invalid syntax");
+
         ThemeName = validator.Name;
         ThemeAuthor = validator.Author;
         ThemeVersion = validator.Version;
@@ -105,6 +109,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
     public void SetupServices(IServiceProvider provider)
     {
         _service = provider.GetRequiredService<CssThemeService>();
+        _vnu = provider.GetRequiredService<VnuCssVerifier>();
     }
 
     public string Identifier => ThemeName;

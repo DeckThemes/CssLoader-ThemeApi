@@ -21,6 +21,7 @@ public class CssManifestV1Validator
     public int ManifestVersion { get; protected set; }
     public string Description { get; protected set; } = "";
     public List<string> Dependencies { get; protected set; } = new();
+    public List<string> CssPaths { get; protected set; } = new();
 
     public CssManifestV1Validator(string themePath, JObject json, User user, List<string> validTargets)
     {
@@ -42,7 +43,8 @@ public class CssManifestV1Validator
         if (!key.EndsWith(".css"))
             throw new Exception($"File {key} is not a .css file");
         
-        //TODO: Check css files for syntax errors?
+        if (!CssPaths.Contains(key))
+            CssPaths.Add(key);
     }
 
     protected virtual void VerifyName()

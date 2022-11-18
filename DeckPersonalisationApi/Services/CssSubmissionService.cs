@@ -40,6 +40,15 @@ public class CssSubmissionService
         CssSubmissionIntent.UpdateTheme.ToString()
     };
 
+    public CssSubmission? GetSubmissionById(string id)
+        => _ctx.CssSubmissions
+            .Include(x => x.ImagesChange)
+            .Include(x => x.ReviewedBy)
+            .Include(x => x.Owner)
+            .Include(x => x.Theme)
+            .Include(x => x.ThemeUpdate)
+            .FirstOrDefault(x => x.Id == id);
+    
     public PaginatedResponse<CssSubmission> GetAwaitingApprovalSubmissions(PaginationDto pagination)
         => GetSubmissionsInternal(pagination, x => x.Where(y => y.Status == SubmissionStatus.AwaitingApproval));
 
