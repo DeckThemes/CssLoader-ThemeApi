@@ -8,6 +8,7 @@ public class SavedBlob : IToDto<SavedBlobDto>
     public User Owner { get; set; }
     public BlobType Type { get; set; }
     public bool Confirmed { get; set; } = false;
+    public bool Deleted { get; set; } = false;
     public DateTimeOffset Uploaded { get; set; }
     public long DownloadCount { get; set; }
 

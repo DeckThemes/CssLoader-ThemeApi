@@ -117,6 +117,20 @@ public class CssThemeService
         return submission;
     }
 
+    public void DisableTheme(CssTheme theme)
+    {
+        theme.Disabled = true;
+        _ctx.CssThemes.Update(theme);
+        _ctx.SaveChanges();
+    }
+
+    public void ApproveTheme(CssTheme theme)
+    {
+        theme.Approved = true;
+        _ctx.CssThemes.Update(theme);
+        _ctx.SaveChanges();
+    }
+
     public CssTheme? GetThemeById(string id)
         => _ctx.CssThemes
             .Include(x => x.Dependencies)
@@ -130,9 +144,6 @@ public class CssThemeService
 
     public IEnumerable<CssTheme> GetThemesByName(List<string> names)
         => _ctx.CssThemes.Where(x => names.Contains(x.Name) && x.Approved && !x.Disabled).ToList();
-    
-    public IEnumerable<CssTheme> GetUsersThemes(User user)
-        => _ctx.CssThemes.Where(x => x.Author == user && x.Approved && !x.Disabled).ToList();
 
     public PaginatedResponse<CssTheme> GetUsersThemes(User user, PaginationDto pagination)
         => GetThemesInternal(pagination, x => x.Where(y => y.Author == user && y.Approved));

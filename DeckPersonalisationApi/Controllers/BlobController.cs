@@ -28,7 +28,7 @@ public class BlobController : Controller
     {
         SavedBlob? image = _service.GetBlob(id);
 
-        if (image == null)
+        if (image == null || image.Deleted)
             return new NotFoundResult();
 
         string path = _service.GetFullFilePath(image);

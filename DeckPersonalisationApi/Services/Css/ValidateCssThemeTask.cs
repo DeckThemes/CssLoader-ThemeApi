@@ -72,8 +72,8 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
         ThemeDescription = validator.Description;
         ThemeDependencies = validator.Dependencies;
         
-        List<CssTheme> authorThemes = _service.GetUsersThemes(_user).ToList();
-        CssTheme? theme = authorThemes.FirstOrDefault(x => x.Name == ThemeName);
+        List<CssTheme> foundThemes = _service.GetThemesByName(new List<string> {ThemeName}).ToList();
+        CssTheme? theme = foundThemes.FirstOrDefault(x => x.Author.Id == _user.Id);
 
         if (_service.ThemeNameExists(ThemeName) && theme == null)
             throw new TaskFailureException($"Theme '{ThemeName}' already exists");

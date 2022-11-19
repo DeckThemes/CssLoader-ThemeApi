@@ -89,7 +89,7 @@ public class BlobService
     
     private void ConfirmBlobInternal(SavedBlob blob)
     {
-        if (blob.Confirmed)
+        if (blob.Confirmed || blob.Deleted)
             return;
 
         string oldPath = GetFullFilePath(blob);
@@ -101,17 +101,26 @@ public class BlobService
         _ctx.Blobs.Update(blob);
 
     }
-
-    // TODO: Figure out how to at some point delete unused blobs
+    
     public void DeleteBlob(SavedBlob blob)
     {
-        if (!blob.Confirmed)
-            return;
-
-        string path = GetFullFilePath(blob);
-        _ctx.Blobs.Remove(blob);
+        DeleteBlobInternal(blob);
         _ctx.SaveChanges();
-        File.Delete(path);
+    }
+
+    public void DeleteBlobs(List<SavedBlob> blobs)
+    {
+        blobs.ForEach(DeleteBlobInternal);
+        _ctx.SaveChanges();
+    }
+
+    private void DeleteBlobInternal(SavedBlob blob)
+    {
+        string path = GetFullFilePath(blob);
+        if (File.Exists(path))
+            File.Delete(path);
+        blob.Deleted = true;
+        _ctx.Blobs.Update(blob);
     }
 
     public SavedBlob CreateBlob(Stream blob, string filename, string userId)

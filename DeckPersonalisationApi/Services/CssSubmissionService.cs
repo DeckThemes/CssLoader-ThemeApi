@@ -10,21 +10,98 @@ public class CssSubmissionService
 {
     private CssThemeService _themes;
     private ApplicationContext _ctx;
-
-    public CssSubmissionService(CssThemeService themes, ApplicationContext ctx)
+    private BlobService _blob;
+    
+    public CssSubmissionService(CssThemeService themes, ApplicationContext ctx, BlobService blob)
     {
         _themes = themes;
         _ctx = ctx;
+        _blob = blob;
     }
     
-    public void ApproveCssTheme(string id, string? message)
+    public void ApproveCssTheme(string id, string? message, User reviewer)
     {
+        CssSubmission? submission = GetSubmissionById(id);
+
+        if (submission == null)
+            throw new NotFoundException("Failed to find submission");
         
+        CssTheme? baseTheme = _themes.GetThemeById(submission.Theme.Id);
+
+        if (baseTheme == null)
+            throw new NotFoundException("Failed to find base theme");
+        
+        CssTheme? updateTheme = submission.ThemeUpdate != null ? _themes.GetThemeById(submission.ThemeUpdate.Id) : null;
+
+        if (updateTheme == null && submission.Intent == CssSubmissionIntent.UpdateTheme)
+            throw new NotFoundException("Failed to find update theme patch");
+        
+        if (submission.Intent == CssSubmissionIntent.NewTheme)
+        {
+            _themes.ApproveTheme(baseTheme);
+        }
+        else if (submission.Intent == CssSubmissionIntent.UpdateMeta)
+        {
+            
+        }
+        else if (submission.Intent == CssSubmissionIntent.UpdateTheme)
+        {
+
+        }
+        else
+        {
+            throw new Exception("Submission has unknown intent");
+        }
+        
+        submission.Status = SubmissionStatus.Approved;
+        submission.ReviewedBy = reviewer;
+        submission.Message = message;
+        _ctx.CssSubmissions.Update(submission);
+        _ctx.SaveChanges();
     }
 
-    public void DenyCssTheme(string id, string? message)
+    public void DenyCssTheme(string id, string? message, User reviewer)
     {
+        CssSubmission? submission = GetSubmissionById(id);
+
+        if (submission == null)
+            throw new NotFoundException("Failed to find submission");
         
+        CssTheme? baseTheme = _themes.GetThemeById(submission.Theme.Id);
+
+        if (baseTheme == null)
+            throw new NotFoundException("Failed to find base theme");
+        
+        CssTheme? updateTheme = submission.ThemeUpdate != null ? _themes.GetThemeById(submission.ThemeUpdate.Id) : null;
+
+        if (updateTheme == null && submission.Intent == CssSubmissionIntent.UpdateTheme)
+            throw new NotFoundException("Failed to find update theme patch");
+
+        if (submission.Intent == CssSubmissionIntent.NewTheme)
+        {
+            _blob.DeleteBlob(baseTheme.Download);
+            _themes.DisableTheme(baseTheme);
+        }
+        else if (submission.Intent == CssSubmissionIntent.UpdateMeta)
+        {
+            if (submission.ImagesChange != null)
+                _blob.DeleteBlobs(submission.ImagesChange);
+        }
+        else if (submission.Intent == CssSubmissionIntent.UpdateTheme)
+        {
+            _blob.DeleteBlob(updateTheme!.Download);
+            _themes.DisableTheme(updateTheme);
+        }
+        else
+        {
+            throw new Exception("Submission has unknown intent");
+        }
+
+        submission.Status = SubmissionStatus.Denied;
+        submission.ReviewedBy = reviewer;
+        submission.Message = message;
+        _ctx.CssSubmissions.Update(submission);
+        _ctx.SaveChanges();
     }
 
     public IEnumerable<string> Orders() => new List<string>()
