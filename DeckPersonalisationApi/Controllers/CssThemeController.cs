@@ -1,4 +1,5 @@
-﻿using DeckPersonalisationApi.Middleware.JwtRole;
+﻿using DeckPersonalisationApi.Extensions;
+using DeckPersonalisationApi.Middleware.JwtRole;
 using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Model.Dto.External.GET;
 using DeckPersonalisationApi.Model.Dto.External.POST;
@@ -22,20 +23,7 @@ public class CssThemeController : Controller
         _service = service;
     }
 
-    [HttpPost("submit/git")]
-    [Authorize]
-    [JwtRoleReject(Permissions.FromApiToken)]
-    public IActionResult SubmitThemeViaGit(CssThemeGitSubmitPostDto post)
-    {
-        UserJwtDto dto = _jwt.DecodeToken(Request)!;
-
-        string task = _service.SubmitThemeViaGit(post.Url, string.IsNullOrWhiteSpace(post.Commit) ? null : post.Commit,
-            post.Subfolder, dto.Id);
-
-        return new OkObjectResult(new TaskIdGetDto(task));
-    }
-
-    [HttpGet("approved")]
+    [HttpGet]
     public IActionResult GetThemes(int page = 1, int perPage = 50, string filters = "", string order = "")
     {
         PaginationDto paginationDto = new(page, perPage, filters, order);
@@ -43,7 +31,7 @@ public class CssThemeController : Controller
         return new OkObjectResult(response.ToDto());
     }
     
-    [HttpGet("approved/filters")]
+    [HttpGet("filters")]
     [HttpGet("awaiting_approval/filters")]
     public IActionResult GetThemesFilters()
     {
@@ -63,6 +51,6 @@ public class CssThemeController : Controller
     [HttpGet("{id}")]
     public IActionResult GetTheme(string id)
     {
-        return new OkResult();
+        return new OkObjectResult(((IToDto<FullCssThemeDto>)_service.GetThemeById(id).Require()).ToDto());
     }
 }

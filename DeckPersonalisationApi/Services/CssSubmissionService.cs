@@ -1,4 +1,5 @@
 ﻿using DeckPersonalisationApi.Exceptions;
+using DeckPersonalisationApi.Extensions;
 using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Model.Dto.External.GET;
 using DeckPersonalisationApi.Model.Dto.Internal.GET;
@@ -21,16 +22,8 @@ public class CssSubmissionService
     
     public void ApproveCssTheme(string id, string? message, User reviewer)
     {
-        CssSubmission? submission = GetSubmissionById(id);
-
-        if (submission == null)
-            throw new NotFoundException("Failed to find submission");
-        
-        CssTheme? baseTheme = _themes.GetThemeById(submission.Theme.Id);
-
-        if (baseTheme == null)
-            throw new NotFoundException("Failed to find base theme");
-        
+        CssSubmission submission = GetSubmissionById(id).Require("Failed to find submission");
+        CssTheme baseTheme = _themes.GetThemeById(submission.Theme.Id).Require("Failed to find base theme");
         CssTheme? updateTheme = submission.ThemeUpdate != null ? _themes.GetThemeById(submission.ThemeUpdate.Id) : null;
 
         if (updateTheme == null && submission.Intent == CssSubmissionIntent.UpdateTheme)
@@ -42,11 +35,21 @@ public class CssSubmissionService
         }
         else if (submission.Intent == CssSubmissionIntent.UpdateMeta)
         {
-            
+            if (submission.TargetChange != null)
+                baseTheme.Target = submission.TargetChange;
+
+            if (submission.DescriptionChange != null)
+                baseTheme.Description = submission.DescriptionChange;
+
+            if (submission.ImagesChange != null)
+                baseTheme.Images = submission.ImagesChange;
+
+            _ctx.CssThemes.Update(baseTheme);
+            _ctx.SaveChanges();
         }
         else if (submission.Intent == CssSubmissionIntent.UpdateTheme)
         {
-
+            throw new NotImplementedException();
         }
         else
         {
@@ -62,16 +65,8 @@ public class CssSubmissionService
 
     public void DenyCssTheme(string id, string? message, User reviewer)
     {
-        CssSubmission? submission = GetSubmissionById(id);
-
-        if (submission == null)
-            throw new NotFoundException("Failed to find submission");
-        
-        CssTheme? baseTheme = _themes.GetThemeById(submission.Theme.Id);
-
-        if (baseTheme == null)
-            throw new NotFoundException("Failed to find base theme");
-        
+        CssSubmission submission = GetSubmissionById(id).Require("Failed to find submission");
+        CssTheme baseTheme = _themes.GetThemeById(submission.Theme.Id).Require("Failed to find base theme");
         CssTheme? updateTheme = submission.ThemeUpdate != null ? _themes.GetThemeById(submission.ThemeUpdate.Id) : null;
 
         if (updateTheme == null && submission.Intent == CssSubmissionIntent.UpdateTheme)
@@ -112,6 +107,7 @@ public class CssSubmissionService
 
     public IEnumerable<string> Filters() => new List<string>()
     {
+        // TODO: Replace with Pending/Completed
         CssSubmissionIntent.NewTheme.ToString(),
         CssSubmissionIntent.UpdateMeta.ToString(),
         CssSubmissionIntent.UpdateTheme.ToString()
