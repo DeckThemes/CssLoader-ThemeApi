@@ -1,4 +1,6 @@
-﻿namespace DeckPersonalisationApi.Model.Dto.Internal.GET;
+﻿using DeckPersonalisationApi.Exceptions;
+
+namespace DeckPersonalisationApi.Model.Dto.Internal.GET;
 
 public class PaginationDto
 {
@@ -13,5 +15,11 @@ public class PaginationDto
         PerPage = perPage;
         Filters = filters.Split('.').Select(x => x.Trim()).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
         Order = order;
+
+        if (Page <= 0)
+            throw new BadRequestException("Page is less than 1");
+
+        if (PerPage <= 0)
+            throw new BadRequestException("Per Page is less than 1");
     }
 }
