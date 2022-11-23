@@ -29,7 +29,7 @@ public class CssSubmissionController : Controller
         UserJwtDto dto = _jwt.DecodeToken(Request)!;
 
         string task = _css.SubmitThemeViaGit(post.Url, string.IsNullOrWhiteSpace(post.Commit) ? null : post.Commit,
-            post.Subfolder, dto.Id);
+            post.Subfolder, dto.Id, post.Meta);
 
         return new OkObjectResult(new TaskIdGetDto(task));
     }

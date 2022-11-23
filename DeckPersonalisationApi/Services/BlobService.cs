@@ -64,7 +64,13 @@ public class BlobService
         => _ctx.Blobs.FirstOrDefault(x => x.Id == id);
 
     public IEnumerable<SavedBlob> GetBlobs(List<string> ids)
-        => _ctx.Blobs.Where(x => ids.Contains(x.Id)).ToList();
+    {
+        List<SavedBlob> blobs = _ctx.Blobs.Where(x => ids.Contains(x.Id)).ToList();
+        if (blobs.Count != ids.Count)
+            throw new NotFoundException("Failed to get all blob ids");
+
+        return blobs;
+    }
 
     public List<SavedBlob> GetBlobsByUser(User user)
         => _ctx.Blobs.Where(x => x.Owner == user).ToList();

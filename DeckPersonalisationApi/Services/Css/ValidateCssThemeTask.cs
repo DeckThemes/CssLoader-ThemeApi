@@ -1,5 +1,6 @@
 ﻿using DeckPersonalisationApi.Exceptions;
 using DeckPersonalisationApi.Model;
+using DeckPersonalisationApi.Model.Dto.External.POST;
 using DeckPersonalisationApi.Services.Tasks;
 using DeckPersonalisationApi.Services.Tasks.Common;
 
@@ -14,12 +15,13 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
     private List<string> _validThemeTargets = new();
     private CssThemeService _service;
     private VnuCssVerifier _vnu;
-    
+
     public string ThemeId { get; private set; }
     public string ThemeName { get; private set; }
     public string ThemeAuthor { get; private set; }
     public string ThemeVersion { get; private set; }
     public string ThemeTarget { get; private set; }
+    public CssTheme? Base { get; private set; }
     public int ThemeManifestVersion { get; private set; }
     public string ThemeDescription { get; private set; }
     public List<string> ThemeDependencies { get; private set; } = new();
@@ -63,28 +65,23 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
 
         if (!_vnu.ValidateCss(validator.CssPaths, _path.DirPath))
             throw new TaskFailureException("Some Css files contain invalid syntax");
-
-        ThemeName = validator.Name;
-        ThemeAuthor = validator.Author;
-        ThemeVersion = validator.Version;
-        ThemeTarget = validator.Target;
-        ThemeManifestVersion = manifestVersion;
-        ThemeDescription = validator.Description;
-        ThemeDependencies = validator.Dependencies;
         
+        ThemeName = validator.Name;
+
         List<CssTheme> foundThemes = _service.GetThemesByName(new List<string> {ThemeName}).ToList();
         CssTheme? theme = foundThemes.FirstOrDefault(x => x.Author.Id == _user.Id);
+        Base = theme;
 
         if (_service.ThemeNameExists(ThemeName) && theme == null)
             throw new TaskFailureException($"Theme '{ThemeName}' already exists");
-
-        // These values can be changed separately from a theme upload, and only will be used for an initial submission if they exist
-        if (theme != null)
-        {
-            ThemeDescription = theme.Description;
-            ThemeTarget = theme.Target;
-        }
         
+        ThemeAuthor = validator.Author;
+        ThemeVersion = validator.Version;
+        ThemeTarget = validator?.Target ?? theme?.Target ?? "Other";
+        ThemeManifestVersion = manifestVersion;
+        ThemeDescription = validator?.Description ?? theme?.Description ?? "";
+        ThemeDependencies = validator!.Dependencies;
+
         List<CssTheme> dependencies = _service.GetThemesByName(ThemeDependencies).ToList();
         if (dependencies.Count != ThemeDependencies.Count)
             throw new TaskFailureException("Not all dependencies were found on this server");

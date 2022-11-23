@@ -17,9 +17,9 @@ public class CssManifestV1Validator
     public string Name { get; protected set; } = "";
     public string Author { get; protected set; }
     public string Version { get; protected set; } = "v1.0";
-    public string Target { get; protected set; } = "Other";
+    public string? Target { get; protected set; }
     public int ManifestVersion { get; protected set; }
-    public string Description { get; protected set; } = "";
+    public string? Description { get; protected set; }
     public List<string> Dependencies { get; protected set; } = new();
     public List<string> CssPaths { get; protected set; } = new();
 

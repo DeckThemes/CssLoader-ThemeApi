@@ -9,19 +9,18 @@ namespace DeckPersonalisationApi.Services;
 
 public class CssSubmissionService
 {
-    private CssThemeService _themes;
     private ApplicationContext _ctx;
     private BlobService _blob;
     
-    public CssSubmissionService(CssThemeService themes, ApplicationContext ctx, BlobService blob)
+    public CssSubmissionService(ApplicationContext ctx, BlobService blob)
     {
-        _themes = themes;
         _ctx = ctx;
         _blob = blob;
     }
     
     public void ApproveCssTheme(string id, string? message, User reviewer)
     {
+        /*
         CssSubmission submission = GetSubmissionById(id).Require("Failed to find submission");
         CssTheme baseTheme = _themes.GetThemeById(submission.Theme.Id).Require("Failed to find base theme");
         CssTheme? updateTheme = submission.ThemeUpdate != null ? _themes.GetThemeById(submission.ThemeUpdate.Id) : null;
@@ -61,10 +60,13 @@ public class CssSubmissionService
         submission.Message = message;
         _ctx.CssSubmissions.Update(submission);
         _ctx.SaveChanges();
+        */
+        throw new NotImplementedException();
     }
 
     public void DenyCssTheme(string id, string? message, User reviewer)
     {
+        /*
         CssSubmission submission = GetSubmissionById(id).Require("Failed to find submission");
         CssTheme baseTheme = _themes.GetThemeById(submission.Theme.Id).Require("Failed to find base theme");
         CssTheme? updateTheme = submission.ThemeUpdate != null ? _themes.GetThemeById(submission.ThemeUpdate.Id) : null;
@@ -97,6 +99,30 @@ public class CssSubmissionService
         submission.Message = message;
         _ctx.CssSubmissions.Update(submission);
         _ctx.SaveChanges();
+        */
+        throw new NotImplementedException();
+    }
+
+    public CssSubmission CreateSubmission(CssTheme? oldTheme, CssTheme newTheme, CssSubmissionIntent intent,
+        User author)
+    {
+        if ((intent != CssSubmissionIntent.NewTheme && oldTheme == null) || newTheme == null || author == null)
+            throw new Exception("Intent validation failed");
+        
+        CssSubmission submission = new()
+        {
+            Id = Guid.NewGuid().ToString(),
+            Intent = intent,
+            Old = oldTheme,
+            New = newTheme,
+            Status = SubmissionStatus.AwaitingApproval,
+            Submitted = DateTimeOffset.Now,
+            Owner = author
+        };
+
+        _ctx.CssSubmissions.Add(submission);
+        _ctx.SaveChanges();
+        return submission;
     }
 
     public IEnumerable<string> Orders() => new List<string>()
@@ -107,10 +133,9 @@ public class CssSubmissionService
 
     public IEnumerable<string> Filters() => new List<string>()
     {
-        // TODO: Replace with Pending/Completed
-        CssSubmissionIntent.NewTheme.ToString(),
-        CssSubmissionIntent.UpdateMeta.ToString(),
-        CssSubmissionIntent.UpdateTheme.ToString()
+        SubmissionStatus.Approved.ToString(),
+        SubmissionStatus.Denied.ToString(),
+        SubmissionStatus.AwaitingApproval.ToString()
     };
 
     public CssSubmission? GetSubmissionById(string id)
@@ -118,34 +143,38 @@ public class CssSubmissionService
             .Include(x => x.ImagesChange)
             .Include(x => x.ReviewedBy)
             .Include(x => x.Owner)
-            .Include(x => x.Theme)
-            .Include(x => x.ThemeUpdate)
+            .Include(x => x.New)
+            .Include(x => x.New.Dependencies)
+            .Include(x => x.New.Author)
+            .Include(x => x.New.Download)
+            .Include(x => x.New.Images)
+            .Include(x => x.Old)
             .FirstOrDefault(x => x.Id == id);
     
-    public PaginatedResponse<CssSubmission> GetAwaitingApprovalSubmissions(PaginationDto pagination)
-        => GetSubmissionsInternal(pagination, x => x.Where(y => y.Status == SubmissionStatus.AwaitingApproval));
+    public PaginatedResponse<CssSubmission> GetSubmissions(PaginationDto pagination)
+        => GetSubmissionsInternal(pagination, x => x);
 
     public PaginatedResponse<CssSubmission> GetSubmissionsFromUser(PaginationDto pagination, User user)
         => GetSubmissionsInternal(pagination, x => x.Where(y => y.Owner == user));
 
     private PaginatedResponse<CssSubmission> GetSubmissionsInternal(PaginationDto pagination, Func<IEnumerable<CssSubmission>, IEnumerable<CssSubmission>> middleware)
     {
-        List<CssSubmissionIntent> intents =
-            pagination.Filters.Select(x => Enum.Parse<CssSubmissionIntent>(x, true)).ToList();
-        
+        List<SubmissionStatus> status =
+            pagination.Filters.Select(x => Enum.Parse<SubmissionStatus>(x, true)).ToList();
+
         IEnumerable<CssSubmission> part1 = _ctx.CssSubmissions
             .Include(x => x.ImagesChange)
             .Include(x => x.ReviewedBy)
             .Include(x => x.Owner)
-            .Include(x => x.Theme)
-            .Include(x => x.Theme.Dependencies)
-            .Include(x => x.Theme.Author)
-            .Include(x => x.Theme.Download)
-            .Include(x => x.Theme.Images)
-            .Include(x => x.ThemeUpdate);
+            .Include(x => x.New)
+            .Include(x => x.New.Dependencies)
+            .Include(x => x.New.Author)
+            .Include(x => x.New.Download)
+            .Include(x => x.New.Images)
+            .Include(x => x.Old);
 
         part1 = middleware(part1);
-        part1 = part1.Where(x => ((intents.Count <= 0) || intents.Contains(x.Intent)));
+        part1 = part1.Where(x => ((status.Count <= 0) || status.Contains(x.Status)));
         
         switch (pagination.Order)
         {

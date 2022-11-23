@@ -1,5 +1,6 @@
 ﻿using DeckPersonalisationApi.Exceptions;
 using DeckPersonalisationApi.Model;
+using DeckPersonalisationApi.Model.Dto.External.POST;
 using DeckPersonalisationApi.Model.Dto.Internal.GET;
 using DeckPersonalisationApi.Services.Css;
 using DeckPersonalisationApi.Services.Tasks;
@@ -14,27 +15,33 @@ public class CssThemeService
     private ApplicationContext _ctx;
     private BlobService _blob;
     private UserService _user;
+    private CssSubmissionService _submission;
     private IConfiguration _config;
 
     public List<string> Targets => _config["Config:CssTargets"]!.Split(';').ToList();
 
     public long MaxCssThemeSize => long.Parse(_config["Config:MaxCssThemeSize"]!);
 
-    public CssThemeService(TaskService task, ApplicationContext ctx, BlobService blob, UserService user, IConfiguration config)
+    public CssThemeService(TaskService task, ApplicationContext ctx, BlobService blob, UserService user, IConfiguration config, CssSubmissionService submission)
     {
         _task = task;
         _ctx = ctx;
         _blob = blob;
         _user = user;
         _config = config;
+        _submission = submission;
     }
 
-    public string SubmitThemeViaGit(string url, string? commit, string subfolder, string userId)
+    public string SubmitThemeViaGit(string url, string? commit, string subfolder, string userId, CssSubmissionMeta meta)
     {
         User? user = _user.GetActiveUserById(userId);
         
         if (user == null)
             throw new UnauthorisedException("User not found");
+
+        List<string>? possibleImageBlobs = meta.ImageBlobs;
+        if (possibleImageBlobs != null && _blob.GetBlobs(possibleImageBlobs).Any(x => x.Confirmed)) 
+            throw new BadRequestException("Cannot use images that are already used elsewhere");
 
         CreateTempFolderTask gitContainer = new CreateTempFolderTask();
         CloneGitTask clone = new CloneGitTask(url, commit, gitContainer, true);
@@ -49,8 +56,7 @@ public class CssThemeService
         CopyFileTask copyToThemeFolder = new CopyFileTask(folder, themeFolder, "*");
         ZipTask zip = new ZipTask(themeContainer, gitContainer);
         WriteAsBlobTask blob = new WriteAsBlobTask(user, zip);
-        // TODO: ImageIds
-        CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blob, new(), url, user);
+        CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blob, meta, url, user);
 
         List<ITaskPart> taskParts = new()
         {
@@ -60,9 +66,8 @@ public class CssThemeService
         AppTaskFromParts task = new(taskParts, "Submit theme via git", user);
         return _task.RegisterTask(task);
     }
-
-    // TODO: Theme updates don't seem to work
-    public CssSubmission CreateSubmission(string id, string name, List<string> imageIds, SavedBlob blob, string version,
+    
+    public CssTheme CreateTheme(string id, string name, List<SavedBlob> imageBlobs, SavedBlob blob, string version,
         string? source, User author, string target, int manifestVersion, string description,
         List<string> dependencyNames, string specifiedAuthor)
     {
@@ -71,14 +76,12 @@ public class CssThemeService
         if (author == null)
             throw new BadRequestException("Author is null");
         
-        CssTheme? theme = GetThemeById(id);
+        if (GetThemeById(id) != null)
+            throw new Exception("Theme already exists");
+        
         List<CssTheme> dependencies = _ctx.CssThemes.Where(x => dependencyNames.Contains(x.Name)).ToList();
-        List<SavedBlob> imageBlobs = _blob.GetBlobs(imageIds).ToList();
         _blob.ConfirmBlobs(imageBlobs);
         _blob.ConfirmBlob(blob);
-        
-        if (theme != null)
-            id = Guid.NewGuid().ToString();
 
         CssTheme newTheme = new()
         {
@@ -92,7 +95,7 @@ public class CssThemeService
             Submitted = DateTimeOffset.Now,
             Updated = DateTimeOffset.Now,
             SpecifiedAuthor = specifiedAuthor,
-            Target = target,
+            Target =  target,
             ManifestVersion = manifestVersion,
             Description = description,
             Dependencies = dependencies,
@@ -100,21 +103,36 @@ public class CssThemeService
         };
 
         _ctx.CssThemes.Add(newTheme);
-
-        CssSubmission submission = new()
-        {
-            Id = Guid.NewGuid().ToString(),
-            Intent = (theme == null) ? CssSubmissionIntent.NewTheme : CssSubmissionIntent.UpdateTheme,
-            Theme = theme ?? newTheme,
-            ThemeUpdate = (theme != null) ? newTheme : null,
-            Status = SubmissionStatus.AwaitingApproval,
-            Submitted = DateTimeOffset.Now,
-            Owner = author
-        };
-
-        _ctx.CssSubmissions.Add(submission);
         _ctx.SaveChanges();
-        return submission;
+
+        return newTheme;
+    }
+
+    public void ApplyThemeUpdate(CssTheme original, CssTheme overlay)
+    {
+        original = GetThemeById(original.Id) ?? throw new NotFoundException("Failed to find original theme");
+        
+        if (original.Author.Id != overlay.Author.Id)
+            throw new BadRequestException("Cannot overlay theme from another author");
+        
+        if (original.Download.Id != overlay.Download.Id)
+            _blob.DeleteBlob(original.Download);
+
+        _blob.DeleteBlobs(original.Images.Where(x => overlay.Images.All(y => y.Id != x.Id)).ToList());
+        
+        original.Images = overlay.Images;
+        original.Download = overlay.Download;
+        original.Version = overlay.Version;
+        original.Source = overlay.Source;
+        original.Updated = overlay.Updated;
+        original.SpecifiedAuthor = overlay.SpecifiedAuthor;
+        original.Target = overlay.Target;
+        original.ManifestVersion = overlay.ManifestVersion;
+        original.Description = overlay.Description;
+        original.Dependencies = overlay.Dependencies;
+        
+        _ctx.CssThemes.Update(original);
+        _ctx.SaveChanges();
     }
 
     public void DisableTheme(CssTheme theme)

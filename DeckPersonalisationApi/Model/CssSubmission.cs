@@ -6,8 +6,8 @@ public class CssSubmission : IToDto<CssSubmissionDto>
 {
     public string Id { get; set; }
     public CssSubmissionIntent Intent { get; set; }
-    public CssTheme Theme { get; set; }
-    public CssTheme? ThemeUpdate { get; set; }
+    public CssTheme? Old { get; set; }
+    public CssTheme New { get; set; }
     public SubmissionStatus Status { get; set; }
     public DateTimeOffset Submitted { get; set; }
     public User? ReviewedBy { get; set; }
