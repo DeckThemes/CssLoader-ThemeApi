@@ -1,4 +1,5 @@
 ﻿using DeckPersonalisationApi.Exceptions;
+using DeckPersonalisationApi.Extensions;
 using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Model.Dto.External.POST;
 using DeckPersonalisationApi.Model.Dto.Internal.GET;
@@ -15,21 +16,18 @@ public class CssThemeService
     private ApplicationContext _ctx;
     private BlobService _blob;
     private UserService _user;
-    private CssSubmissionService _submission;
     private IConfiguration _config;
 
     public List<string> Targets => _config["Config:CssTargets"]!.Split(';').ToList();
-
     public long MaxCssThemeSize => long.Parse(_config["Config:MaxCssThemeSize"]!);
 
-    public CssThemeService(TaskService task, ApplicationContext ctx, BlobService blob, UserService user, IConfiguration config, CssSubmissionService submission)
+    public CssThemeService(TaskService task, ApplicationContext ctx, BlobService blob, UserService user, IConfiguration config)
     {
         _task = task;
         _ctx = ctx;
         _blob = blob;
         _user = user;
         _config = config;
-        _submission = submission;
     }
 
     public string SubmitThemeViaGit(string url, string? commit, string subfolder, string userId, CssSubmissionMeta meta)
@@ -64,6 +62,34 @@ public class CssThemeService
         };
 
         AppTaskFromParts task = new(taskParts, "Submit theme via git", user);
+        return _task.RegisterTask(task);
+    }
+
+    public string SubmitThemeViaZip(SavedBlob blob, CssSubmissionMeta meta, User user)
+    {
+        List<string>? possibleImageBlobs = meta.ImageBlobs;
+        if (possibleImageBlobs != null && _blob.GetBlobs(possibleImageBlobs).Any(x => x.Confirmed)) 
+            throw new BadRequestException("Cannot use images that are already used elsewhere");
+
+        CreateTempFolderTask zipContainer = new CreateTempFolderTask();
+        ExtractZipTask extractZip = new ExtractZipTask(zipContainer, blob, MaxCssThemeSize);
+        FolderSizeConstraintTask size = new FolderSizeConstraintTask(zipContainer, MaxCssThemeSize);
+        GetJsonTask jsonGet = new GetJsonTask(zipContainer, "theme.json");
+        ValidateCssThemeTask css = new ValidateCssThemeTask(zipContainer, jsonGet, user, Targets);
+        WriteJsonTask jsonWrite = new WriteJsonTask(zipContainer, "theme.json", jsonGet);
+        CreateTempFolderTask themeContainer = new CreateTempFolderTask();
+        CreateFolderTask themeFolder = new CreateFolderTask(themeContainer, css);
+        CopyFileTask copyToThemeFolder = new CopyFileTask(zipContainer, themeFolder, "*");
+        ZipTask zip = new ZipTask(themeContainer, zipContainer);
+        WriteAsBlobTask blobSave = new WriteAsBlobTask(user, zip);
+        CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blobSave, meta, "[Zip Deploy]", user);
+
+        List<ITaskPart> taskParts = new()
+        {
+            zipContainer, extractZip, size, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blobSave, submission
+        };
+
+        AppTaskFromParts task = new(taskParts, "Submit theme via zip", user);
         return _task.RegisterTask(task);
     }
     
@@ -110,7 +136,8 @@ public class CssThemeService
 
     public void ApplyThemeUpdate(CssTheme original, CssTheme overlay)
     {
-        original = GetThemeById(original.Id) ?? throw new NotFoundException("Failed to find original theme");
+        original = GetThemeById(original.Id).Require("Failed to find original theme");
+        overlay = GetThemeById(overlay.Id).Require("Failed to find update theme patch");
         
         if (original.Author.Id != overlay.Author.Id)
             throw new BadRequestException("Cannot overlay theme from another author");
@@ -135,15 +162,23 @@ public class CssThemeService
         _ctx.SaveChanges();
     }
 
-    public void DisableTheme(CssTheme theme)
+    public void DeleteTheme(CssTheme theme, bool deleteImages = false, bool deleteDownload = false)
     {
-        theme.Disabled = true;
+        theme = GetThemeById(theme.Id).Require("Could not find theme");
+        theme.Deleted = true;
         _ctx.CssThemes.Update(theme);
+        if (deleteImages)
+            _blob.DeleteBlobs(theme.Images);
+        
+        if (deleteDownload)
+            _blob.DeleteBlob(theme.Download);
+        
         _ctx.SaveChanges();
     }
 
     public void ApproveTheme(CssTheme theme)
     {
+        theme = GetThemeById(theme.Id).Require("Could not find theme");
         theme.Approved = true;
         _ctx.CssThemes.Update(theme);
         _ctx.SaveChanges();
@@ -158,10 +193,10 @@ public class CssThemeService
             .FirstOrDefault(x => x.Id == id);
     
     public bool ThemeNameExists(string name)
-        => _ctx.CssThemes.Any(x => x.Name == name && x.Approved & !x.Disabled);
+        => _ctx.CssThemes.Any(x => x.Name == name && x.Approved & !x.Deleted);
 
     public IEnumerable<CssTheme> GetThemesByName(List<string> names)
-        => _ctx.CssThemes.Where(x => names.Contains(x.Name) && x.Approved && !x.Disabled).ToList();
+        => _ctx.CssThemes.Where(x => names.Contains(x.Name) && x.Approved && !x.Deleted).ToList();
 
     public PaginatedResponse<CssTheme> GetUsersThemes(User user, PaginationDto pagination)
         => GetThemesInternal(pagination, x => x.Where(y => y.Author == user && y.Approved));
@@ -190,7 +225,7 @@ public class CssThemeService
             .Include(x => x.Images);
 
         part1 = middleware(part1);
-        part1 = part1.Where(x => ((pagination.Filters.Count <= 0) || pagination.Filters.Contains(x.Target)) && !x.Disabled);
+        part1 = part1.Where(x => ((pagination.Filters.Count <= 0) || pagination.Filters.Contains(x.Target)) && !x.Deleted);
 
         switch (pagination.Order)
         {

@@ -46,11 +46,13 @@ public class AppTaskFromParts : AppTask
         catch (TaskFailureException e)
         {
             Status = $"Failed at task '{taskName}': {e.Message}";
+            Console.WriteLine($"[Task:TaskFailureException] {e.Message}");
             Success = false;
         }
         catch (Exception e)
         {
             Status = $"Failed at task '{taskName}': Internal Server Error";
+            Console.WriteLine($"[Task:Exception] {e.Message}");
             Success = false;
         }
         

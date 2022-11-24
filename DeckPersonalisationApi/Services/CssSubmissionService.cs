@@ -10,97 +10,48 @@ namespace DeckPersonalisationApi.Services;
 public class CssSubmissionService
 {
     private ApplicationContext _ctx;
+    private CssThemeService _themes;
     private BlobService _blob;
     
-    public CssSubmissionService(ApplicationContext ctx, BlobService blob)
+    public CssSubmissionService(ApplicationContext ctx, BlobService blob, CssThemeService themes)
     {
         _ctx = ctx;
         _blob = blob;
+        _themes = themes;
     }
     
     public void ApproveCssTheme(string id, string? message, User reviewer)
     {
-        /*
         CssSubmission submission = GetSubmissionById(id).Require("Failed to find submission");
-        CssTheme baseTheme = _themes.GetThemeById(submission.Theme.Id).Require("Failed to find base theme");
-        CssTheme? updateTheme = submission.ThemeUpdate != null ? _themes.GetThemeById(submission.ThemeUpdate.Id) : null;
-
-        if (updateTheme == null && submission.Intent == CssSubmissionIntent.UpdateTheme)
-            throw new NotFoundException("Failed to find update theme patch");
+        CssTheme newTheme = submission.New;
+        CssTheme? oldTheme = submission.Old;
         
-        if (submission.Intent == CssSubmissionIntent.NewTheme)
-        {
-            _themes.ApproveTheme(baseTheme);
-        }
-        else if (submission.Intent == CssSubmissionIntent.UpdateMeta)
-        {
-            if (submission.TargetChange != null)
-                baseTheme.Target = submission.TargetChange;
+        newTheme = _themes.GetThemeById(newTheme.Id).Require("Failed to find new theme");
+        oldTheme = (oldTheme == null) ? null : _themes.GetThemeById(oldTheme.Id).Require("Failed to find old theme");
 
-            if (submission.DescriptionChange != null)
-                baseTheme.Description = submission.DescriptionChange;
-
-            if (submission.ImagesChange != null)
-                baseTheme.Images = submission.ImagesChange;
-
-            _ctx.CssThemes.Update(baseTheme);
-            _ctx.SaveChanges();
-        }
-        else if (submission.Intent == CssSubmissionIntent.UpdateTheme)
-        {
-            throw new NotImplementedException();
-        }
+        if (oldTheme == null)
+            _themes.ApproveTheme(newTheme);
         else
-        {
-            throw new Exception("Submission has unknown intent");
-        }
+            _themes.ApplyThemeUpdate(oldTheme, newTheme);
         
-        submission.Status = SubmissionStatus.Approved;
-        submission.ReviewedBy = reviewer;
-        submission.Message = message;
-        _ctx.CssSubmissions.Update(submission);
-        _ctx.SaveChanges();
-        */
         throw new NotImplementedException();
     }
 
     public void DenyCssTheme(string id, string? message, User reviewer)
     {
-        /*
         CssSubmission submission = GetSubmissionById(id).Require("Failed to find submission");
-        CssTheme baseTheme = _themes.GetThemeById(submission.Theme.Id).Require("Failed to find base theme");
-        CssTheme? updateTheme = submission.ThemeUpdate != null ? _themes.GetThemeById(submission.ThemeUpdate.Id) : null;
+        CssTheme newTheme = submission.New;
+        CssTheme? oldTheme = submission.Old;
 
-        if (updateTheme == null && submission.Intent == CssSubmissionIntent.UpdateTheme)
-            throw new NotFoundException("Failed to find update theme patch");
+        newTheme = _themes.GetThemeById(newTheme.Id).Require("Failed to find new theme");
+        oldTheme = (oldTheme == null) ? null : _themes.GetThemeById(oldTheme.Id).Require("Failed to find old theme");
 
-        if (submission.Intent == CssSubmissionIntent.NewTheme)
-        {
-            _blob.DeleteBlob(baseTheme.Download);
-            _themes.DisableTheme(baseTheme);
-        }
-        else if (submission.Intent == CssSubmissionIntent.UpdateMeta)
-        {
-            if (submission.ImagesChange != null)
-                _blob.DeleteBlobs(submission.ImagesChange);
-        }
-        else if (submission.Intent == CssSubmissionIntent.UpdateTheme)
-        {
-            _blob.DeleteBlob(updateTheme!.Download);
-            _themes.DisableTheme(updateTheme);
-        }
-        else
-        {
-            throw new Exception("Submission has unknown intent");
-        }
-
-        submission.Status = SubmissionStatus.Denied;
+        _themes.DeleteTheme(newTheme, oldTheme?.Images.All(x => newTheme.Images.Any(y => y.Id == x.Id)) ?? true, (oldTheme == null) || oldTheme.Download.Id == newTheme.Download.Id);
+        
         submission.ReviewedBy = reviewer;
-        submission.Message = message;
+        submission.Status = SubmissionStatus.Denied;
         _ctx.CssSubmissions.Update(submission);
         _ctx.SaveChanges();
-        */
-        throw new NotImplementedException();
     }
 
     public CssSubmission CreateSubmission(CssTheme? oldTheme, CssTheme newTheme, CssSubmissionIntent intent,
@@ -140,7 +91,6 @@ public class CssSubmissionService
 
     public CssSubmission? GetSubmissionById(string id)
         => _ctx.CssSubmissions
-            .Include(x => x.ImagesChange)
             .Include(x => x.ReviewedBy)
             .Include(x => x.Owner)
             .Include(x => x.New)
@@ -163,7 +113,6 @@ public class CssSubmissionService
             pagination.Filters.Select(x => Enum.Parse<SubmissionStatus>(x, true)).ToList();
 
         IEnumerable<CssSubmission> part1 = _ctx.CssSubmissions
-            .Include(x => x.ImagesChange)
             .Include(x => x.ReviewedBy)
             .Include(x => x.Owner)
             .Include(x => x.New)

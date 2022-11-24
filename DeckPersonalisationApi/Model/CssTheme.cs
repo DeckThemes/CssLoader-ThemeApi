@@ -19,7 +19,7 @@ public class CssTheme : IToDto<PartialCssThemeDto>, IToDto<MinimalCssThemeDto>, 
     public string Description { get; set; }
     public List<CssTheme> Dependencies { get; set; }
     public bool Approved { get; set; }
-    public bool Disabled { get; set; }
+    public bool Deleted { get; set; }
 
     public PartialCssThemeDto ToDto()
         => new(this);
@@ -28,9 +28,7 @@ public class CssTheme : IToDto<PartialCssThemeDto>, IToDto<MinimalCssThemeDto>, 
         => new(this);
 
     FullCssThemeDto IToDto<FullCssThemeDto>.ToDto()
-    {
-        throw new NotImplementedException();
-    }
+        => new(this);
 
     public object ToDtoObject()
         => ToDto();

@@ -1,7 +1,9 @@
-﻿using DeckPersonalisationApi.Middleware.JwtRole;
+﻿using DeckPersonalisationApi.Extensions;
+using DeckPersonalisationApi.Middleware.JwtRole;
 using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Model.Dto.External.GET;
 using DeckPersonalisationApi.Model.Dto.External.POST;
+using DeckPersonalisationApi.Model.Dto.Internal.GET;
 using DeckPersonalisationApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,11 +16,15 @@ public class CssSubmissionController : Controller
 {
     private JwtService _jwt;
     private CssThemeService _css;
-
-    public CssSubmissionController(JwtService jwt, CssThemeService css)
+    private CssSubmissionService _submission;
+    private UserService _user;
+    
+    public CssSubmissionController(JwtService jwt, CssThemeService css, CssSubmissionService submission, UserService user)
     {
         _jwt = jwt;
         _css = css;
+        _submission = submission;
+        _user = user;
     }
 
     [HttpPost("git")]
@@ -55,7 +61,8 @@ public class CssSubmissionController : Controller
     [JwtRoleRequire(Permissions.ViewThemeSubmissions)]
     public IActionResult ViewSubmissions(int page = 1, int perPage = 50, string filters = "", string order = "")
     {
-        throw new NotImplementedException();
+        PaginationDto pagination = new(page, perPage, filters, order);
+        return new OkObjectResult(_submission.GetSubmissions(pagination));
     }
     
     [HttpGet("filters")]
@@ -63,6 +70,34 @@ public class CssSubmissionController : Controller
     [JwtRoleRequire(Permissions.ViewThemeSubmissions)]
     public IActionResult ViewSubmissionsFilters()
     {
-        throw new NotImplementedException();
+        return new OkObjectResult(new PaginationFilters(_submission.Filters().ToList(), _submission.Orders().ToList()));
+    }
+
+    [HttpGet("{id}")]
+    [Authorize]
+    [JwtRoleRequire(Permissions.ViewThemeSubmissions)]
+    public IActionResult GetSubmissionViaId(string id)
+    {
+        return new OkObjectResult(_submission.GetSubmissionById(id).Require());
+    }
+
+    [HttpPut("{id}/approve")]
+    [Authorize]
+    [JwtRoleRequire(Permissions.ApproveThemeSubmissions)]
+    public IActionResult ApproveThemeSubmissions(string id, MessageDto messageDto)
+    {
+        User user = _user.GetUserById(_jwt.DecodeToken(Request).Require().Id).Require();
+        _submission.ApproveCssTheme(id, messageDto.Message, user);
+        return new OkResult();
+    }
+
+    [HttpPut("{id}/deny")]
+    [Authorize]
+    [JwtRoleRequire(Permissions.ApproveThemeSubmissions)]
+    public IActionResult DenyThemeSubmission(string id, MessageDto messageDto)
+    {
+        User user = _user.GetUserById(_jwt.DecodeToken(Request).Require().Id).Require();
+        _submission.DenyCssTheme(id, messageDto.Message, user);
+        return new OkResult();
     }
 }

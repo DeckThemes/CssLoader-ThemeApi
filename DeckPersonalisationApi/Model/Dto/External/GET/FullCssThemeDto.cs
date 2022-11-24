@@ -39,7 +39,7 @@ public class FullCssThemeDto
         Description = theme.Description;
         Dependencies = theme.Dependencies.Select(x => ((IToDto<MinimalCssThemeDto>)x).ToDto()).ToList();
         Approved = theme.Approved;
-        Disabled = theme.Disabled;
+        Disabled = theme.Deleted;
         SpecifiedAuthor = theme.SpecifiedAuthor;
     }
 }

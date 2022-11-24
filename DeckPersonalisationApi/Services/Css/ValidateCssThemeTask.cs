@@ -9,7 +9,7 @@ namespace DeckPersonalisationApi.Services.Css;
 public class ValidateCssThemeTask : IIdentifierTaskPart
 {
     public string Name => "Validating css theme";
-    private PathTransformTask _path;
+    private IDirTaskPart _path;
     private GetJsonTask _json;
     private User _user;
     private List<string> _validThemeTargets = new();
@@ -95,7 +95,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
     {
     }
 
-    public ValidateCssThemeTask(PathTransformTask path, GetJsonTask json, User user, List<string> validThemeTargets)
+    public ValidateCssThemeTask(IDirTaskPart path, GetJsonTask json, User user, List<string> validThemeTargets)
     {
         _path = path;
         _json = json;

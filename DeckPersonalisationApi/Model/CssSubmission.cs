@@ -13,10 +13,6 @@ public class CssSubmission : IToDto<CssSubmissionDto>
     public User? ReviewedBy { get; set; }
     public User Owner { get; set; }
     public string? Message { get; set; }
-    
-    public string? DescriptionChange { get; set; }
-    public List<SavedBlob>? ImagesChange { get; set; }
-    public string? TargetChange { get; set; }
 
     public CssSubmissionDto ToDto()
         => new(this);
