@@ -92,6 +92,35 @@ public class CssThemeService
         AppTaskFromParts task = new(taskParts, "Submit theme via zip", user);
         return _task.RegisterTask(task);
     }
+
+    public string SubmitThemeViaCss(string cssContent, string name, CssSubmissionMeta meta, User user)
+    {
+        List<string>? possibleImageBlobs = meta.ImageBlobs;
+        if (possibleImageBlobs != null && _blob.GetBlobs(possibleImageBlobs).Any(x => x.Confirmed)) 
+            throw new BadRequestException("Cannot use images that are already used elsewhere");
+
+        CreateTempFolderTask zipContainer = new CreateTempFolderTask();
+        WriteStringToFileTask writeCss = new WriteStringToFileTask(zipContainer, "shared.css", cssContent);
+        WriteStringToFileTask writeJson = new WriteStringToFileTask(zipContainer, "theme.json", CreateCssJson(name));
+        FolderSizeConstraintTask size = new FolderSizeConstraintTask(zipContainer, MaxCssThemeSize);
+        GetJsonTask jsonGet = new GetJsonTask(zipContainer, "theme.json");
+        ValidateCssThemeTask css = new ValidateCssThemeTask(zipContainer, jsonGet, user, Targets);
+        WriteJsonTask jsonWrite = new WriteJsonTask(zipContainer, "theme.json", jsonGet);
+        CreateTempFolderTask themeContainer = new CreateTempFolderTask();
+        CreateFolderTask themeFolder = new CreateFolderTask(themeContainer, css);
+        CopyFileTask copyToThemeFolder = new CopyFileTask(zipContainer, themeFolder, "*");
+        ZipTask zip = new ZipTask(themeContainer, zipContainer);
+        WriteAsBlobTask blobSave = new WriteAsBlobTask(user, zip);
+        CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blobSave, meta, "[Zip Deploy]", user);
+
+        List<ITaskPart> taskParts = new()
+        {
+            zipContainer, writeCss, writeJson, size, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blobSave, submission
+        };
+
+        AppTaskFromParts task = new(taskParts, "Submit theme via css", user);
+        return _task.RegisterTask(task);
+    }
     
     public CssTheme CreateTheme(string id, string name, List<SavedBlob> imageBlobs, SavedBlob blob, string version,
         string? source, User author, string target, int manifestVersion, string description,
@@ -254,4 +283,7 @@ public class CssThemeService
         
         return new(part1.Count(), part1.Skip((pagination.Page - 1) * pagination.PerPage).Take(pagination.PerPage).ToList());
     }
+
+    private string CreateCssJson(string name)
+        => _config["Config:CssToThemeJson"]!.Replace("%THEME_NAME%", name).Replace("\"", "\\\"");
 }
