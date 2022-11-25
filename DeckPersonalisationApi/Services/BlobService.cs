@@ -110,7 +110,6 @@ public class BlobService
         File.Move(oldPath, newPath);
 
         _ctx.Blobs.Update(blob);
-
     }
     
     public void DeleteBlob(SavedBlob blob)
@@ -137,17 +136,11 @@ public class BlobService
         _ctx.Blobs.Update(blob);
     }
 
+
     public SavedBlob CreateBlob(Stream blob, string filename, string userId)
     {
-        User? user = _user.GetUserById(userId);
-
-        if (user == null)
-            throw new BadRequestException("User not found");
-
-        return CreateBlob(blob, filename, user);
-    }
-    public SavedBlob CreateBlob(Stream blob, string filename, User user)
-    {
+        _ctx.ChangeTracker.Clear();
+        User user = _user.GetActiveUserById(userId).Require("User not found");
         string ext = filename.Split('.').Last();
         BlobType type = BlobTypeEx.FromExtensionToBlobType(ext);
 

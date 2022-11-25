@@ -122,19 +122,20 @@ public class CssThemeService
         return _task.RegisterTask(task);
     }
     
-    public CssTheme CreateTheme(string id, string name, List<SavedBlob> imageBlobs, SavedBlob blob, string version,
-        string? source, User author, string target, int manifestVersion, string description,
+    public CssTheme CreateTheme(string id, string name, List<string> imageIds, string blobId, string version,
+        string? source, string authorId, string target, int manifestVersion, string description,
         List<string> dependencyNames, string specifiedAuthor)
     {
-        author = _user.GetActiveUserById(author.Id);
-
-        if (author == null)
-            throw new BadRequestException("Author is null");
+        _ctx.ChangeTracker.Clear();
         
         if (GetThemeById(id) != null)
             throw new Exception("Theme already exists");
         
+        User author = _user.GetActiveUserById(authorId).Require("User not found");
+        List<SavedBlob> imageBlobs = _blob.GetBlobs(imageIds).ToList();
+        SavedBlob blob = _blob.GetBlob(blobId).Require();
         List<CssTheme> dependencies = _ctx.CssThemes.Where(x => dependencyNames.Contains(x.Name)).ToList();
+
         _blob.ConfirmBlobs(imageBlobs);
         _blob.ConfirmBlob(blob);
 

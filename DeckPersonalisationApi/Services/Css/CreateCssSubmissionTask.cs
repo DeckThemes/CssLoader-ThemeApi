@@ -18,22 +18,18 @@ public class CreateCssSubmissionTask : ITaskPart
     private User _author;
     public void Execute()
     {
-        List<SavedBlob> blobs = 
-            (_meta.ImageBlobs != null) 
-                ? _blob.GetBlobs(_meta.ImageBlobs).ToList()
-                : new();
+        List<string> blobs = 
+            _meta.ImageBlobs ?? new();
 
         if (blobs.Count <= 0)
-            blobs = _validation.Base?.Images ?? new();
-        
-        _blob.ConfirmBlobs(blobs);
-        
-        CssTheme theme = _service.CreateTheme(_validation.ThemeId, _validation.ThemeName, blobs, _download.Blob, _validation.ThemeVersion,
-            _source, _author, _meta.Target ?? _validation.ThemeTarget, _validation.ThemeManifestVersion, _meta.Description ?? _validation.ThemeDescription,
+            blobs = _validation.Base?.Images.Select(x => x.Id).ToList() ?? new();
+
+        CssTheme theme = _service.CreateTheme(_validation.ThemeId, _validation.ThemeName, blobs, _download.Blob.Id, _validation.ThemeVersion,
+            _source, _author.Id, _meta.Target ?? _validation.ThemeTarget, _validation.ThemeManifestVersion, _meta.Description ?? _validation.ThemeDescription,
             _validation.ThemeDependencies, _validation.ThemeAuthor);
 
-        _submission.CreateSubmission(_validation.Base, theme,
-            _validation.Base == null ? CssSubmissionIntent.NewTheme : CssSubmissionIntent.UpdateTheme, _author);
+        _submission.CreateSubmission(_validation.Base?.Id ?? null, theme.Id,
+            _validation.Base == null ? CssSubmissionIntent.NewTheme : CssSubmissionIntent.UpdateTheme, _author.Id);
     }
 
     public void Cleanup(bool success)

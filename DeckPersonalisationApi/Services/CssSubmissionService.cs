@@ -12,12 +12,14 @@ public class CssSubmissionService
     private ApplicationContext _ctx;
     private CssThemeService _themes;
     private BlobService _blob;
+    private UserService _user;
     
-    public CssSubmissionService(ApplicationContext ctx, BlobService blob, CssThemeService themes)
+    public CssSubmissionService(ApplicationContext ctx, BlobService blob, CssThemeService themes, UserService user)
     {
         _ctx = ctx;
         _blob = blob;
         _themes = themes;
+        _user = user;
     }
     
     public void ApproveCssTheme(string id, string? message, User reviewer)
@@ -54,9 +56,14 @@ public class CssSubmissionService
         _ctx.SaveChanges();
     }
 
-    public CssSubmission CreateSubmission(CssTheme? oldTheme, CssTheme newTheme, CssSubmissionIntent intent,
-        User author)
+    public CssSubmission CreateSubmission(string? oldThemeId, string newThemeId, CssSubmissionIntent intent,
+        string authorId)
     {
+        _ctx.ChangeTracker.Clear();
+        User author = _user.GetActiveUserById(authorId).Require("User not found");
+        CssTheme? oldTheme = (oldThemeId == null) ? null : _themes.GetThemeById(oldThemeId).Require();
+        CssTheme newTheme = _themes.GetThemeById(newThemeId).Require();
+        
         if ((intent != CssSubmissionIntent.NewTheme && oldTheme == null) || newTheme == null || author == null)
             throw new Exception("Intent validation failed");
         
