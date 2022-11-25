@@ -9,7 +9,7 @@ public class SavedBlobDto
 
     public SavedBlobDto(SavedBlob blob)
     {
-        Id = (blob.Deleted) ? blob.Id : "MISSING";
+        Id = (blob.Deleted) ? "MISSING" : blob.Id;
         BlobType = blob.Type.ToString();
         Uploaded = blob.Uploaded;
         DownloadCount = blob.DownloadCount;

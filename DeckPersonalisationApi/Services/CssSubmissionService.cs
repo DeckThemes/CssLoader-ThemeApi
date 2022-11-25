@@ -36,7 +36,11 @@ public class CssSubmissionService
         else
             _themes.ApplyThemeUpdate(oldTheme, newTheme);
         
-        throw new NotImplementedException();
+        submission.ReviewedBy = reviewer;
+        submission.Status = SubmissionStatus.Denied;
+        submission.Message = message;
+        _ctx.CssSubmissions.Update(submission);
+        _ctx.SaveChanges();
     }
 
     public void DenyCssTheme(string id, string? message, User reviewer)
@@ -52,6 +56,7 @@ public class CssSubmissionService
         
         submission.ReviewedBy = reviewer;
         submission.Status = SubmissionStatus.Denied;
+        submission.Message = message;
         _ctx.CssSubmissions.Update(submission);
         _ctx.SaveChanges();
     }

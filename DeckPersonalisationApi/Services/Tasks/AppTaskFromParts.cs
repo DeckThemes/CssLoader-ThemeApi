@@ -62,8 +62,10 @@ public class AppTaskFromParts : AppTask
             {
                 _tasks[i].Cleanup(Success);
             }
-            catch (Exception _)
-            { }
+            catch (Exception e)
+            {
+                Console.WriteLine($"[TaskCleanup:Exception] {e.Message}");
+            }
         }
         
         InvokeOnCompleted();

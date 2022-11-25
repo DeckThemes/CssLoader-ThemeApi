@@ -6,7 +6,7 @@ public class CssSubmissionDto
     public string Intent { get; }
     public MinimalCssThemeDto? OldTheme { get; }
     public PartialCssThemeDto NewTheme { get; }
-    public SubmissionStatus Status { get; }
+    public string Status { get; }
     public UserGetMinimalDto? ReviewedBy { get; }
     public UserGetMinimalDto Owner { get; }
     public DateTimeOffset Submitted { get; }
@@ -16,7 +16,7 @@ public class CssSubmissionDto
     {
         Id = submission.Id;
         Intent = submission.Intent.ToString();
-        Status = submission.Status;
+        Status = submission.Status.ToString();
         
         if (submission.Old != null)
             OldTheme = ((IToDto<MinimalCssThemeDto>) submission.Old).ToDto();

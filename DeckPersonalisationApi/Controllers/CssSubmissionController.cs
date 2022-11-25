@@ -82,7 +82,7 @@ public class CssSubmissionController : Controller
     public IActionResult ViewSubmissions(int page = 1, int perPage = 50, string filters = "", string order = "")
     {
         PaginationDto pagination = new(page, perPage, filters, order);
-        return new OkObjectResult(_submission.GetSubmissions(pagination));
+        return new OkObjectResult(_submission.GetSubmissions(pagination).ToDto());
     }
     
     [HttpGet("filters")]
@@ -98,7 +98,7 @@ public class CssSubmissionController : Controller
     [JwtRoleRequire(Permissions.ViewThemeSubmissions)]
     public IActionResult GetSubmissionViaId(string id)
     {
-        return new OkObjectResult(_submission.GetSubmissionById(id).Require());
+        return new OkObjectResult(_submission.GetSubmissionById(id).Require().ToDto());
     }
 
     [HttpPut("{id}/approve")]
