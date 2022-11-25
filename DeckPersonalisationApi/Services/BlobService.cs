@@ -189,6 +189,6 @@ public class BlobService
         List<SavedBlob> unconfirmedAndExpiredBlobs =
             unconfirmedBlobs.Where(x => (x.Uploaded + BlobTTLMinutes) < DateTimeOffset.Now).ToList();
         DeleteBlobs(unconfirmedAndExpiredBlobs);
-        return unconfirmedBlobs.Count;
+        return unconfirmedAndExpiredBlobs.Count;
     }
 }

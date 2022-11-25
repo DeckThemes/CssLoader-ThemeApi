@@ -22,6 +22,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 IConfiguration configuration =  new ConfigurationBuilder()
+    .AddJsonFile("appsettings.example.json")
     .AddJsonFile($"appsettings.json")
     .AddEnvironmentVariables()
     .Build();
@@ -54,6 +55,7 @@ builder.Services.AddScoped<CssThemeService>();
 builder.Services.AddSingleton<TaskService>();
 builder.Services.AddScoped<VnuCssVerifier>();
 builder.Services.AddScoped<CssSubmissionService>();
+builder.Services.AddHostedService<BlobCheckerBackgroundService>();
 builder.Services.AddDbContext<ApplicationContext>(x =>
 {
     string? conn = configuration.GetConnectionString("DbPath");
@@ -97,7 +99,7 @@ var app = builder.Build();
 app.UseAuthTokenCookieToAuthHeader();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if ((configuration["Config:UseSwagger"]?.ToLower() ?? "") == "true")
 {
     app.UseSwagger();
     app.UseSwaggerUI();
