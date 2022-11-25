@@ -10,6 +10,8 @@ public class BlobService
     private IConfiguration _conf;
     private ApplicationContext _ctx;
 
+    public TimeSpan BlobTTLMinutes => TimeSpan.FromMinutes(int.Parse(_conf["Config:BlobTTLMinutes"]!));
+
     public string BlobDir
     {
         get
@@ -76,7 +78,7 @@ public class BlobService
         => _ctx.Blobs.Where(x => x.Owner == user).ToList();
 
     public int GetBlobCountByUser(User user)
-        => _ctx.Blobs.Count(x => x.Owner == user);
+        => _ctx.Blobs.Count(x => x.Owner == user && !x.Confirmed);
 
     public string GetFullFilePath(SavedBlob blob)
         => Path.Join(blob.Confirmed ? BlobDir : TempBlobDir, $"{blob.Id}.{blob.Type.GetExtension()}");
@@ -89,6 +91,9 @@ public class BlobService
     
     public void ConfirmBlobs(List<SavedBlob> blobs)
     {
+        if (blobs.Count <= 0)
+            return;
+        
         blobs.ForEach(ConfirmBlobInternal);
         _ctx.SaveChanges();
     }
@@ -116,6 +121,9 @@ public class BlobService
 
     public void DeleteBlobs(List<SavedBlob> blobs)
     {
+        if (blobs.Count <= 0)
+            return;
+        
         blobs.ForEach(DeleteBlobInternal);
         _ctx.SaveChanges();
     }
@@ -173,5 +181,14 @@ public class BlobService
         _ctx.SaveChanges();
 
         return result;
+    }
+
+    public int RemoveExpiredBlobs()
+    {
+        List<SavedBlob> unconfirmedBlobs = _ctx.Blobs.Where(x => !x.Confirmed).ToList();
+        List<SavedBlob> unconfirmedAndExpiredBlobs =
+            unconfirmedBlobs.Where(x => (x.Uploaded + BlobTTLMinutes) < DateTimeOffset.Now).ToList();
+        DeleteBlobs(unconfirmedAndExpiredBlobs);
+        return unconfirmedBlobs.Count;
     }
 }

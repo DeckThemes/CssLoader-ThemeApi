@@ -1,4 +1,5 @@
-﻿using DeckPersonalisationApi.Extensions;
+﻿using DeckPersonalisationApi.Exceptions;
+using DeckPersonalisationApi.Extensions;
 using DeckPersonalisationApi.Middleware.JwtRole;
 using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Model.Dto.External.GET;
@@ -18,13 +19,15 @@ public class CssSubmissionController : Controller
     private CssThemeService _css;
     private CssSubmissionService _submission;
     private UserService _user;
+    private BlobService _blob;
     
-    public CssSubmissionController(JwtService jwt, CssThemeService css, CssSubmissionService submission, UserService user)
+    public CssSubmissionController(JwtService jwt, CssThemeService css, CssSubmissionService submission, UserService user, BlobService blob)
     {
         _jwt = jwt;
         _css = css;
         _submission = submission;
         _user = user;
+        _blob = blob;
     }
 
     [HttpPost("git")]
@@ -32,7 +35,7 @@ public class CssSubmissionController : Controller
     [JwtRoleReject(Permissions.FromApiToken)]
     public IActionResult SubmitThemeViaGit(CssThemeGitSubmitPostDto post)
     {
-        UserJwtDto dto = _jwt.DecodeToken(Request)!;
+        UserJwtDto dto = _jwt.DecodeToken(Request).Require("Could not find user");
 
         string task = _css.SubmitThemeViaGit(post.Url, string.IsNullOrWhiteSpace(post.Commit) ? null : post.Commit,
             post.Subfolder, dto.Id, post.Meta);
@@ -43,17 +46,34 @@ public class CssSubmissionController : Controller
     [HttpPost("zip")]
     [Authorize]
     [JwtRoleReject(Permissions.FromApiToken)]
-    public IActionResult SubmitThemeViaZip()
+    public IActionResult SubmitThemeViaZip(CssThemeZipSubmissionPostDto post)
     {
-        throw new NotImplementedException();
+        UserJwtDto dto = _jwt.DecodeToken(Request).Require("Could not find user");
+        SavedBlob blob = _blob.GetBlob(post.Blob).Require("Could not find blob");
+
+        if (blob.Confirmed || blob.Deleted)
+            throw new BadRequestException("Can't use a blob that's already used");
+
+        if (blob.Owner.Id != dto.Id)
+            throw new UnauthorisedException("Can't use a blob from someone else");
+
+        User user = _user.GetUserById(dto.Id).Require("Could not find user");
+        _blob.ConfirmBlob(blob);
+
+        string task = _css.SubmitThemeViaZip(blob, post.Meta, user);
+        return new OkObjectResult(new TaskIdGetDto(task));
     }
     
     [HttpPost("css")]
     [Authorize]
     [JwtRoleReject(Permissions.FromApiToken)]
-    public IActionResult SubmitThemeViaCss()
+    public IActionResult SubmitThemeViaCss(CssThemeCssSubmissionPostDto post)
     {
-        throw new NotImplementedException();
+        UserJwtDto dto = _jwt.DecodeToken(Request).Require("Could not find user");
+        User user = _user.GetUserById(dto.Id).Require("Could not find user");
+
+        string task = _css.SubmitThemeViaCss(post.Css, user.Username, post.Meta, user);
+        return new OkObjectResult(new TaskIdGetDto(task));
     }
     
     [HttpGet]

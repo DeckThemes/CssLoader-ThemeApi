@@ -285,5 +285,5 @@ public class CssThemeService
     }
 
     private string CreateCssJson(string name)
-        => _config["Config:CssToThemeJson"]!.Replace("%THEME_NAME%", name).Replace("\"", "\\\"");
+        => _config["Config:CssToThemeJson"]!.Replace("%THEME_NAME%", name.Replace("\"", "\\\""));
 }
