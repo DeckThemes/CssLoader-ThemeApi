@@ -55,7 +55,7 @@ builder.Services.AddScoped<CssThemeService>();
 builder.Services.AddSingleton<TaskService>();
 builder.Services.AddScoped<VnuCssVerifier>();
 builder.Services.AddScoped<CssSubmissionService>();
-builder.Services.AddHostedService<BlobCheckerBackgroundService>();
+builder.Services.AddHostedService<Startup>();
 builder.Services.AddDbContext<ApplicationContext>(x =>
 {
     string? conn = configuration.GetConnectionString("DbPath");

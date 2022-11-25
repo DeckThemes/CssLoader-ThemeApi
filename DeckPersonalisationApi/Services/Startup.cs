@@ -1,14 +1,16 @@
-﻿namespace DeckPersonalisationApi.Services;
+﻿using DeckPersonalisationApi.Model;
 
-public class BlobCheckerBackgroundService : BackgroundService
+namespace DeckPersonalisationApi.Services;
+
+public class Startup : BackgroundService
 {
-    private readonly ILogger<BlobCheckerBackgroundService> _logger;
+    private readonly ILogger<Startup> _logger;
     private IServiceProvider _services;
     private IConfiguration _conf;
     
     public TimeSpan BlobTTLMinutes => TimeSpan.FromMinutes(int.Parse(_conf["Config:BlobTTLMinutes"]!));
     
-    public BlobCheckerBackgroundService(ILogger<BlobCheckerBackgroundService> logger, IServiceProvider provider, IConfiguration conf)
+    public Startup(ILogger<Startup> logger, IServiceProvider provider, IConfiguration conf)
     {
         _logger = logger;
         _services = provider;
@@ -17,6 +19,15 @@ public class BlobCheckerBackgroundService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        using (var scope = _services.CreateScope())
+        {
+            var ctx = 
+                scope.ServiceProvider
+                    .GetRequiredService<ApplicationContext>();
+
+            await ctx.Database.EnsureCreatedAsync(stoppingToken);
+        }
+        
         while (!stoppingToken.IsCancellationRequested)
         {
             await Task.Run(RemoveExpiredBlobs);
