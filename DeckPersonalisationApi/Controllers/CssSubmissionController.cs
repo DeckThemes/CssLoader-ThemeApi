@@ -72,7 +72,7 @@ public class CssSubmissionController : Controller
         UserJwtDto dto = _jwt.DecodeToken(Request).Require("Could not find user");
         User user = _user.GetActiveUserById(dto.Id).Require("Could not find user");
 
-        string task = _css.SubmitThemeViaCss(post.Css, user.Username, post.Meta, user);
+        string task = _css.SubmitThemeViaCss(post.Css, post.Name, post.Meta, user);
         return new OkObjectResult(new TaskIdGetDto(task));
     }
     
