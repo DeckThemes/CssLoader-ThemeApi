@@ -1,4 +1,5 @@
 ﻿using DeckPersonalisationApi.Exceptions;
+using DeckPersonalisationApi.Extensions;
 using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Model.Dto.External.POST;
 using DeckPersonalisationApi.Services.Tasks;
@@ -70,7 +71,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
 
         List<CssTheme> foundThemes = _service.GetThemesByName(new List<string> {ThemeName}).ToList();
         CssTheme? theme = foundThemes.FirstOrDefault(x => x.Author.Id == _user.Id);
-        Base = theme;
+        Base = (theme == null) ? null : _service.GetThemeById(theme.Id).Require();
 
         if (_service.ThemeNameExists(ThemeName) && theme == null)
             throw new TaskFailureException($"Theme '{ThemeName}' already exists");
@@ -86,9 +87,11 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
         if (dependencies.Count != ThemeDependencies.Count)
             throw new TaskFailureException("Not all dependencies were found on this server");
 
-        ThemeId = theme?.Id ?? Guid.NewGuid().ToString();
+        string guid = Guid.NewGuid().ToString();
+        string internalId = theme?.Id ?? guid;
+        ThemeId = guid;
         
-        _json.Json!["id"] = ThemeId;
+        _json.Json!["id"] = internalId;
     }
 
     public void Cleanup(bool success)

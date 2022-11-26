@@ -37,7 +37,7 @@ public class CssSubmissionService
             _themes.ApplyThemeUpdate(oldTheme, newTheme);
         
         submission.ReviewedBy = reviewer;
-        submission.Status = SubmissionStatus.Denied;
+        submission.Status = SubmissionStatus.Approved;
         submission.Message = message;
         _ctx.CssSubmissions.Update(submission);
         _ctx.SaveChanges();
