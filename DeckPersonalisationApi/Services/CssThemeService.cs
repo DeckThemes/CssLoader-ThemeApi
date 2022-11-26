@@ -258,6 +258,9 @@ public class CssThemeService
         part1 = middleware(part1);
         part1 = part1.Where(x => ((pagination.Filters.Count <= 0) || pagination.Filters.Contains(x.Target)) && !x.Deleted);
 
+        if (!string.IsNullOrWhiteSpace(pagination.Search))
+            part1 = part1.Where(x => (x.Name.ToLower().Contains(pagination.Search)));
+        
         switch (pagination.Order)
         {
             case "Alphabetical (A to Z)":

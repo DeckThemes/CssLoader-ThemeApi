@@ -79,9 +79,9 @@ public class CssSubmissionController : Controller
     [HttpGet]
     [Authorize]
     [JwtRoleRequire(Permissions.ViewThemeSubmissions)]
-    public IActionResult ViewSubmissions(int page = 1, int perPage = 50, string filters = "", string order = "")
+    public IActionResult ViewSubmissions(int page = 1, int perPage = 50, string filters = "", string order = "", string search = "")
     {
-        PaginationDto pagination = new(page, perPage, filters, order);
+        PaginationDto pagination = new(page, perPage, filters, order, search);
         return new OkObjectResult(_submission.GetSubmissions(pagination).ToDto());
     }
     

@@ -29,21 +29,21 @@ public class UserController : Controller
     }
 
     [HttpGet("{id}/css_themes")]
-    public IActionResult GetCssThemes(string id, int page = 1, int perPage = 50, string filters = "", string order = "")
+    public IActionResult GetCssThemes(string id, int page = 1, int perPage = 50, string filters = "", string order = "", string search = "")
     {
         User user = _user.GetActiveUserById(id).Require();
 
-        PaginationDto paginationDto = new(page, perPage, filters, order);
+        PaginationDto paginationDto = new(page, perPage, filters, order, search);
         PaginatedResponse<CssTheme> response = _css.GetUsersThemes(user, paginationDto);
         return new OkObjectResult(response.ToDto());
     }
 
     [HttpGet("me/css_themes")]
     [Authorize]
-    public IActionResult GetCssThemesMe(int page = 1, int perPage = 50, string filters = "", string order = "")
+    public IActionResult GetCssThemesMe(int page = 1, int perPage = 50, string filters = "", string order = "", string search = "")
     {
         UserJwtDto user = _jwt.DecodeToken(Request).Require();
-        return GetCssThemes(user.Id, page, perPage, filters, order);
+        return GetCssThemes(user.Id, page, perPage, filters, order, search);
     }
     
     [HttpGet("{id}/css_themes/filters")]
@@ -55,18 +55,18 @@ public class UserController : Controller
     [HttpGet("{id}/css_submissions")]
     [Authorize]
     [JwtRoleRequire(Permissions.ViewThemeSubmissions)]
-    public IActionResult GetCssSubmissions(string id, int page = 1, int perPage = 50, string filters = "", string order = "")
+    public IActionResult GetCssSubmissions(string id, int page = 1, int perPage = 50, string filters = "", string order = "", string search = "")
     {
-        PaginationDto paginationDto = new(page, perPage, filters, order);
+        PaginationDto paginationDto = new(page, perPage, filters, order, search);
         User user = _user.GetActiveUserById(id).Require();
         return new OkObjectResult(_submission.GetSubmissionsFromUser(paginationDto, user));
     }
 
     [HttpGet("me/css_submissions")]
     [Authorize]
-    public IActionResult GetCssSubmissionsMe(int page = 1, int perPage = 50, string filters = "", string order = "")
+    public IActionResult GetCssSubmissionsMe(int page = 1, int perPage = 50, string filters = "", string order = "", string search = "")
     {
         UserJwtDto user = _jwt.DecodeToken(Request).Require();
-        return GetCssSubmissions(user.Id, page, perPage, filters, order);
+        return GetCssSubmissions(user.Id, page, perPage, filters, order, search);
     }
 }

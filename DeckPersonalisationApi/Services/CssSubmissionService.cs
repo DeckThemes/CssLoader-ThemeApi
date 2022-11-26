@@ -34,8 +34,11 @@ public class CssSubmissionService
         if (oldTheme == null)
             _themes.ApproveTheme(newTheme);
         else
+        {
             _themes.ApplyThemeUpdate(oldTheme, newTheme);
-        
+            _themes.DeleteTheme(newTheme);
+        }
+
         submission.ReviewedBy = reviewer;
         submission.Status = SubmissionStatus.Approved;
         submission.Message = message;
@@ -136,6 +139,8 @@ public class CssSubmissionService
 
         part1 = middleware(part1);
         part1 = part1.Where(x => ((status.Count <= 0) || status.Contains(x.Status)));
+        if (!string.IsNullOrWhiteSpace(pagination.Search))
+            part1 = part1.Where(x => (x.New.Name.ToLower().Contains(pagination.Search)));
         
         switch (pagination.Order)
         {
