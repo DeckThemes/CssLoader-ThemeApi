@@ -7,10 +7,12 @@ public class TaskService
     private Dictionary<string, AppTask> _tasks = new();
     private IServiceProvider _services;
     private Dictionary<string, int> _blobDlCache = new();
+    private IConfiguration _config;
 
-    public TaskService(IServiceProvider services)
+    public TaskService(IServiceProvider services, IConfiguration config)
     {
         _services = services;
+        _config = config;
     }
 
     public AppTask? GetTask(string id)
@@ -48,5 +50,17 @@ public class TaskService
         Dictionary<string, int> cache = _blobDlCache;
         _blobDlCache = new();
         return cache;
+    }
+
+    public void ClearOldTasks()
+    {
+        List<string> toDelete = new();
+        foreach (var (key, value) in _tasks)
+        {
+            if ((value.TaskCompleted + TimeSpan.FromDays(1)) < DateTime.Now)
+                toDelete.Add(key);
+        }
+        
+        toDelete.ForEach(x => _tasks.Remove(x));
     }
 }

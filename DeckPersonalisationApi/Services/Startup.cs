@@ -10,6 +10,7 @@ public class Startup : BackgroundService
     
 
     public TimeSpan BlobTTLMinutes => TimeSpan.FromMinutes(int.Parse(_conf["Config:BlobTTLMinutes"]!));
+    public TimeSpan Frequency => TimeSpan.FromMinutes(int.Parse(_conf["Config:BackgroundServiceFrequencyMinutes"]!));
     
     public Startup(ILogger<Startup> logger, IServiceProvider provider, IConfiguration conf)
     {
@@ -31,9 +32,10 @@ public class Startup : BackgroundService
         
         while (!stoppingToken.IsCancellationRequested)
         {
+            _logger.LogInformation($"Running background service at {DateTime.Now:HH:mm:ss}");
             await Task.Run(RemoveExpiredBlobs);
             await Task.Run(WriteBlobDownloads);
-            await Task.Delay(BlobTTLMinutes, stoppingToken);
+            await Task.Delay(Frequency, stoppingToken);
         }
     }
 
@@ -59,6 +61,9 @@ public class Startup : BackgroundService
             var blobService = scope.ServiceProvider.GetRequiredService<BlobService>();
             var taskService = scope.ServiceProvider.GetRequiredService<TaskService>();
             blobService.WriteDownloadCache(taskService.RolloverRegisteredDownloads());
+            
+            // Sneaky extra
+            taskService.ClearOldTasks();
         }
     }
 }
