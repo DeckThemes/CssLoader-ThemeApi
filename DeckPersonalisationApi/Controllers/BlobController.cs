@@ -15,12 +15,14 @@ public class BlobController : Controller
     private BlobService _service;
     private JwtService _jwt;
     private UserService _user;
+    private TaskService _tasks;
 
-    public BlobController(BlobService service, JwtService jwt, UserService user)
+    public BlobController(BlobService service, JwtService jwt, UserService user, TaskService tasks)
     {
         _service = service;
         _jwt = jwt;
         _user = user;
+        _tasks = tasks;
     }
 
     [HttpGet("{id}")]
@@ -33,6 +35,7 @@ public class BlobController : Controller
 
         string path = _service.GetFullFilePath(image);
         Stream stream = System.IO.File.OpenRead(path);
+        _tasks.RegisterDownload(id);
         return new FileStreamResult(stream, image.Type.GetContentType());
     }
 

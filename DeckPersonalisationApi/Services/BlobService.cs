@@ -184,4 +184,16 @@ public class BlobService
         DeleteBlobs(unconfirmedAndExpiredBlobs);
         return unconfirmedAndExpiredBlobs.Count;
     }
+
+    public void WriteDownloadCache(Dictionary<string, int> cache)
+    {
+        List<SavedBlob> blobs = GetBlobs(cache.Keys.ToList()).ToList();
+        foreach (var savedBlob in blobs)
+        {
+            savedBlob.DownloadCount += cache[savedBlob.Id];
+            _ctx.Blobs.Update(savedBlob);
+        }
+
+        _ctx.SaveChanges();
+    }
 }

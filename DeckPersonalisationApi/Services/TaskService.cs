@@ -6,6 +6,7 @@ public class TaskService
 {
     private Dictionary<string, AppTask> _tasks = new();
     private IServiceProvider _services;
+    private Dictionary<string, int> _blobDlCache = new();
 
     public TaskService(IServiceProvider services)
     {
@@ -34,5 +35,18 @@ public class TaskService
         }
     }
     
-    // TODO: Throw out tasks that are more than a few hours old
+    public void RegisterDownload(string blobId)
+    {
+        if (!_blobDlCache.ContainsKey(blobId))
+            _blobDlCache[blobId] = 1;
+        else
+            _blobDlCache[blobId]++;
+    }
+
+    public Dictionary<string, int> RolloverRegisteredDownloads()
+    {
+        Dictionary<string, int> cache = _blobDlCache;
+        _blobDlCache = new();
+        return cache;
+    }
 }
