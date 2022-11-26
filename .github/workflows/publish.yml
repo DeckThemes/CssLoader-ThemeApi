@@ -16,5 +16,5 @@ jobs:
 
     - name: Build the docker image
       run: |
-        docker build . --tag ghcr.io/suchmememanyskill/CssLoader-ThemeApi:latest
-        docker push ghcr.io/suchmememanyskill/CssLoader-ThemeApi:latest
+        docker build . --tag ghcr.io/suchmememanyskill/cssloader-themeapi:latest
+        docker push ghcr.io/suchmememanyskill/cssloader-themeapi:latest
