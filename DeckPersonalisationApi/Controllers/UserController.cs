@@ -59,7 +59,7 @@ public class UserController : Controller
     {
         PaginationDto paginationDto = new(page, perPage, filters, order, search);
         User user = _user.GetActiveUserById(id).Require();
-        return new OkObjectResult(_submission.GetSubmissionsFromUser(paginationDto, user));
+        return new OkObjectResult(_submission.GetSubmissionsFromUser(paginationDto, user).ToDto());
     }
 
     [HttpGet("me/css_submissions")]
