@@ -26,6 +26,7 @@ WORKDIR /app
 COPY --from=build /app ./
 COPY --from=build /vnu /vnu
 RUN chmod a+x /vnu/bin/vnu
+RUN chmod -R 0777 /app
 
 RUN apt update
 RUN apt install -y git
