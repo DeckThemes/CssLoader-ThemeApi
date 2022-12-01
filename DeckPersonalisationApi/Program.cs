@@ -115,4 +115,4 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseJwtRoleAttributes();
 app.MapControllers();
-app.Run($"http://localhost:{configuration.Port}");
+app.Run($"http://*:{configuration.Port}");
