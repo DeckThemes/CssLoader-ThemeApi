@@ -111,7 +111,6 @@ app.UseExceptionHandler(x =>
     });
 });
 
-app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseJwtRoleAttributes();
