@@ -32,5 +32,6 @@ RUN apt install -y git
 RUN apt clean
 
 ENV Config__VnuPath=/vnu/bin/vnu
+ENV Config__Port=80
 EXPOSE 80
 ENTRYPOINT ["dotnet", "DeckPersonalisationApi.dll"]

@@ -69,4 +69,12 @@ public class UserController : Controller
         UserJwtDto user = _jwt.DecodeToken(Request).Require();
         return GetCssSubmissions(user.Id, page, perPage, filters, order, search);
     }
+    
+    [HttpGet("{id}/css_submissions/filters")]
+    [Authorize]
+    [JwtRoleRequire(Permissions.ViewThemeSubmissions)]
+    public IActionResult ViewSubmissionsFilters()
+    {
+        return new OkObjectResult(new PaginationFilters(_submission.Filters().ToList(), _submission.Orders().ToList()));
+    }
 }

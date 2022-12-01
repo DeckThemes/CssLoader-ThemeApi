@@ -16,12 +16,11 @@ public class CssThemeService
     private ApplicationContext _ctx;
     private BlobService _blob;
     private UserService _user;
-    private IConfiguration _config;
+    private AppConfiguration _config;
 
-    public List<string> Targets => _config["Config:CssTargets"]!.Split(';').ToList();
-    public long MaxCssThemeSize => long.Parse(_config["Config:MaxCssThemeSize"]!);
+    public List<string> Targets => _config.CssTargets;
 
-    public CssThemeService(TaskService task, ApplicationContext ctx, BlobService blob, UserService user, IConfiguration config)
+    public CssThemeService(TaskService task, ApplicationContext ctx, BlobService blob, UserService user, AppConfiguration config)
     {
         _task = task;
         _ctx = ctx;
@@ -30,24 +29,17 @@ public class CssThemeService
         _config = config;
     }
 
-    public string SubmitThemeViaGit(string url, string? commit, string subfolder, string userId, CssSubmissionMeta meta)
+    public string SubmitThemeViaGit(string url, string? commit, string subfolder, User user, CssSubmissionMeta meta)
     {
-        User? user = _user.GetActiveUserById(userId);
-        
-        if (user == null)
-            throw new UnauthorisedException("User not found");
-
-        List<string>? possibleImageBlobs = meta.ImageBlobs;
-        if (possibleImageBlobs != null && _blob.GetBlobs(possibleImageBlobs).Any(x => x.Confirmed)) 
-            throw new BadRequestException("Cannot use images that are already used elsewhere");
+        Checks(user, meta);
 
         CreateTempFolderTask gitContainer = new CreateTempFolderTask();
         CloneGitTask clone = new CloneGitTask(url, commit, gitContainer, true);
-        FolderSizeConstraintTask size = new FolderSizeConstraintTask(clone, MaxCssThemeSize);
+        FolderSizeConstraintTask size = new FolderSizeConstraintTask(clone, _config.MaxCssThemeSize);
         PathTransformTask folder = new PathTransformTask(clone, subfolder);
         CopyFileTask copy = new CopyFileTask(clone, folder, "LICENSE");
         GetJsonTask jsonGet = new GetJsonTask(folder, "theme.json");
-        ValidateCssThemeTask css = new ValidateCssThemeTask(folder, jsonGet, user, Targets);
+        ValidateCssThemeTask css = new ValidateCssThemeTask(folder, jsonGet, user, _config.CssTargets);
         WriteJsonTask jsonWrite = new WriteJsonTask(folder, "theme.json", jsonGet);
         CreateTempFolderTask themeContainer = new CreateTempFolderTask();
         CreateFolderTask themeFolder = new CreateFolderTask(themeContainer, css);
@@ -67,15 +59,13 @@ public class CssThemeService
 
     public string SubmitThemeViaZip(SavedBlob blob, CssSubmissionMeta meta, User user)
     {
-        List<string>? possibleImageBlobs = meta.ImageBlobs;
-        if (possibleImageBlobs != null && _blob.GetBlobs(possibleImageBlobs).Any(x => x.Confirmed)) 
-            throw new BadRequestException("Cannot use images that are already used elsewhere");
+        Checks(user, meta);
 
         CreateTempFolderTask zipContainer = new CreateTempFolderTask();
-        ExtractZipTask extractZip = new ExtractZipTask(zipContainer, blob, MaxCssThemeSize);
-        FolderSizeConstraintTask size = new FolderSizeConstraintTask(zipContainer, MaxCssThemeSize);
+        ExtractZipTask extractZip = new ExtractZipTask(zipContainer, blob, _config.MaxCssThemeSize);
+        FolderSizeConstraintTask size = new FolderSizeConstraintTask(zipContainer, _config.MaxCssThemeSize);
         GetJsonTask jsonGet = new GetJsonTask(zipContainer, "theme.json");
-        ValidateCssThemeTask css = new ValidateCssThemeTask(zipContainer, jsonGet, user, Targets);
+        ValidateCssThemeTask css = new ValidateCssThemeTask(zipContainer, jsonGet, user, _config.CssTargets);
         WriteJsonTask jsonWrite = new WriteJsonTask(zipContainer, "theme.json", jsonGet);
         CreateTempFolderTask themeContainer = new CreateTempFolderTask();
         CreateFolderTask themeFolder = new CreateFolderTask(themeContainer, css);
@@ -95,16 +85,14 @@ public class CssThemeService
 
     public string SubmitThemeViaCss(string cssContent, string name, CssSubmissionMeta meta, User user)
     {
-        List<string>? possibleImageBlobs = meta.ImageBlobs;
-        if (possibleImageBlobs != null && _blob.GetBlobs(possibleImageBlobs).Any(x => x.Confirmed)) 
-            throw new BadRequestException("Cannot use images that are already used elsewhere");
+        Checks(user, meta);
 
         CreateTempFolderTask zipContainer = new CreateTempFolderTask();
         WriteStringToFileTask writeCss = new WriteStringToFileTask(zipContainer, "shared.css", cssContent);
         WriteStringToFileTask writeJson = new WriteStringToFileTask(zipContainer, "theme.json", CreateCssJson(name));
-        FolderSizeConstraintTask size = new FolderSizeConstraintTask(zipContainer, MaxCssThemeSize);
+        FolderSizeConstraintTask size = new FolderSizeConstraintTask(zipContainer, _config.MaxCssThemeSize);
         GetJsonTask jsonGet = new GetJsonTask(zipContainer, "theme.json");
-        ValidateCssThemeTask css = new ValidateCssThemeTask(zipContainer, jsonGet, user, Targets);
+        ValidateCssThemeTask css = new ValidateCssThemeTask(zipContainer, jsonGet, user, _config.CssTargets);
         WriteJsonTask jsonWrite = new WriteJsonTask(zipContainer, "theme.json", jsonGet);
         CreateTempFolderTask themeContainer = new CreateTempFolderTask();
         CreateFolderTask themeFolder = new CreateFolderTask(themeContainer, css);
@@ -120,6 +108,20 @@ public class CssThemeService
 
         AppTaskFromParts task = new(taskParts, "Submit theme via css", user);
         return _task.RegisterTask(task);
+    }
+
+    private void Checks(User user, CssSubmissionMeta meta)
+    {
+        if ((meta.ImageBlobs?.Count ?? 0) > _config.MaxImagesPerSubmission)
+            throw new BadRequestException($"Cannot have more than {_config.MaxImagesPerSubmission} images per submission");
+
+        if (_user.GetSubmissionCountByUser(user, SubmissionStatus.AwaitingApproval) > _config.MaxActiveSubmissions)
+            throw new BadRequestException(
+                $"Cannot have more than {_config.MaxActiveSubmissions} submissions awaiting approval");
+        
+        List<string>? possibleImageBlobs = meta.ImageBlobs;
+        if (possibleImageBlobs != null && _blob.GetBlobs(possibleImageBlobs).Any(x => x.Confirmed)) 
+            throw new BadRequestException("Cannot use images that are already used elsewhere");
     }
     
     public CssTheme CreateTheme(string id, string name, List<string> imageIds, string blobId, string version,
@@ -290,5 +292,5 @@ public class CssThemeService
     }
 
     private string CreateCssJson(string name)
-        => _config["Config:CssToThemeJson"]!.Replace("%THEME_NAME%", name.Replace("\"", "\\\""));
+        => _config.CssToThemeJson.Replace("%THEME_NAME%", name.Replace("\"", "\\\""));
 }

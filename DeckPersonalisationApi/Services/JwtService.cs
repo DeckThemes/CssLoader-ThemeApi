@@ -14,18 +14,18 @@ namespace DeckPersonalisationApi.Services;
 
 public class JwtService
 {
-    private IConfiguration _config;
+    private AppConfiguration _config;
 
-    public JwtService(IConfiguration config)
+    public JwtService(AppConfiguration config)
     {
         _config = config;
     }
 
     public string CreateToken(UserJwtDto user)
     {
-        string issuer = _config["Jwt:Issuer"]!;
-        string audience = _config["Jwt:Audience"]!;
-        byte[] key = Encoding.ASCII.GetBytes(_config["Jwt:Key"]!);
+        string issuer = _config.JwtIssuer;
+        string audience = _config.JwtAudience;
+        byte[] key = Encoding.ASCII.GetBytes(_config.JwtKey);
         SecurityTokenDescriptor descriptor = new()
         {
             Subject = new ClaimsIdentity(new[]

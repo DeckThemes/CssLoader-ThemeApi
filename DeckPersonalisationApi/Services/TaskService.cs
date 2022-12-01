@@ -7,9 +7,9 @@ public class TaskService
     private Dictionary<string, AppTask> _tasks = new();
     private IServiceProvider _services;
     private Dictionary<string, int> _blobDlCache = new();
-    private IConfiguration _config;
+    private AppConfiguration _config;
 
-    public TaskService(IServiceProvider services, IConfiguration config)
+    public TaskService(IServiceProvider services, AppConfiguration config)
     {
         _services = services;
         _config = config;

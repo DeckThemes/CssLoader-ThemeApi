@@ -15,13 +15,11 @@ namespace DeckPersonalisationApi.Services;
 
 public class UserService
 {
-    private IConfiguration _config;
+    private AppConfiguration _config;
     private ApplicationContext _ctx;
     private JwtService _jwt;
-    private string ClientId => _config.GetConnectionString("ClientId")!;
-    private string ClientSecret => _config.GetConnectionString("ClientSecret")!;
 
-    public UserService(IConfiguration config, ApplicationContext ctx, JwtService jwt)
+    public UserService(AppConfiguration config, ApplicationContext ctx, JwtService jwt)
     {
         _config = config;
         _ctx = ctx;
@@ -31,7 +29,7 @@ public class UserService
     public Uri BuildDiscordOauthUri(string redirectUri)
     {
         return new Uri(
-            $"https://discord.com/api/oauth2/authorize?client_id={ClientId}&redirect_uri={HttpUtility.UrlEncode(redirectUri)}&response_type=code&scope=identify");
+            $"https://discord.com/api/oauth2/authorize?client_id={_config.ClientId}&redirect_uri={HttpUtility.UrlEncode(redirectUri)}&response_type=code&scope=identify");
     }
 
     public string GenerateTokenViaDiscord(string code, string redirectUri)
@@ -44,8 +42,8 @@ public class UserService
 
             Dictionary<string, string> items = new()
             {
-                {"client_id", ClientId},
-                {"client_secret", ClientSecret},
+                {"client_id", _config.ClientId},
+                {"client_secret", _config.ClientSecret},
                 {"grant_type", "authorization_code"},
                 {"code", code},
                 {"redirect_uri", redirectUri},
@@ -105,7 +103,7 @@ public class UserService
             _ctx.SaveChanges();
         }
 
-        if (userResponse.Id == _config["Config:OwnerDiscordId"])
+        if (userResponse.Id == _config.OwnerDiscordId.ToString())
             user.Permissions = Permissions.All;
         
         return _jwt.CreateToken(new UserJwtDto(user));
@@ -140,6 +138,7 @@ public class UserService
 
     public User? GetUserById(string id) => _ctx.Users.FirstOrDefault(x => x.Id == id);
     public User? GetActiveUserById(string id) => _ctx.Users.FirstOrDefault(x => x.Id == id && x.Active == true);
+    public long GetSubmissionCountByUser(User user, SubmissionStatus status) => _ctx.CssSubmissions.Count(x => x.Owner == user && x.Status == status);
     
     private static string GetFixedLengthString(int len)
     {

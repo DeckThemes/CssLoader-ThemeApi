@@ -7,55 +7,10 @@ namespace DeckPersonalisationApi.Services;
 public class BlobService
 {
     private UserService _user;
-    private IConfiguration _conf;
+    private AppConfiguration _conf;
     private ApplicationContext _ctx;
 
-    public TimeSpan BlobTTLMinutes => TimeSpan.FromMinutes(int.Parse(_conf["Config:BlobTTLMinutes"]!));
-
-    public string BlobDir
-    {
-        get
-        {
-            string path = _conf["Config:BlobPath"]!;
-            if (!Path.Exists(path))
-                Directory.CreateDirectory(path);
-            return path;
-        }
-    }
-
-    public string TempBlobDir
-    {
-        get
-        {
-            string path = _conf["Config:TempBlobPath"]!;
-            if (!Path.Exists(path))
-                Directory.CreateDirectory(path);
-            return path;
-        }
-    }
-
-    public Dictionary<string, long> FileSizeLimit
-    {
-        get
-        {
-            Dictionary<string, long> items = new();
-            string conf = _conf["Config:MaxUploadFileSizes"]!;
-            foreach (var s in conf.Split(";"))
-            {
-                string[] i = s.Split(":");
-                if (i.Length != 2)
-                    throw new Exception("Failed to parse upload file sizes");
-                
-                items.Add(i[0], long.Parse(i[1]));
-            }
-
-            return items;
-        }
-    }
-
-    public int MaxBlobs => int.Parse(_conf["Config:MaxBlobs"]!);
-
-    public BlobService(UserService user, IConfiguration config, ApplicationContext ctx)
+    public BlobService(UserService user, AppConfiguration config, ApplicationContext ctx)
     {
         _user = user;
         _conf = config;
@@ -81,7 +36,7 @@ public class BlobService
         => _ctx.Blobs.Count(x => x.Owner == user && !x.Confirmed);
 
     public string GetFullFilePath(SavedBlob blob)
-        => Path.Join(blob.Confirmed ? BlobDir : TempBlobDir, $"{blob.Id}.{blob.Type.GetExtension()}");
+        => Path.Join(blob.Confirmed ? _conf.BlobPath : _conf.TempBlobPath, $"{blob.Id}.{blob.Type.GetExtension()}");
 
     public void ConfirmBlob(SavedBlob blob)
     {
@@ -144,7 +99,7 @@ public class BlobService
         string ext = filename.Split('.').Last();
         BlobType type = BlobTypeEx.FromExtensionToBlobType(ext);
 
-        Dictionary<string, long> fileSizeLimits = FileSizeLimit;
+        Dictionary<string, long> fileSizeLimits = _conf.ValidFileTypesAndMaxSizes;
 
         if (!fileSizeLimits.ContainsKey(ext)) // TODO: Check if it's actually a jpg
             throw new BadRequestException("File type is not supported");
@@ -152,12 +107,12 @@ public class BlobService
         if (blob.Length > fileSizeLimits[ext])
             throw new BadRequestException($"File is too large. Max filesize is {fileSizeLimits[ext].GetReadableFileSize()}");
 
-        if (GetBlobCountByUser(user) > MaxBlobs)
+        if (GetBlobCountByUser(user) > _conf.MaxUnconfirmedBlobs)
             throw new BadRequestException("User has reached the max upload limit");
 
         string id = Guid.NewGuid().ToString();
         string path = $"{id}.{ext}";
-        var file = File.Create(Path.Join(TempBlobDir, path));
+        var file = File.Create(Path.Join(_conf.TempBlobPath, path));
         blob.CopyTo(file);
         file.Close();
 
@@ -180,7 +135,7 @@ public class BlobService
     {
         List<SavedBlob> unconfirmedBlobs = _ctx.Blobs.Where(x => !x.Confirmed).ToList();
         List<SavedBlob> unconfirmedAndExpiredBlobs =
-            unconfirmedBlobs.Where(x => (x.Uploaded + BlobTTLMinutes) < DateTimeOffset.Now).ToList();
+            unconfirmedBlobs.Where(x => (x.Uploaded + TimeSpan.FromMinutes(_conf.BlobTtlMinutes)) < DateTimeOffset.Now).ToList();
         DeleteBlobs(unconfirmedAndExpiredBlobs);
         return unconfirmedAndExpiredBlobs.Count;
     }

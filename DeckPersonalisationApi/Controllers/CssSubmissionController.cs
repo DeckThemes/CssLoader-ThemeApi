@@ -36,9 +36,10 @@ public class CssSubmissionController : Controller
     public IActionResult SubmitThemeViaGit(CssThemeGitSubmitPostDto post)
     {
         UserJwtDto dto = _jwt.DecodeToken(Request).Require("Could not find user");
+        User user = _user.GetActiveUserById(dto.Id).Require("Could not find user");
 
         string task = _css.SubmitThemeViaGit(post.Url, string.IsNullOrWhiteSpace(post.Commit) ? null : post.Commit,
-            post.Subfolder, dto.Id, post.Meta);
+            post.Subfolder, user, post.Meta);
 
         return new OkObjectResult(new TaskIdGetDto(task));
     }
@@ -113,10 +114,18 @@ public class CssSubmissionController : Controller
 
     [HttpPut("{id}/deny")]
     [Authorize]
-    [JwtRoleRequire(Permissions.ApproveThemeSubmissions)]
     public IActionResult DenyThemeSubmission(string id, MessageDto messageDto)
     {
-        User user = _user.GetUserById(_jwt.DecodeToken(Request).Require().Id).Require();
+        var token = _jwt.DecodeToken(Request).Require();
+        User user = _user.GetUserById(token.Id).Require();
+
+        if ((token.Permissions & Permissions.ApproveThemeSubmissions) != Permissions.ApproveThemeSubmissions)
+        {
+            CssSubmission submission = _submission.GetSubmissionById(id).Require("Could not find submission");
+            if (submission.Owner.Id != user.Id)
+                throw new UnauthorisedException("Unauthorized");
+        }
+        
         _submission.DenyCssTheme(id, messageDto.Message, user);
         return new OkResult();
     }

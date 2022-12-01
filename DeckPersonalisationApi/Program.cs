@@ -17,16 +17,9 @@ using Microsoft.OpenApi.Models;
 
 #endregion
 
+AppConfiguration configuration = new();
+
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-
-IConfiguration configuration =  new ConfigurationBuilder()
-    .AddJsonFile("appsettings.example.json")
-    .AddJsonFile($"appsettings.json")
-    .AddEnvironmentVariables()
-    .Build();
-
 builder.Services.AddControllers();
 builder.Services.AddAuthentication(options =>
 {
@@ -37,12 +30,12 @@ builder.Services.AddAuthentication(options =>
 {
     o.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidIssuer = builder.Configuration["Jwt:Issuer"]!,
-        ValidAudience = builder.Configuration["Jwt:Audience"]!,
+        ValidIssuer = configuration.JwtIssuer,
+        ValidAudience = configuration.JwtAudience,
         IssuerSigningKey = new SymmetricSecurityKey
-            (Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"]!)),
-        ValidateIssuer = false,
-        ValidateAudience = false,
+            (Encoding.ASCII.GetBytes(configuration.JwtKey)),
+        ValidateIssuer = configuration.JwtValidateIssuer,
+        ValidateAudience = configuration.JwtValidateAudience,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
     };
@@ -58,8 +51,8 @@ builder.Services.AddScoped<CssSubmissionService>();
 builder.Services.AddHostedService<Startup>();
 builder.Services.AddDbContext<ApplicationContext>(x =>
 {
-    string? conn = configuration.GetConnectionString("DbPath");
-    if (string.IsNullOrEmpty(conn) || conn == "MEMORY")
+    string conn = configuration.DbPath;
+    if (string.IsNullOrWhiteSpace(conn) || conn == "MEMORY")
         x.UseInMemoryDatabase("app");
     else
         x.UseSqlite(conn);
@@ -93,13 +86,12 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
-
 var app = builder.Build();
 
 app.UseAuthTokenCookieToAuthHeader();
 
 // Configure the HTTP request pipeline.
-if ((configuration["Config:UseSwagger"]?.ToLower() ?? "") == "true")
+if (configuration.UseSwagger)
 {
     app.UseSwagger();
     app.UseSwaggerUI();
@@ -124,4 +116,4 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseJwtRoleAttributes();
 app.MapControllers();
-app.Run();
+app.Run($"http://localhost:{configuration.Port}");

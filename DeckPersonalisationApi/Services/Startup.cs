@@ -6,13 +6,9 @@ public class Startup : BackgroundService
 {
     private readonly ILogger<Startup> _logger;
     private IServiceProvider _services;
-    private IConfiguration _conf;
-    
+    private AppConfiguration _conf;
 
-    public TimeSpan BlobTTLMinutes => TimeSpan.FromMinutes(int.Parse(_conf["Config:BlobTTLMinutes"]!));
-    public TimeSpan Frequency => TimeSpan.FromMinutes(int.Parse(_conf["Config:BackgroundServiceFrequencyMinutes"]!));
-    
-    public Startup(ILogger<Startup> logger, IServiceProvider provider, IConfiguration conf)
+    public Startup(ILogger<Startup> logger, IServiceProvider provider, AppConfiguration conf)
     {
         _logger = logger;
         _services = provider;
@@ -35,11 +31,9 @@ public class Startup : BackgroundService
             _logger.LogInformation($"Running background service at {DateTime.Now:HH:mm:ss}");
             await Task.Run(RemoveExpiredBlobs);
             await Task.Run(WriteBlobDownloads);
-            await Task.Delay(Frequency, stoppingToken);
+            await Task.Delay(TimeSpan.FromMinutes(_conf.BackgroundServiceFrequencyMinutes), stoppingToken);
         }
     }
-
-
 
     private void RemoveExpiredBlobs()
     {
