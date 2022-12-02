@@ -1,4 +1,5 @@
 ﻿using DeckPersonalisationApi.Model.Dto.External.GET;
+using Newtonsoft.Json;
 
 namespace DeckPersonalisationApi.Model;
 
@@ -13,7 +14,16 @@ public class CssSubmission : IToDto<CssSubmissionDto>
     public User? ReviewedBy { get; set; }
     public User Owner { get; set; }
     public string? Message { get; set; }
+    public string? Errors { get; set; }
 
+    public List<string> GetErrors()
+    {
+        if (Errors == null)
+            return new();
+
+        return JsonConvert.DeserializeObject<List<string>>(Errors)!;
+    }
+    
     public CssSubmissionDto ToDto()
         => new(this);
 

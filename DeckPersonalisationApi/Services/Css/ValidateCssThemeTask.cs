@@ -26,6 +26,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
     public int ThemeManifestVersion { get; private set; }
     public string ThemeDescription { get; private set; }
     public List<string> ThemeDependencies { get; private set; } = new();
+    public List<string> Errors { get; private set; } = new();
     
     
     public void Execute()
@@ -64,11 +65,10 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
             throw new TaskFailureException(e.Message);
         }
 
-        if (!_vnu.ValidateCss(validator.CssPaths, _path.DirPath))
-            throw new TaskFailureException("Some Css files contain invalid syntax");
-        
+        Errors = _vnu.ValidateCss(validator.CssPaths, _path.DirPath);
         ThemeName = validator.Name;
 
+        // TODO: This is mega jank. Fix! We should also check if someone isn't double submitting a theme
         List<CssTheme> foundThemes = _service.GetThemesByName(new List<string> {ThemeName}).ToList();
         CssTheme? theme = foundThemes.FirstOrDefault(x => x.Author.Id == _user.Id);
         Base = (theme == null) ? null : _service.GetThemeById(theme.Id).Require();

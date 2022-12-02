@@ -1,4 +1,6 @@
-﻿namespace DeckPersonalisationApi.Model.Dto.External.GET;
+﻿using Newtonsoft.Json;
+
+namespace DeckPersonalisationApi.Model.Dto.External.GET;
 
 public class CssSubmissionDto
 {
@@ -11,12 +13,15 @@ public class CssSubmissionDto
     public UserGetMinimalDto Owner { get; }
     public DateTimeOffset Submitted { get; }
     public string? Message { get; }
+    public List<string> Errors { get; } = new();
 
     public CssSubmissionDto(CssSubmission submission)
     {
         Id = submission.Id;
         Intent = submission.Intent.ToString();
         Status = submission.Status.ToString();
+
+        Errors = submission.GetErrors();
         
         if (submission.Old != null)
             OldTheme = ((IToDto<MinimalCssThemeDto>) submission.Old).ToDto();

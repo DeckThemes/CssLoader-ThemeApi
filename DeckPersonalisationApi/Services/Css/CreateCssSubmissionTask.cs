@@ -29,7 +29,7 @@ public class CreateCssSubmissionTask : ITaskPart
             _validation.ThemeDependencies, _validation.ThemeAuthor);
 
         _submission.CreateSubmission(_validation.Base?.Id ?? null, theme.Id,
-            _validation.Base == null ? CssSubmissionIntent.NewTheme : CssSubmissionIntent.UpdateTheme, _author.Id);
+            _validation.Base == null ? CssSubmissionIntent.NewTheme : CssSubmissionIntent.UpdateTheme, _author.Id, _validation.Errors);
     }
 
     public void Cleanup(bool success)

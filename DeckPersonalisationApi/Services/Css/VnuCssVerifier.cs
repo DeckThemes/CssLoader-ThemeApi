@@ -1,4 +1,5 @@
-﻿using DeckPersonalisationApi.Utils;
+﻿using System.Runtime.InteropServices;
+using DeckPersonalisationApi.Utils;
 
 namespace DeckPersonalisationApi.Services.Css;
 
@@ -15,19 +16,24 @@ public class VnuCssVerifier
         _terminal.Silence = true;
     }
 
-    public bool ValidateCss(List<string> cssFiles, string workDir)
+    public List<string> ValidateCss(List<string> cssFiles, string workDir)
     {
         _terminal.WorkingDirectory = workDir;
+        string fullWorkDirPath = Path.GetFullPath(workDir);
+
+        // TODO: Fix. Note VNU uses HTML encoded paths
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            fullWorkDirPath = fullWorkDirPath.Replace("\\", "/");
+        
         _terminal.Exec(VnuPath, $"--css --asciiquotes --verbose {string.Join(' ', cssFiles.Select(x => $"\"{x}\""))}").GetAwaiter().GetResult();
 
+        List<string> errors = new List<string>(_terminal.StdErr).Where(x => x.Contains("error:")).Select(x => x.Replace(fullWorkDirPath, "")).ToList();
+        
         if (_terminal.ExitCode != 0)
         {
-            List<string> errors = new(_terminal.StdErr);
-            errors = errors.Where(x => x.Contains("error:")).ToList();
-            
             errors.ForEach(x => Console.WriteLine($"[VNU FATAL] {x}"));
         }
-        
-        return _terminal.ExitCode == 0;
+
+        return errors;
     }
 }

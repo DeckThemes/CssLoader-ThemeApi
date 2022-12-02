@@ -4,6 +4,7 @@ using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Model.Dto.External.GET;
 using DeckPersonalisationApi.Model.Dto.Internal.GET;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace DeckPersonalisationApi.Services;
 
@@ -65,7 +66,7 @@ public class CssSubmissionService
     }
 
     public CssSubmission CreateSubmission(string? oldThemeId, string newThemeId, CssSubmissionIntent intent,
-        string authorId)
+        string authorId, List<string> errors)
     {
         _ctx.ChangeTracker.Clear();
         User author = _user.GetActiveUserById(authorId).Require("User not found");
@@ -83,7 +84,8 @@ public class CssSubmissionService
             New = newTheme,
             Status = SubmissionStatus.AwaitingApproval,
             Submitted = DateTimeOffset.Now,
-            Owner = author
+            Owner = author,
+            Errors = JsonConvert.SerializeObject(errors)
         };
 
         _ctx.CssSubmissions.Add(submission);
