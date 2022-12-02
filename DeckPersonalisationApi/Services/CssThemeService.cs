@@ -35,8 +35,8 @@ public class CssThemeService
 
         CreateTempFolderTask gitContainer = new CreateTempFolderTask();
         CloneGitTask clone = new CloneGitTask(url, commit, gitContainer, true);
-        FolderSizeConstraintTask size = new FolderSizeConstraintTask(clone, _config.MaxCssThemeSize);
         PathTransformTask folder = new PathTransformTask(clone, subfolder);
+        FolderSizeConstraintTask size = new FolderSizeConstraintTask(folder, _config.MaxCssThemeSize);
         CopyFileTask copy = new CopyFileTask(clone, folder, "LICENSE");
         GetJsonTask jsonGet = new GetJsonTask(folder, "theme.json");
         ValidateCssThemeTask css = new ValidateCssThemeTask(folder, jsonGet, user, _config.CssTargets);
@@ -50,7 +50,7 @@ public class CssThemeService
 
         List<ITaskPart> taskParts = new()
         {
-            gitContainer, clone, size, folder, copy, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blob, submission
+            gitContainer, clone, folder, size, copy, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blob, submission
         };
 
         AppTaskFromParts task = new(taskParts, "Submit theme via git", user);
@@ -87,23 +87,23 @@ public class CssThemeService
     {
         Checks(user, meta);
 
-        CreateTempFolderTask zipContainer = new CreateTempFolderTask();
-        WriteStringToFileTask writeCss = new WriteStringToFileTask(zipContainer, "shared.css", cssContent);
-        WriteStringToFileTask writeJson = new WriteStringToFileTask(zipContainer, "theme.json", CreateCssJson(name));
-        FolderSizeConstraintTask size = new FolderSizeConstraintTask(zipContainer, _config.MaxCssThemeSize);
-        GetJsonTask jsonGet = new GetJsonTask(zipContainer, "theme.json");
-        ValidateCssThemeTask css = new ValidateCssThemeTask(zipContainer, jsonGet, user, _config.CssTargets);
-        WriteJsonTask jsonWrite = new WriteJsonTask(zipContainer, "theme.json", jsonGet);
+        CreateTempFolderTask cssContainer = new CreateTempFolderTask();
+        WriteStringToFileTask writeCss = new WriteStringToFileTask(cssContainer, "shared.css", cssContent);
+        WriteStringToFileTask writeJson = new WriteStringToFileTask(cssContainer, "theme.json", CreateCssJson(name));
+        FolderSizeConstraintTask size = new FolderSizeConstraintTask(cssContainer, _config.MaxCssThemeSize);
+        GetJsonTask jsonGet = new GetJsonTask(cssContainer, "theme.json");
+        ValidateCssThemeTask css = new ValidateCssThemeTask(cssContainer, jsonGet, user, _config.CssTargets);
+        WriteJsonTask jsonWrite = new WriteJsonTask(cssContainer, "theme.json", jsonGet);
         CreateTempFolderTask themeContainer = new CreateTempFolderTask();
         CreateFolderTask themeFolder = new CreateFolderTask(themeContainer, css);
-        CopyFileTask copyToThemeFolder = new CopyFileTask(zipContainer, themeFolder, "*");
-        ZipTask zip = new ZipTask(themeContainer, zipContainer);
+        CopyFileTask copyToThemeFolder = new CopyFileTask(cssContainer, themeFolder, "*");
+        ZipTask zip = new ZipTask(themeContainer, cssContainer);
         WriteAsBlobTask blobSave = new WriteAsBlobTask(user, zip);
         CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blobSave, meta, "[Zip Deploy]", user);
 
         List<ITaskPart> taskParts = new()
         {
-            zipContainer, writeCss, writeJson, size, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blobSave, submission
+            cssContainer, writeCss, writeJson, size, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blobSave, submission
         };
 
         AppTaskFromParts task = new(taskParts, "Submit theme via css", user);

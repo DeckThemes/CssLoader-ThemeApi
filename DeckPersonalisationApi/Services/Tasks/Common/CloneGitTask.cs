@@ -38,16 +38,6 @@ public class CloneGitTask : IDirTaskPart
                 throw new TaskFailureException("Git reset failed");
             }
         }
-
-        try
-        {
-            Directory.Delete(Path.Join(_workDir.DirPath, ".git"), true);
-        }
-        catch (Exception _)
-        {
-            // TODO: Gracefully handle error
-            //throw new TaskFailureException("Deletion of .git failed");
-        }
     }
 
     public void Cleanup(bool success)
