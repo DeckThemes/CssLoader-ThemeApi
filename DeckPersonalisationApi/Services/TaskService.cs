@@ -8,6 +8,7 @@ public class TaskService
     private IServiceProvider _services;
     private Dictionary<string, int> _blobDlCache = new();
     private AppConfiguration _config;
+    private bool _lock = false;
 
     public TaskService(IServiceProvider services, AppConfiguration config)
     {
@@ -22,8 +23,7 @@ public class TaskService
     {
         task.Id = Guid.NewGuid().ToString();
         _tasks.Add(task.Id, task);
-        Thread thread = new(() => RunTask(task));
-        thread.Start();
+        StartNewTask();
         return task.Id;
     }
 
@@ -34,6 +34,24 @@ public class TaskService
             IServiceProvider provider = scope.ServiceProvider;
             task.SetupServices(provider);
             task.Run();
+        }
+
+        _lock = false;
+        StartNewTask();
+    }
+
+    private void StartNewTask()
+    {
+        if (_lock)
+            return;
+
+        _lock = true;
+        
+        var task = _tasks.Values.FirstOrDefault(x => x.TaskStarted == null);
+        if (task != null)
+        {
+            Thread thread = new(() => RunTask(task));
+            thread.Start();
         }
     }
     

@@ -7,6 +7,7 @@ public class Terminal
     public List<string> StdOut { get; private set; }
     public List<string> StdErr { get; private set; }
     public int ExitCode { get; private set; }
+    public bool Silence { get; set; } = false;
     public bool IsActive { get; private set; } = false;
     public Dictionary<string, string> Env { get; set; } = new();
     public bool Killed { get; private set; }
@@ -122,5 +123,9 @@ public class Terminal
         }
     }
 
-    private void Log(string message) => Console.WriteLine($"[Terminal] {message}");
+    private void Log(string message)
+    {
+        if (!Silence)
+            Console.WriteLine($"[Terminal] {message}");
+    }
 }
