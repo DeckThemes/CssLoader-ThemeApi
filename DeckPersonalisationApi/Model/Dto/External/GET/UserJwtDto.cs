@@ -2,7 +2,7 @@
 
 namespace DeckPersonalisationApi.Model.Dto.External.GET;
 
-public class UserJwtDto
+public class UserJwtDto : IToDto<UserJwtExtDto>
 {
     public string Id { get; set; }
     public string Username { get; set; }
@@ -41,4 +41,10 @@ public class UserJwtDto
         if ((Permissions & permission) != 0)
             throw new UnauthorisedException("Token is not allowed to do this action");
     }
+
+    public UserJwtExtDto ToDto()
+        => new(this);
+
+    public object ToDtoObject()
+        => ToDto();
 }

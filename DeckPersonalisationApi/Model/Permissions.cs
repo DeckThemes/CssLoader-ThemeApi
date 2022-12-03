@@ -11,3 +11,28 @@ public enum Permissions
     FromApiToken = 0x8,
     ViewThemeSubmissions = 0x10,
 }
+
+public static class PermissionExt
+{
+    public static List<string> ToList(this Permissions permissions)
+    {
+        List<string> perms = new();
+        
+        if (permissions.HasPermission(Permissions.EditAnyPost))
+            perms.Add(Permissions.EditAnyPost.ToString());
+        
+        if (permissions.HasPermission(Permissions.ApproveThemeSubmissions))
+            perms.Add(Permissions.ApproveThemeSubmissions.ToString());
+        
+        if (permissions.HasPermission(Permissions.ViewThemeSubmissions))
+            perms.Add(Permissions.ViewThemeSubmissions.ToString());
+        
+        if (permissions.HasPermission(Permissions.ManageApi))
+            perms.Add(Permissions.ManageApi.ToString());
+
+        return perms;
+    }
+
+    public static bool HasPermission(this Permissions permissions, Permissions has)
+        => ((permissions & has) == has);
+}

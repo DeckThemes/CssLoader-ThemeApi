@@ -68,19 +68,20 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
         Errors = _vnu.ValidateCss(validator.CssPaths, _path.DirPath);
         ThemeName = validator.Name;
 
-        // TODO: This is mega jank. Fix! We should also check if someone isn't double submitting a theme
-        List<CssTheme> foundThemes = _service.GetThemesByName(new List<string> {ThemeName}).ToList();
-        CssTheme? theme = foundThemes.FirstOrDefault(x => x.Author.Id == _user.Id);
-        Base = (theme == null) ? null : _service.GetThemeById(theme.Id).Require();
+        List<CssTheme> t = _service.GetAnyThemesByAuthorWithName(_user, ThemeName).ToList();
+        if (t.Any(x => !x.Approved))
+            throw new TaskFailureException("Theme seems to already be a pending submission for this theme");
+        
+        Base = t.FirstOrDefault();
 
-        if (_service.ThemeNameExists(ThemeName) && theme == null)
+        if (_service.ThemeNameExists(ThemeName) && Base == null)
             throw new TaskFailureException($"Theme '{ThemeName}' already exists");
         
         ThemeAuthor = validator.Author;
         ThemeVersion = validator.Version;
-        ThemeTarget = validator?.Target ?? theme?.Target ?? "Other";
+        ThemeTarget = validator?.Target ?? Base?.Target ?? "Other";
         ThemeManifestVersion = manifestVersion;
-        ThemeDescription = validator?.Description ?? theme?.Description ?? "";
+        ThemeDescription = validator?.Description ?? Base?.Description ?? "";
         ThemeDependencies = validator!.Dependencies;
 
         List<CssTheme> dependencies = _service.GetThemesByName(ThemeDependencies).ToList();
@@ -88,7 +89,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
             throw new TaskFailureException("Not all dependencies were found on this server");
 
         string guid = Guid.NewGuid().ToString();
-        string internalId = theme?.Id ?? guid;
+        string internalId = Base?.Id ?? guid;
         ThemeId = guid;
         
         _json.Json!["id"] = internalId;

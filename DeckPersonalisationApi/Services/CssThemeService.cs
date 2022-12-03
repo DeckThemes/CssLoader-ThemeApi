@@ -230,6 +230,10 @@ public class CssThemeService
     public IEnumerable<CssTheme> GetThemesByName(List<string> names)
         => _ctx.CssThemes.Include(x => x.Author)
             .Where(x => names.Contains(x.Name) && x.Approved && !x.Deleted).ToList();
+    
+    public IEnumerable<CssTheme> GetAnyThemesByAuthorWithName(User user, string name)
+        => _ctx.CssThemes.Include(x => x.Author)
+            .Where(x => x.Name == name && x.Author.Id == user.Id && !x.Deleted).ToList();
 
     public PaginatedResponse<CssTheme> GetUsersThemes(User user, PaginationDto pagination)
         => GetThemesInternal(pagination, x => x.Where(y => y.Author == user && y.Approved));

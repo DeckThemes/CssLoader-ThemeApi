@@ -87,6 +87,6 @@ public class AuthenticationController : Controller
         if (token == null)
             return new NotFoundResult();
 
-        return new OkObjectResult(token);
+        return new OkObjectResult(token.ToDto());
     }
 }

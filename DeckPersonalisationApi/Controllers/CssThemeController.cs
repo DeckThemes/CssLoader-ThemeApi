@@ -51,6 +51,10 @@ public class CssThemeController : Controller
     [HttpGet("{id}")]
     public IActionResult GetTheme(string id)
     {
-        return new OkObjectResult(((IToDto<FullCssThemeDto>)_service.GetThemeById(id).Require()).ToDto());
+        CssTheme? theme = _service.GetThemeById(id);
+        theme ??= _service.GetThemesByName(new() { id }).FirstOrDefault();
+        theme.Require("Theme not found");
+        
+        return new OkObjectResult(((IToDto<FullCssThemeDto>)theme!).ToDto());
     }
 }

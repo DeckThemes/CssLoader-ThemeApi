@@ -44,12 +44,11 @@ public class TaskService
     {
         if (_lock)
             return;
-
-        _lock = true;
         
         var task = _tasks.Values.FirstOrDefault(x => x.TaskStarted == null);
         if (task != null)
         {
+            _lock = true;
             Thread thread = new(() => RunTask(task));
             thread.Start();
         }

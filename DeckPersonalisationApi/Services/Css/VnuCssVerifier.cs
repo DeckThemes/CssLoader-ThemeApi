@@ -5,12 +5,10 @@ namespace DeckPersonalisationApi.Services.Css;
 
 public class VnuCssVerifier
 {
-    private IConfiguration _config;
+    private AppConfiguration _config;
     private Terminal _terminal = new();
     
-    public string VnuPath => _config["Config:VnuPath"]!;
-    
-    public VnuCssVerifier(IConfiguration config)
+    public VnuCssVerifier(AppConfiguration config)
     {
         _config = config;
         _terminal.Silence = true;
@@ -25,12 +23,15 @@ public class VnuCssVerifier
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             fullWorkDirPath = fullWorkDirPath.Replace("\\", "/");
         
-        _terminal.Exec(VnuPath, $"--css --asciiquotes --verbose {string.Join(' ', cssFiles.Select(x => $"\"{x}\""))}").GetAwaiter().GetResult();
+        _terminal.Exec(_config.VnuPath, $"--css --asciiquotes --verbose {string.Join(' ', cssFiles.Select(x => $"\"{x}\""))}").GetAwaiter().GetResult();
 
         List<string> errors = new List<string>(_terminal.StdErr).Where(x => x.Contains("error:")).Select(x => x.Replace(fullWorkDirPath, "")).ToList();
         
         if (_terminal.ExitCode != 0)
         {
+            if (_terminal.ExitCode == -69420)
+                errors.Add("VNU is not installed. Unable to validate CSS");
+            
             errors.ForEach(x => Console.WriteLine($"[VNU FATAL] {x}"));
         }
 
