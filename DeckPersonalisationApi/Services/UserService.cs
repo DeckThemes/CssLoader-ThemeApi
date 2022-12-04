@@ -8,6 +8,7 @@ using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Model.Dto;
 using DeckPersonalisationApi.Model.Dto.External.GET;
 using DeckPersonalisationApi.Model.Dto.Internal.GET;
+using Microsoft.EntityFrameworkCore;
 
 #endregion
 
@@ -135,9 +136,24 @@ public class UserService
         jwt.Permissions |= Permissions.FromApiToken;
         return _jwt.CreateToken(jwt);
     }
+    
+    public void AddStarToTheme(User user, CssTheme theme)
+    {
+        if (!user.CssStars.Contains(theme))
+        {
+            user.CssStars.Add(theme);
+            _ctx.SaveChanges();
+        }
+    }
 
-    public User? GetUserById(string id) => _ctx.Users.FirstOrDefault(x => x.Id == id);
-    public User? GetActiveUserById(string id) => _ctx.Users.FirstOrDefault(x => x.Id == id && x.Active == true);
+    public void RemoveStarFromTheme(User user, CssTheme theme)
+    {
+        if (user.CssStars.Remove(theme))
+            _ctx.SaveChanges();
+    }
+
+    public User? GetUserById(string id) => _ctx.Users.Include(x => x.CssStars).FirstOrDefault(x => x.Id == id);
+    public User? GetActiveUserById(string id) => _ctx.Users.Include(x => x.CssStars).FirstOrDefault(x => x.Id == id && x.Active == true);
     public long GetSubmissionCountByUser(User user, SubmissionStatus status) => _ctx.CssSubmissions.Count(x => x.Owner == user && x.Status == status);
     
     private static string GetFixedLengthString(int len)

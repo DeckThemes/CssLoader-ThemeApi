@@ -14,6 +14,7 @@ public class PartialCssThemeDto
     public string SpecifiedAuthor { get; }
     public DateTimeOffset Submitted { get; }
     public DateTimeOffset Updated { get; }
+    public long StarCount { get; }
 
     public PartialCssThemeDto(CssTheme theme)
     {
@@ -28,5 +29,6 @@ public class PartialCssThemeDto
         Submitted = theme.Submitted;
         Updated = theme.Updated;
         SpecifiedAuthor = theme.SpecifiedAuthor;
+        StarCount = theme.StarCount;
     }
 }

@@ -47,6 +47,7 @@ public class UserController : Controller
     }
     
     [HttpGet("{id}/css_themes/filters")]
+    [HttpGet("{id}/css_stars/filters")]
     public IActionResult GetCssThemesFilters(string id)
     {
         return new OkObjectResult(new PaginationFilters(_css.Targets, _css.Orders().ToList()));
@@ -76,5 +77,38 @@ public class UserController : Controller
     public IActionResult ViewSubmissionsFilters()
     {
         return new OkObjectResult(new PaginationFilters(_submission.Filters().ToList(), _submission.Orders().ToList()));
+    }
+
+    [HttpGet("{id}/css_stars")]
+    [Authorize]
+    [JwtRoleRequire(Permissions.ManageApi)]
+    public IActionResult ViewStarredThemesOfUser(string id, int page = 1, int perPage = 50, string filters = "", string order = "", string search = "")
+    {
+        User user = _user.GetActiveUserById(id).Require();
+        PaginationDto paginationDto = new(page, perPage, filters, order, search);
+        PaginatedResponse<CssTheme> response = _css.GetStarredThemesByUser(paginationDto, user);
+        return new OkObjectResult(response.ToDto());
+    }
+
+    [HttpPost("{id}/css_stars")]
+    [Authorize]
+    [JwtRoleRequire(Permissions.ManageApi)]
+    public IActionResult AddStarToTheme(string id, ThemeIdGetDto themeThemeId)
+    {
+        User user = _user.GetActiveUserById(id).Require();
+        CssTheme theme = _css.GetThemeById(themeThemeId.ThemeId).Require("Theme not found");
+        _user.AddStarToTheme(user, theme);
+        return new OkResult();
+    }
+
+    [HttpDelete("{id}/css_stars")]
+    [Authorize]
+    [JwtRoleRequire(Permissions.ManageApi)]
+    public IActionResult RemoveStarFromTheme(string id, ThemeIdGetDto themeThemeId)
+    {
+        User user = _user.GetActiveUserById(id).Require();
+        CssTheme theme = _css.GetThemeById(themeThemeId.ThemeId).Require("Theme not found");
+        _user.RemoveStarFromTheme(user, theme);
+        return new OkResult();
     }
 }

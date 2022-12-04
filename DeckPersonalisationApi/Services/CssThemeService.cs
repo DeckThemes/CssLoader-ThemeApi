@@ -223,7 +223,7 @@ public class CssThemeService
             .Include(x => x.Download)
             .Include(x => x.Images)
             .FirstOrDefault(x => x.Id == id);
-    
+
     public bool ThemeNameExists(string name)
         => _ctx.CssThemes.Any(x => x.Name == name && x.Approved & !x.Deleted);
 
@@ -243,6 +243,23 @@ public class CssThemeService
     
     public PaginatedResponse<CssTheme> GetNonApprovedThemes(PaginationDto pagination)
         => GetThemesInternal(pagination, x => x.Where(y => !y.Approved));
+
+    public PaginatedResponse<CssTheme> GetStarredThemesByUser(PaginationDto pagination, User user)
+        => GetThemesInternal(pagination, x => x.Where(y => user.CssStars.Contains(y)));
+
+    public void UpdateStars()
+    {
+        IEnumerable<Tuple<CssTheme, long>> themes = _ctx.CssThemes.Include(x => x.UserStars)
+            .Select(x => new Tuple<CssTheme, long>(x, x.UserStars.Count));
+
+        foreach (var (item1, item2) in themes)
+        {
+            item1.StarCount = item2;
+            _ctx.CssThemes.Update(item1);
+        }
+
+        _ctx.SaveChanges();
+    }
 
     public IEnumerable<string> Orders() => new List<string>()
     {

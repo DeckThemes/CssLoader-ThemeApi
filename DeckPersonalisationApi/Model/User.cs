@@ -1,4 +1,5 @@
-﻿using DeckPersonalisationApi.Model.Dto.External.GET;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using DeckPersonalisationApi.Model.Dto.External.GET;
 
 namespace DeckPersonalisationApi.Model;
 
@@ -11,6 +12,9 @@ public class User : IToDto<UserGetMinimalDto>, IToDto<UserGetDto>
     public DateTimeOffset LastLoginDate { get; set; }
     public string? ApiToken { get; set; }
     public bool Active { get; set; } = true;
+    public ICollection<CssTheme> CssStars { get; set; }
+    [InverseProperty("Author")]
+    public ICollection<CssTheme> CssThemes { get; set; }
 
     public Uri? GetAvatarUri()
     {

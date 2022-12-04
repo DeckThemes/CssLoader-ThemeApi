@@ -18,6 +18,7 @@ public class FullCssThemeDto
     public List<MinimalCssThemeDto> Dependencies { get; set; }
     public bool Approved { get; set; }
     public bool Disabled { get; set; }
+    public long StarCount { get; set; }
 
     public FullCssThemeDto()
     {
@@ -41,5 +42,6 @@ public class FullCssThemeDto
         Approved = theme.Approved;
         Disabled = theme.Deleted;
         SpecifiedAuthor = theme.SpecifiedAuthor;
+        StarCount = theme.StarCount;
     }
 }

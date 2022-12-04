@@ -20,6 +20,8 @@ public class CssTheme : IToDto<PartialCssThemeDto>, IToDto<MinimalCssThemeDto>, 
     public List<CssTheme> Dependencies { get; set; }
     public bool Approved { get; set; }
     public bool Deleted { get; set; }
+    public ICollection<User> UserStars { get; set; }
+    public long StarCount { get; set; }
 
     public PartialCssThemeDto ToDto()
         => new(this);

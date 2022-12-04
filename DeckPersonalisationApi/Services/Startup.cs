@@ -31,6 +31,7 @@ public class Startup : BackgroundService
             _logger.LogInformation($"Running background service at {DateTime.Now:HH:mm:ss}");
             await Task.Run(RemoveExpiredBlobs);
             await Task.Run(WriteBlobDownloads);
+            await Task.Run(UpdateStars);
             await Task.Delay(TimeSpan.FromMinutes(_conf.BackgroundServiceFrequencyMinutes), stoppingToken);
         }
     }
@@ -58,6 +59,15 @@ public class Startup : BackgroundService
             
             // Sneaky extra
             taskService.ClearOldTasks();
+        }
+    }
+
+    private void UpdateStars()
+    {
+        using (var scope = _services.CreateScope())
+        {
+            var cssThemeService = scope.ServiceProvider.GetRequiredService<CssThemeService>();
+            cssThemeService.UpdateStars();
         }
     }
 }
