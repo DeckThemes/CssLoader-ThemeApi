@@ -1,3 +1,3 @@
 ﻿namespace DeckPersonalisationApi.Model.Dto.External.GET;
 
-public record ThemeIdGetDto(string ThemeId);
+public record HasThemeStarredDto(bool Starred);

@@ -90,25 +90,68 @@ public class UserController : Controller
         return new OkObjectResult(response.ToDto());
     }
 
-    [HttpPost("{id}/css_stars")]
+    [HttpGet("me/css_stars")]
+    [Authorize]
+    public IActionResult ViewMyStarredThemes(int page = 1, int perPage = 50, string filters = "", string order = "",
+        string search = "")
+    {
+        UserJwtDto user = _jwt.DecodeToken(Request).Require();
+        return ViewStarredThemesOfUser(user.Id, page, perPage, filters, order, search);
+    }
+
+    [HttpPost("{id}/css_stars/{themeId}")]
     [Authorize]
     [JwtRoleRequire(Permissions.ManageApi)]
-    public IActionResult AddStarToTheme(string id, ThemeIdGetDto themeThemeId)
+    public IActionResult AddStarToTheme(string id, string themeId)
     {
         User user = _user.GetActiveUserById(id).Require();
-        CssTheme theme = _css.GetThemeById(themeThemeId.ThemeId).Require("Theme not found");
+        CssTheme theme = _css.GetThemeById(themeId).Require("Theme not found");
         _user.AddStarToTheme(user, theme);
         return new OkResult();
     }
+    
+    [HttpPost("me/css_stars/{themeId}")]
+    [Authorize]
+    public IActionResult AddMyStarToTheme(string themeId)
+    {
+        UserJwtDto user = _jwt.DecodeToken(Request).Require();
+        return AddStarToTheme(user.Id, themeId);
+    }
 
-    [HttpDelete("{id}/css_stars")]
+    [HttpDelete("{id}/css_stars/{themeId}")]
     [Authorize]
     [JwtRoleRequire(Permissions.ManageApi)]
-    public IActionResult RemoveStarFromTheme(string id, ThemeIdGetDto themeThemeId)
+    public IActionResult RemoveStarFromTheme(string id, string themeId)
     {
         User user = _user.GetActiveUserById(id).Require();
-        CssTheme theme = _css.GetThemeById(themeThemeId.ThemeId).Require("Theme not found");
+        CssTheme theme = _css.GetThemeById(themeId).Require("Theme not found");
         _user.RemoveStarFromTheme(user, theme);
         return new OkResult();
+    }
+    
+    [HttpDelete("me/css_stars/{themeId}")]
+    [Authorize]
+    public IActionResult RemoveMyStarFromTheme(string themeId)
+    {
+        UserJwtDto user = _jwt.DecodeToken(Request).Require();
+        return RemoveStarFromTheme(user.Id, themeId);
+    }
+
+    [HttpGet("{id}/css_stars/{themeId}")]
+    [Authorize]
+    [JwtRoleRequire(Permissions.ManageApi)]
+    public IActionResult GetStarStatusOfThemeFromUser(string id, string themeId)
+    {
+        User user = _user.GetUserById(id).Require("User not found");
+        CssTheme theme = _css.GetThemeById(themeId).Require("Theme not found");
+        return new OkObjectResult(new HasThemeStarredDto(_user.HasThemeStarred(user, theme)));
+    }
+    
+    [HttpGet("me/css_stars/{themeId}")]
+    [Authorize]
+    public IActionResult GetStarStatusOfThemeFromMe(string themeId)
+    {
+        UserJwtDto user = _jwt.DecodeToken(Request).Require();
+        return GetStarStatusOfThemeFromUser(user.Id, themeId);
     }
 }

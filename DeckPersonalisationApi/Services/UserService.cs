@@ -139,7 +139,7 @@ public class UserService
     
     public void AddStarToTheme(User user, CssTheme theme)
     {
-        if (!user.CssStars.Contains(theme))
+        if (!HasThemeStarred(user, theme))
         {
             user.CssStars.Add(theme);
             _ctx.SaveChanges();
@@ -151,6 +151,9 @@ public class UserService
         if (user.CssStars.Remove(theme))
             _ctx.SaveChanges();
     }
+
+    public bool HasThemeStarred(User user, CssTheme theme)
+        => user.CssStars.Any(x => x.Id == theme.Id);
 
     public User? GetUserById(string id) => _ctx.Users.Include(x => x.CssStars).FirstOrDefault(x => x.Id == id);
     public User? GetActiveUserById(string id) => _ctx.Users.Include(x => x.CssStars).FirstOrDefault(x => x.Id == id && x.Active == true);
