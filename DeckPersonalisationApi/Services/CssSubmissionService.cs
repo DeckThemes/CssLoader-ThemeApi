@@ -26,6 +26,10 @@ public class CssSubmissionService
     public void ApproveCssTheme(string id, string? message, User reviewer)
     {
         CssSubmission submission = GetSubmissionById(id).Require("Failed to find submission");
+
+        if (submission.Status != SubmissionStatus.AwaitingApproval)
+            throw new BadRequestException("Submission is not awaiting approval");
+        
         CssTheme newTheme = submission.New;
         CssTheme? oldTheme = submission.Old;
         
@@ -50,6 +54,10 @@ public class CssSubmissionService
     public void DenyCssTheme(string id, string? message, User reviewer)
     {
         CssSubmission submission = GetSubmissionById(id).Require("Failed to find submission");
+        
+        if (submission.Status != SubmissionStatus.AwaitingApproval)
+            throw new BadRequestException("Submission is not awaiting approval");
+        
         CssTheme newTheme = submission.New;
         CssTheme? oldTheme = submission.Old;
 
