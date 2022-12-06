@@ -5,20 +5,20 @@ namespace DeckPersonalisationApi.Services.Tasks.Common;
 
 public class CloneGitTask : IDirTaskPart
 {
-    public string Name => $"Cloning {_url}@{_commit ?? "Latest"}";
+    public string Name => $"Cloning {Url}@{_commit ?? "Latest"}";
 
-    private string _url;
+    public string Url { get; private set; }
     private string? _commit;
     private IDirTaskPart _workDir;
-    private bool _removeGitFolder;
     public Git Repo { get; set; }
+    public string Commit { get; set; }
     public string DirPath => Repo.Path;
 
     public void Execute()
     {
         try
         {
-            Git.Clone(_url, _workDir.DirPath).GetAwaiter().GetResult();
+            Git.Clone(Url, _workDir.DirPath).GetAwaiter().GetResult();
         }
         catch (Exception _)
         {
@@ -38,17 +38,25 @@ public class CloneGitTask : IDirTaskPart
                 throw new TaskFailureException("Git reset failed");
             }
         }
+
+        try
+        {
+            Commit = Repo.GetLatestCommitHash().GetAwaiter().GetResult();
+        }
+        catch (Exception _)
+        {
+            throw new TaskFailureException("Failed to get current commit");
+        }
     }
 
     public void Cleanup(bool success)
     {
     }
 
-    public CloneGitTask(string url, string? commit, IDirTaskPart workDir, bool removeGitFolder = false)
+    public CloneGitTask(string url, string? commit, IDirTaskPart workDir)
     {
-        _url = url;
+        Url = url;
         _commit = commit;
         _workDir = workDir;
-        _removeGitFolder = removeGitFolder;
     }
 }

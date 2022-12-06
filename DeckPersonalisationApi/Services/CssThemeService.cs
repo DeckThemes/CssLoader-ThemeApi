@@ -34,7 +34,7 @@ public class CssThemeService
         Checks(user, meta);
 
         CreateTempFolderTask gitContainer = new CreateTempFolderTask();
-        CloneGitTask clone = new CloneGitTask(url, commit, gitContainer, true);
+        CloneGitTask clone = new CloneGitTask(url, commit, gitContainer);
         PathTransformTask folder = new PathTransformTask(clone, subfolder);
         FolderSizeConstraintTask size = new FolderSizeConstraintTask(folder, _config.MaxCssThemeSize);
         CopyFileTask copy = new CopyFileTask(clone, folder, "LICENSE");
@@ -46,7 +46,7 @@ public class CssThemeService
         CopyFileTask copyToThemeFolder = new CopyFileTask(folder, themeFolder, "*");
         ZipTask zip = new ZipTask(themeContainer, gitContainer);
         WriteAsBlobTask blob = new WriteAsBlobTask(user, zip);
-        CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blob, meta, url, user);
+        CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blob, meta, clone, user);
 
         List<ITaskPart> taskParts = new()
         {

@@ -16,8 +16,12 @@ public class CreateCssSubmissionTask : ITaskPart
     private CssSubmissionMeta _meta;
     private string? _source;
     private User _author;
+    private CloneGitTask? _gitSrc;
     public void Execute()
     {
+        if (_gitSrc != null)
+            _source = $"{_gitSrc.Url} @ {_gitSrc.Commit}";
+        
         List<string> blobs = 
             _meta.ImageBlobs ?? new();
 
@@ -42,6 +46,15 @@ public class CreateCssSubmissionTask : ITaskPart
         _download = download;
         _meta = meta;
         _source = source;
+        _author = author;
+    }
+    
+    public CreateCssSubmissionTask(ValidateCssThemeTask validation, WriteAsBlobTask download, CssSubmissionMeta meta, CloneGitTask? source, User author)
+    {
+        _validation = validation;
+        _download = download;
+        _meta = meta;
+        _gitSrc = source;
         _author = author;
     }
     
