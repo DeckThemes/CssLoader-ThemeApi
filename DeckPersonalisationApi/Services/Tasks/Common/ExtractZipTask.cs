@@ -59,7 +59,7 @@ public class ExtractZipTask : ITaskPart
 
     public void Cleanup(bool success)
     {
-        _blobService.DeleteBlob(_blob);
+        _blobService.DeleteBlob(_blob.Id);
     }
 
     public void SetupServices(IServiceProvider provider)

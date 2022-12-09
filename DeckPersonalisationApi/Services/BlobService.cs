@@ -1,6 +1,7 @@
 ﻿using DeckPersonalisationApi.Exceptions;
 using DeckPersonalisationApi.Extensions;
 using DeckPersonalisationApi.Model;
+using Microsoft.EntityFrameworkCore;
 
 namespace DeckPersonalisationApi.Services;
 
@@ -18,7 +19,7 @@ public class BlobService
     }
 
     public SavedBlob? GetBlob(string? id)
-        => _ctx.Blobs.FirstOrDefault(x => x.Id == id);
+        => _ctx.Blobs.Include(x => x.Owner).FirstOrDefault(x => x.Id == id);
 
     public IEnumerable<SavedBlob> GetBlobs(List<string> ids)
     {
@@ -66,7 +67,10 @@ public class BlobService
 
         _ctx.Blobs.Update(blob);
     }
-    
+
+    public void DeleteBlob(string blobId)
+        => DeleteBlob(GetBlob(blobId).Require());
+
     public void DeleteBlob(SavedBlob blob)
     {
         DeleteBlobInternal(blob);
