@@ -1,6 +1,8 @@
 ﻿#region
 
 using System.ComponentModel;
+using DeckPersonalisationApi.Exceptions;
+using DeckPersonalisationApi.Extensions;
 using DeckPersonalisationApi.Middleware.JwtRole;
 using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Model.Dto;
@@ -57,6 +59,25 @@ public class AuthenticationController : Controller
             return new BadRequestResult();
 
         return new ObjectResult(new TokenGetDto(token));
+    }
+
+    [HttpPost("refresh_token")]
+    // Uses manual auth checks
+    public IActionResult RefreshJwtToken()
+    {
+        string? auth = Request.Headers.Authorization;
+
+        if (string.IsNullOrEmpty(auth) || !auth.StartsWith("Bearer "))
+            throw new BadRequestException("No auth token set");
+
+        string key = auth[7..];
+
+        if (!_jwt.ValidateToken(key, true))
+            throw new BadRequestException("Cannot validate token");
+
+        UserJwtDto token = _jwt.DecodeToken(key).Require("Cannot extract token");
+        User user = _user.GetActiveUserById(token.Id).Require("Cannot find user");
+        return new ObjectResult(new TokenGetDto(_jwt.RenewToken(key, user)));
     }
 
     [HttpGet("me_full")]

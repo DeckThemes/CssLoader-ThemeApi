@@ -45,6 +45,26 @@ public class UserController : Controller
         UserJwtDto user = _jwt.DecodeToken(Request).Require();
         return GetCssThemes(user.Id, page, perPage, filters, order, search);
     }
+
+    [HttpPost("{id}/logout_all")]
+    [Authorize]
+    [JwtRoleRequire(Permissions.ManageApi)]
+    [JwtRoleReject(Permissions.FromApiToken)]
+    public IActionResult RenewValidationToken(string id)
+    {
+        _user.ResetValidationToken(id);
+        return new OkResult();
+    }
+    
+    [HttpPost("me/logout_all")]
+    [Authorize]
+    [JwtRoleRequire(Permissions.ManageApi)]
+    [JwtRoleReject(Permissions.FromApiToken)]
+    public IActionResult RenewMyValidationToken()
+    {
+        UserJwtDto user = _jwt.DecodeToken(Request).Require();
+        return RenewValidationToken(user.Id);
+    }
     
     [HttpGet("{id}/css_themes/filters")]
     [HttpGet("{id}/css_stars/filters")]

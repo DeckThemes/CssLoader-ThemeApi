@@ -8,17 +8,19 @@ public class UserJwtDto : IToDto<UserJwtExtDto>
     public string Username { get; set; }
     public Permissions Permissions { get; set; }
     public string Avatar { get; set; }
+    public string ValidationToken { get; set; }
 
-    public UserJwtDto(string id, string username, string avatar, Permissions permissions)
+    public UserJwtDto(string id, string username, string avatar, Permissions permissions, string validationToken)
     {
         Id = id;
         Username = username;
         Permissions = permissions;
         Avatar = avatar;
+        ValidationToken = validationToken;
     }
 
-    public UserJwtDto(string id, string username, string avatar, int permissions) 
-        : this(id, username, avatar, (Permissions)permissions)
+    public UserJwtDto(string id, string username, string avatar, int permissions, string validationToken) 
+        : this(id, username, avatar, (Permissions)permissions, validationToken)
     {
     }
 
@@ -28,6 +30,7 @@ public class UserJwtDto : IToDto<UserJwtExtDto>
         Username = user.Username;
         Permissions = user.Permissions;
         Avatar = user.GetAvatarUri()?.AbsoluteUri ?? "";
+        ValidationToken = user.ValidationToken;
     }
 
     public void RequirePermission(Permissions permission)

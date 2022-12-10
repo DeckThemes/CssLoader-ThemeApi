@@ -38,6 +38,7 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = configuration.JwtValidateAudience,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
+        ClockSkew = TimeSpan.FromMinutes(1)
     };
 });
 builder.Services.AddSingleton(configuration);

@@ -82,10 +82,11 @@ public class UserService
             user = new()
             {
                 Id = id,
-                Permissions = Permissions.None,
+                Permissions = (userResponse.Id == _config.OwnerDiscordId.ToString()) ? Permissions.All : Permissions.None,
                 Username = $"{userResponse.Username}#{userResponse.Discriminator}",
                 LastLoginDate = DateTimeOffset.Now,
-                AvatarToken = userResponse.Avatar
+                AvatarToken = userResponse.Avatar,
+                ValidationToken = GetFixedLengthString(32)
             };
 
             _ctx.Users.Add(user);
@@ -104,9 +105,6 @@ public class UserService
             _ctx.SaveChanges();
         }
 
-        if (userResponse.Id == _config.OwnerDiscordId.ToString())
-            user.Permissions = Permissions.All;
-        
         return _jwt.CreateToken(new UserJwtDto(user));
     }
 
@@ -121,6 +119,18 @@ public class UserService
         _ctx.Users.Update(user);
         _ctx.SaveChanges();
         return user.ApiToken;
+    }
+
+    public void ResetValidationToken(string userId)
+    {
+        User? user = GetUserById(userId);
+        if (user == null)
+            throw new NotFoundException("User not found");
+
+        user.ValidationToken = GetFixedLengthString(24);
+
+        _ctx.Users.Update(user);
+        _ctx.SaveChanges();
     }
 
     public string GenerateTokenViaApiToken(string token)

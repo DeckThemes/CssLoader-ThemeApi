@@ -10,6 +10,7 @@ public class User : IToDto<UserGetMinimalDto>, IToDto<UserGetDto>
     public string? AvatarToken { get; set; }
     public Permissions Permissions { get; set; }
     public DateTimeOffset LastLoginDate { get; set; }
+    public string ValidationToken { get; set; }
     public string? ApiToken { get; set; }
     public bool Active { get; set; } = true;
     public ICollection<CssTheme> CssStars { get; set; }
