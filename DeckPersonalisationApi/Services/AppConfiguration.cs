@@ -31,6 +31,7 @@ public class AppConfiguration
     public long BackgroundServiceFrequencyMinutes { get; private set; }
     public bool UseSwagger { get; private set; }
     public long Port { get; private set; }
+    public string LegacyUrlBase { get; private set; }
     
     public AppConfiguration()
     {
@@ -89,6 +90,7 @@ public class AppConfiguration
         BackgroundServiceFrequencyMinutes = GetInt("Config:BackgroundServiceFrequencyMinutes");
         UseSwagger = GetBool("Config:UseSwagger");
         Port = GetInt("Config:Port");
+        LegacyUrlBase = GetString("Config:LegacyUrl");
     }
 
     private string GetString(string key)

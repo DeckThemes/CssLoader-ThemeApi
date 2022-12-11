@@ -1,6 +1,7 @@
 ﻿using DeckPersonalisationApi.Exceptions;
 using DeckPersonalisationApi.Extensions;
 using DeckPersonalisationApi.Model;
+using DeckPersonalisationApi.Model.Dto.External.GET;
 using DeckPersonalisationApi.Model.Dto.External.POST;
 using DeckPersonalisationApi.Model.Dto.Internal.GET;
 using DeckPersonalisationApi.Services.Css;
@@ -227,6 +228,10 @@ public class CssThemeService
     public bool ThemeNameExists(string name)
         => _ctx.CssThemes.Any(x => x.Name == name && x.Approved & !x.Deleted);
 
+    public List<LegacyThemesDto> GetThemesLegacy()
+        => _ctx.CssThemes.Include(x => x.Images).Include(x => x.Download).ToList()
+            .Select(x => new LegacyThemesDto(x, _config)).ToList();
+    
     public IEnumerable<CssTheme> GetThemesByName(List<string> names)
         => _ctx.CssThemes.Include(x => x.Author)
             .Where(x => names.Contains(x.Name) && x.Approved && !x.Deleted).ToList();
@@ -287,10 +292,10 @@ public class CssThemeService
         switch (pagination.Order)
         {
             case "Alphabetical (A to Z)":
-                part1 = part1.OrderByDescending(x => x.Name);
+                part1 = part1.OrderBy(x => x.Name);
                 break;
             case "Alphabetical (Z to A)":
-                part1 = part1.OrderBy(x => x.Name);
+                part1 = part1.OrderByDescending(x => x.Name);
                 break;
             case "":
             case "Last Updated":

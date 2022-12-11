@@ -57,4 +57,10 @@ public class CssThemeController : Controller
         
         return new OkObjectResult(((IToDto<FullCssThemeDto>)theme!).ToDto());
     }
+
+    [HttpGet("legacy")]
+    public IActionResult GetThemesAsLegacy()
+    {
+        return new OkObjectResult(_service.GetThemesLegacy());
+    }
 }
