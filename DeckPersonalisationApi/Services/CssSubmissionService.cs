@@ -14,13 +14,15 @@ public class CssSubmissionService
     private CssThemeService _themes;
     private BlobService _blob;
     private UserService _user;
+    private AppConfiguration _config;
     
-    public CssSubmissionService(ApplicationContext ctx, BlobService blob, CssThemeService themes, UserService user)
+    public CssSubmissionService(ApplicationContext ctx, BlobService blob, CssThemeService themes, UserService user, AppConfiguration config)
     {
         _ctx = ctx;
         _blob = blob;
         _themes = themes;
         _user = user;
+        _config = config;
     }
     
     public void ApproveCssTheme(string id, string? message, User reviewer)
@@ -49,6 +51,8 @@ public class CssSubmissionService
         submission.Message = message;
         _ctx.CssSubmissions.Update(submission);
         _ctx.SaveChanges();
+        
+        Utils.Utils.SendDiscordWebhook(_config, submission);
     }
 
     public void DenyCssTheme(string id, string? message, User reviewer)
@@ -71,6 +75,8 @@ public class CssSubmissionService
         submission.Message = message;
         _ctx.CssSubmissions.Update(submission);
         _ctx.SaveChanges();
+        
+        Utils.Utils.SendDiscordWebhook(_config, submission);
     }
 
     public CssSubmission CreateSubmission(string? oldThemeId, string newThemeId, CssSubmissionIntent intent,
@@ -98,6 +104,9 @@ public class CssSubmissionService
 
         _ctx.CssSubmissions.Add(submission);
         _ctx.SaveChanges();
+        
+        Utils.Utils.SendDiscordWebhook(_config, submission);
+        
         return submission;
     }
 

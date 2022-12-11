@@ -32,6 +32,7 @@ public class AppConfiguration
     public bool UseSwagger { get; private set; }
     public long Port { get; private set; }
     public string LegacyUrlBase { get; private set; }
+    public string DiscordWebhook { get; private set; }
     
     public AppConfiguration()
     {
@@ -91,6 +92,7 @@ public class AppConfiguration
         UseSwagger = GetBool("Config:UseSwagger");
         Port = GetInt("Config:Port");
         LegacyUrlBase = GetString("Config:LegacyUrl");
+        DiscordWebhook = GetString("Config:DiscordWebhook");
     }
 
     private string GetString(string key)
