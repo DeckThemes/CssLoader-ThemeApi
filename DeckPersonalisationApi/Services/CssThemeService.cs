@@ -257,7 +257,7 @@ public class CssThemeService
             .Where(x => names.Contains(x.Name) && x.Approved && !x.Deleted).ToList();
     
     public IEnumerable<CssTheme> GetAnyThemesByAuthorWithName(User user, string name)
-        => _ctx.CssThemes.Include(x => x.Author)
+        => _ctx.CssThemes.Include(x => x.Author).Include(x => x.Images).Include(x => x.Download)
             .Where(x => x.Name == name && x.Author.Id == user.Id && !x.Deleted).ToList();
 
     public PaginatedResponse<CssTheme> GetUsersThemes(User user, PaginationDto pagination)
