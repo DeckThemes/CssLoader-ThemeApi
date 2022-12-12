@@ -33,9 +33,12 @@ public class UserJwtDto : IToDto<UserJwtExtDto>
         ValidationToken = user.ValidationToken;
     }
 
+    public bool HasPermission(Permissions permission)
+        => (Permissions & permission) == permission;
+    
     public void RequirePermission(Permissions permission)
     {
-        if ((Permissions & permission) != permission)
+        if (!HasPermission(permission))
             throw new UnauthorisedException("Token is not allowed to do this action");
     }
 

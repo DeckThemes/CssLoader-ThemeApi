@@ -99,7 +99,13 @@ public class CssSubmissionController : Controller
     [JwtRoleRequire(Permissions.ViewThemeSubmissions)]
     public IActionResult GetSubmissionViaId(string id)
     {
-        return new OkObjectResult(_submission.GetSubmissionById(id).Require().ToDto());
+        UserJwtDto jwt = _jwt.DecodeToken(Request).Require();
+        CssSubmission submission = _submission.GetSubmissionById(id).Require("Could not find theme submission");
+
+        if (jwt.HasPermission(Permissions.ViewThemeSubmissions) || jwt.Id == submission.Owner.Id)
+            return new OkObjectResult(submission.ToDto());
+
+        throw new NotFoundException("Could not find theme submission");
     }
 
     [HttpPut("{id}/approve")]

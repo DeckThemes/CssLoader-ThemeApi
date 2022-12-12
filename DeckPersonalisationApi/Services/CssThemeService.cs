@@ -217,6 +217,26 @@ public class CssThemeService
         _ctx.SaveChanges();
     }
 
+    public void EditTheme(CssTheme theme, string? description, string? target, User? author)
+    {
+        if (target != null)
+        {
+            if (!_config.CssTargets.Contains(target))
+                throw new BadRequestException("Target is not a valid target type");
+            
+            theme.Target = target;
+        }
+        
+        if (description != null)
+            theme.Description = description;
+
+        if (author != null)
+            theme.Author = author;
+
+        _ctx.CssThemes.Update(theme);
+        _ctx.SaveChanges();
+    }
+
     public CssTheme? GetThemeById(string id)
         => _ctx.CssThemes
             .Include(x => x.Dependencies)

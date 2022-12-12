@@ -162,6 +162,13 @@ public class UserService
             _ctx.SaveChanges();
     }
 
+    public void SetUserActiveState(User user, bool state)
+    {
+        user.Active = state;
+        _ctx.Users.Update(user);
+        _ctx.SaveChanges();
+    }
+
     public bool HasThemeStarred(User user, CssTheme theme)
         => user.CssStars.Any(x => x.Id == theme.Id);
 

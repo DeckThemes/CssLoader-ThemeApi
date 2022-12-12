@@ -1,4 +1,5 @@
-﻿using DeckPersonalisationApi.Extensions;
+﻿using DeckPersonalisationApi.Exceptions;
+using DeckPersonalisationApi.Extensions;
 using DeckPersonalisationApi.Middleware.JwtRole;
 using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Model.Dto.External.GET;
@@ -15,12 +16,14 @@ namespace DeckPersonalisationApi.Controllers;
 public class CssThemeController : Controller
 {
     private JwtService _jwt;
+    private UserService _user;
     private CssThemeService _service;
 
-    public CssThemeController(JwtService jwt, CssThemeService service)
+    public CssThemeController(JwtService jwt, CssThemeService service, UserService user)
     {
         _jwt = jwt;
         _service = service;
+        _user = user;
     }
 
     [HttpGet]
@@ -56,6 +59,33 @@ public class CssThemeController : Controller
         theme.Require("Theme not found");
         
         return new OkObjectResult(((IToDto<FullCssThemeDto>)theme!).ToDto());
+    }
+
+    [HttpPatch("{id}")]
+    [Authorize]
+    [JwtRoleRequire(Permissions.EditAnyPost)]
+    [JwtRoleReject(Permissions.FromApiToken)]
+    public IActionResult EditTheme(string id, CssThemeDirectPatchDto patch)
+    {
+        CssTheme theme = _service.GetThemeById(id).Require();
+        User? author = (patch.Author == null) ? null : _user.GetActiveUserById(patch.Author).Require();
+        _service.EditTheme(theme, patch.Description, patch.Target, author);
+        return new OkResult();
+    }
+
+    [HttpDelete("{id}")]
+    [Authorize]
+    [JwtRoleReject(Permissions.FromApiToken)]
+    public IActionResult DeleteTheme(string id)
+    {
+        UserJwtDto jwt = _jwt.DecodeToken(Request).Require();
+        CssTheme theme = _service.GetThemeById(id).Require();
+
+        if (!jwt.HasPermission(Permissions.EditAnyPost) && theme.Author.Id != jwt.Id)
+            throw new NotFoundException("Could not find theme");
+        
+        _service.DeleteTheme(theme, true, true);
+        return new OkResult();
     }
 
     [HttpGet("legacy")]

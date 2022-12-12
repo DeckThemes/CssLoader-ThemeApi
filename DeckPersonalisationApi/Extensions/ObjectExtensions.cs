@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using DeckPersonalisationApi.Exceptions;
+using Microsoft.AspNetCore.Mvc;
 
 namespace DeckPersonalisationApi.Extensions;
 
@@ -12,4 +13,7 @@ public static class ObjectExtensions
 
         return o;
     }
+
+    public static IActionResult Ok<T>(this T o)
+        => new OkObjectResult(o);
 }

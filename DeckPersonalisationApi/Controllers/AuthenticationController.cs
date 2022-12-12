@@ -47,20 +47,6 @@ public class AuthenticationController : Controller
         return new OkObjectResult(new TokenGetDto(_user.GenerateTokenViaApiToken(auth.Token)));
     }
 
-    [HttpGet("token")]
-    [Authorize]
-    [JwtRoleReject(Permissions.FromApiToken)]
-    public IActionResult GetApiToken()
-    {
-        UserJwtDto dto = _jwt.DecodeToken(Request)!;
-        string? token = _user.GetApiToken(dto.Id);
-
-        if (token == null)
-            return new BadRequestResult();
-
-        return new ObjectResult(new TokenGetDto(token));
-    }
-
     [HttpPost("refresh_token")]
     // Uses manual auth checks
     public IActionResult RefreshJwtToken()

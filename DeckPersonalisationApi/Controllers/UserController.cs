@@ -13,15 +13,13 @@ namespace DeckPersonalisationApi.Controllers;
 [Route("users")]
 public class UserController : Controller
 {
-    private UserService _service;
     private CssThemeService _css;
     private UserService _user;
     private JwtService _jwt;
     private CssSubmissionService _submission;
 
-    public UserController(UserService service, CssThemeService css, UserService user, CssSubmissionService submission, JwtService jwt)
+    public UserController(CssThemeService css, UserService user, CssSubmissionService submission, JwtService jwt)
     {
-        _service = service;
         _css = css;
         _user = user;
         _submission = submission;
@@ -173,5 +171,42 @@ public class UserController : Controller
     {
         UserJwtDto user = _jwt.DecodeToken(Request).Require();
         return GetStarStatusOfThemeFromUser(user.Id, themeId);
+    }
+
+    [HttpGet("{id}")]
+    [Authorize]
+    [JwtRoleRequire(Permissions.ManageApi)]
+    [JwtRoleReject(Permissions.FromApiToken)]
+    public IActionResult GetUser(string id)
+        => _user.GetUserById(id).Require().Ok();
+
+    [HttpPatch("{id}")]
+    [Authorize]
+    [JwtRoleRequire(Permissions.ManageApi)]
+    [JwtRoleReject(Permissions.FromApiToken)]
+    public IActionResult EditUser(string id, UserPutDto put)
+    {
+        User user = _user.GetUserById(id).Require();
+        _user.SetUserActiveState(user, put.Active);
+        return new OkResult();
+    }
+    
+    [HttpGet("{id}/token")]
+    [Authorize]
+    [JwtRoleReject(Permissions.FromApiToken)]
+    [JwtRoleRequire(Permissions.ManageApi)]
+    public IActionResult GetApiToken(string id)
+    {
+        string token = _user.GetApiToken(id).Require();
+        return new TokenGetDto(token).Ok();
+    }
+    
+    [HttpGet("me/token")]
+    [Authorize]
+    [JwtRoleReject(Permissions.FromApiToken)]
+    public IActionResult GetApiToken()
+    {
+        UserJwtDto dto = _jwt.DecodeToken(Request)!;
+        return GetApiToken(dto.Id);
     }
 }
