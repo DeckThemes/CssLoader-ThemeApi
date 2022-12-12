@@ -175,8 +175,6 @@ public class UserController : Controller
 
     [HttpGet("{id}")]
     [Authorize]
-    [JwtRoleRequire(Permissions.ManageApi)]
-    [JwtRoleReject(Permissions.FromApiToken)]
     public IActionResult GetUser(string id)
         => _user.GetUserById(id).Require().Ok();
 
