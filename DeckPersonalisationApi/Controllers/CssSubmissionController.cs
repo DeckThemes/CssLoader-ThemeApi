@@ -96,7 +96,6 @@ public class CssSubmissionController : Controller
 
     [HttpGet("{id}")]
     [Authorize]
-    [JwtRoleRequire(Permissions.ViewThemeSubmissions)]
     public IActionResult GetSubmissionViaId(string id)
     {
         UserJwtDto jwt = _jwt.DecodeToken(Request).Require();
