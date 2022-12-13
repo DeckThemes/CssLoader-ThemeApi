@@ -30,101 +30,6 @@ public class CssThemeService
         _config = config;
     }
 
-    public string SubmitThemeViaGit(string url, string? commit, string subfolder, User user, CssSubmissionMeta meta)
-    {
-        Checks(user, meta);
-
-        CreateTempFolderTask gitContainer = new CreateTempFolderTask();
-        CloneGitTask clone = new CloneGitTask(url, commit, gitContainer);
-        PathTransformTask folder = new PathTransformTask(clone, subfolder);
-        FolderSizeConstraintTask size = new FolderSizeConstraintTask(folder, _config.MaxCssThemeSize);
-        CopyFileTask copy = new CopyFileTask(clone, folder, "LICENSE");
-        GetJsonTask jsonGet = new GetJsonTask(folder, "theme.json");
-        ValidateCssThemeTask css = new ValidateCssThemeTask(folder, jsonGet, user, _config.CssTargets);
-        WriteJsonTask jsonWrite = new WriteJsonTask(folder, "theme.json", jsonGet);
-        CreateTempFolderTask themeContainer = new CreateTempFolderTask();
-        CreateFolderTask themeFolder = new CreateFolderTask(themeContainer, css);
-        CopyFileTask copyToThemeFolder = new CopyFileTask(folder, themeFolder, "*");
-        ZipTask zip = new ZipTask(themeContainer, gitContainer);
-        WriteAsBlobTask blob = new WriteAsBlobTask(user, zip);
-        CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blob, meta, clone, user);
-
-        List<ITaskPart> taskParts = new()
-        {
-            gitContainer, clone, folder, size, copy, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blob, submission
-        };
-
-        AppTaskFromParts task = new(taskParts, "Submit theme via git", user);
-        return _task.RegisterTask(task);
-    }
-
-    public string SubmitThemeViaZip(SavedBlob blob, CssSubmissionMeta meta, User user)
-    {
-        Checks(user, meta);
-
-        CreateTempFolderTask zipContainer = new CreateTempFolderTask();
-        ExtractZipTask extractZip = new ExtractZipTask(zipContainer, blob, _config.MaxCssThemeSize);
-        FolderSizeConstraintTask size = new FolderSizeConstraintTask(zipContainer, _config.MaxCssThemeSize);
-        GetJsonTask jsonGet = new GetJsonTask(zipContainer, "theme.json");
-        ValidateCssThemeTask css = new ValidateCssThemeTask(zipContainer, jsonGet, user, _config.CssTargets);
-        WriteJsonTask jsonWrite = new WriteJsonTask(zipContainer, "theme.json", jsonGet);
-        CreateTempFolderTask themeContainer = new CreateTempFolderTask();
-        CreateFolderTask themeFolder = new CreateFolderTask(themeContainer, css);
-        CopyFileTask copyToThemeFolder = new CopyFileTask(zipContainer, themeFolder, "*");
-        ZipTask zip = new ZipTask(themeContainer, zipContainer);
-        WriteAsBlobTask blobSave = new WriteAsBlobTask(user, zip);
-        CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blobSave, meta, "[Zip Deploy]", user);
-
-        List<ITaskPart> taskParts = new()
-        {
-            zipContainer, extractZip, size, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blobSave, submission
-        };
-
-        AppTaskFromParts task = new(taskParts, "Submit theme via zip", user);
-        return _task.RegisterTask(task);
-    }
-
-    public string SubmitThemeViaCss(string cssContent, string name, CssSubmissionMeta meta, User user)
-    {
-        Checks(user, meta);
-
-        CreateTempFolderTask cssContainer = new CreateTempFolderTask();
-        WriteStringToFileTask writeCss = new WriteStringToFileTask(cssContainer, "shared.css", cssContent);
-        WriteStringToFileTask writeJson = new WriteStringToFileTask(cssContainer, "theme.json", CreateCssJson(name));
-        FolderSizeConstraintTask size = new FolderSizeConstraintTask(cssContainer, _config.MaxCssThemeSize);
-        GetJsonTask jsonGet = new GetJsonTask(cssContainer, "theme.json");
-        ValidateCssThemeTask css = new ValidateCssThemeTask(cssContainer, jsonGet, user, _config.CssTargets);
-        WriteJsonTask jsonWrite = new WriteJsonTask(cssContainer, "theme.json", jsonGet);
-        CreateTempFolderTask themeContainer = new CreateTempFolderTask();
-        CreateFolderTask themeFolder = new CreateFolderTask(themeContainer, css);
-        CopyFileTask copyToThemeFolder = new CopyFileTask(cssContainer, themeFolder, "*");
-        ZipTask zip = new ZipTask(themeContainer, cssContainer);
-        WriteAsBlobTask blobSave = new WriteAsBlobTask(user, zip);
-        CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blobSave, meta, "[Zip Deploy]", user);
-
-        List<ITaskPart> taskParts = new()
-        {
-            cssContainer, writeCss, writeJson, size, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blobSave, submission
-        };
-
-        AppTaskFromParts task = new(taskParts, "Submit theme via css", user);
-        return _task.RegisterTask(task);
-    }
-
-    private void Checks(User user, CssSubmissionMeta meta)
-    {
-        if ((meta.ImageBlobs?.Count ?? 0) > _config.MaxImagesPerSubmission)
-            throw new BadRequestException($"Cannot have more than {_config.MaxImagesPerSubmission} images per submission");
-
-        if (_user.GetSubmissionCountByUser(user, SubmissionStatus.AwaitingApproval) > _config.MaxActiveSubmissions)
-            throw new BadRequestException(
-                $"Cannot have more than {_config.MaxActiveSubmissions} submissions awaiting approval");
-        
-        List<string>? possibleImageBlobs = meta.ImageBlobs;
-        if (possibleImageBlobs != null && _blob.GetBlobs(possibleImageBlobs).Any(x => x.Confirmed)) 
-            throw new BadRequestException("Cannot use images that are already used elsewhere");
-    }
-    
     public CssTheme CreateTheme(string id, string name, List<string> imageIds, string blobId, string version,
         string? source, string authorId, string target, int manifestVersion, string description,
         List<string> dependencyNames, string specifiedAuthor)
@@ -336,7 +241,4 @@ public class CssThemeService
         
         return new(part1.Count(), part1.Skip((pagination.Page - 1) * pagination.PerPage).Take(pagination.PerPage).ToList());
     }
-
-    private string CreateCssJson(string name)
-        => _config.CssToThemeJson.Replace("%THEME_NAME%", name.Replace("\"", "\\\""));
 }

@@ -2,7 +2,11 @@
 using DeckPersonalisationApi.Extensions;
 using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Model.Dto.External.GET;
+using DeckPersonalisationApi.Model.Dto.External.POST;
 using DeckPersonalisationApi.Model.Dto.Internal.GET;
+using DeckPersonalisationApi.Services.Css;
+using DeckPersonalisationApi.Services.Tasks;
+using DeckPersonalisationApi.Services.Tasks.Common;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 
@@ -15,14 +19,16 @@ public class CssSubmissionService
     private BlobService _blob;
     private UserService _user;
     private AppConfiguration _config;
+    private TaskService _task;
     
-    public CssSubmissionService(ApplicationContext ctx, BlobService blob, CssThemeService themes, UserService user, AppConfiguration config)
+    public CssSubmissionService(ApplicationContext ctx, BlobService blob, CssThemeService themes, UserService user, AppConfiguration config, TaskService task)
     {
         _ctx = ctx;
         _blob = blob;
         _themes = themes;
         _user = user;
         _config = config;
+        _task = task;
     }
     
     public void ApproveCssTheme(string id, string? message, User reviewer)
@@ -77,6 +83,101 @@ public class CssSubmissionService
         _ctx.SaveChanges();
         
         Utils.Utils.SendDiscordWebhook(_config, submission);
+    }
+    
+        public string SubmitThemeViaGit(string url, string? commit, string subfolder, User user, CssSubmissionMeta meta)
+    {
+        Checks(user, meta);
+
+        CreateTempFolderTask gitContainer = new CreateTempFolderTask();
+        CloneGitTask clone = new CloneGitTask(url, commit, gitContainer);
+        PathTransformTask folder = new PathTransformTask(clone, subfolder);
+        FolderSizeConstraintTask size = new FolderSizeConstraintTask(folder, _config.MaxCssThemeSize);
+        CopyFileTask copy = new CopyFileTask(clone, folder, "LICENSE");
+        GetJsonTask jsonGet = new GetJsonTask(folder, "theme.json");
+        ValidateCssThemeTask css = new ValidateCssThemeTask(folder, jsonGet, user, _config.CssTargets);
+        WriteJsonTask jsonWrite = new WriteJsonTask(folder, "theme.json", jsonGet);
+        CreateTempFolderTask themeContainer = new CreateTempFolderTask();
+        CreateFolderTask themeFolder = new CreateFolderTask(themeContainer, css);
+        CopyFileTask copyToThemeFolder = new CopyFileTask(folder, themeFolder, "*");
+        ZipTask zip = new ZipTask(themeContainer, gitContainer);
+        WriteAsBlobTask blob = new WriteAsBlobTask(user, zip);
+        CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blob, meta, clone, user);
+
+        List<ITaskPart> taskParts = new()
+        {
+            gitContainer, clone, folder, size, copy, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blob, submission
+        };
+
+        AppTaskFromParts task = new(taskParts, "Submit theme via git", user);
+        return _task.RegisterTask(task);
+    }
+
+    public string SubmitThemeViaZip(SavedBlob blob, CssSubmissionMeta meta, User user)
+    {
+        Checks(user, meta);
+
+        CreateTempFolderTask zipContainer = new CreateTempFolderTask();
+        ExtractZipTask extractZip = new ExtractZipTask(zipContainer, blob, _config.MaxCssThemeSize);
+        FolderSizeConstraintTask size = new FolderSizeConstraintTask(zipContainer, _config.MaxCssThemeSize);
+        GetJsonTask jsonGet = new GetJsonTask(zipContainer, "theme.json");
+        ValidateCssThemeTask css = new ValidateCssThemeTask(zipContainer, jsonGet, user, _config.CssTargets);
+        WriteJsonTask jsonWrite = new WriteJsonTask(zipContainer, "theme.json", jsonGet);
+        CreateTempFolderTask themeContainer = new CreateTempFolderTask();
+        CreateFolderTask themeFolder = new CreateFolderTask(themeContainer, css);
+        CopyFileTask copyToThemeFolder = new CopyFileTask(zipContainer, themeFolder, "*");
+        ZipTask zip = new ZipTask(themeContainer, zipContainer);
+        WriteAsBlobTask blobSave = new WriteAsBlobTask(user, zip);
+        CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blobSave, meta, "[Zip Deploy]", user);
+
+        List<ITaskPart> taskParts = new()
+        {
+            zipContainer, extractZip, size, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blobSave, submission
+        };
+
+        AppTaskFromParts task = new(taskParts, "Submit theme via zip", user);
+        return _task.RegisterTask(task);
+    }
+
+    public string SubmitThemeViaCss(string cssContent, string name, CssSubmissionMeta meta, User user)
+    {
+        Checks(user, meta);
+
+        CreateTempFolderTask cssContainer = new CreateTempFolderTask();
+        WriteStringToFileTask writeCss = new WriteStringToFileTask(cssContainer, "shared.css", cssContent);
+        WriteStringToFileTask writeJson = new WriteStringToFileTask(cssContainer, "theme.json", CreateCssJson(name));
+        FolderSizeConstraintTask size = new FolderSizeConstraintTask(cssContainer, _config.MaxCssThemeSize);
+        GetJsonTask jsonGet = new GetJsonTask(cssContainer, "theme.json");
+        ValidateCssThemeTask css = new ValidateCssThemeTask(cssContainer, jsonGet, user, _config.CssTargets);
+        WriteJsonTask jsonWrite = new WriteJsonTask(cssContainer, "theme.json", jsonGet);
+        CreateTempFolderTask themeContainer = new CreateTempFolderTask();
+        CreateFolderTask themeFolder = new CreateFolderTask(themeContainer, css);
+        CopyFileTask copyToThemeFolder = new CopyFileTask(cssContainer, themeFolder, "*");
+        ZipTask zip = new ZipTask(themeContainer, cssContainer);
+        WriteAsBlobTask blobSave = new WriteAsBlobTask(user, zip);
+        CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blobSave, meta, "[Css Only Deploy]", user);
+
+        List<ITaskPart> taskParts = new()
+        {
+            cssContainer, writeCss, writeJson, size, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blobSave, submission
+        };
+
+        AppTaskFromParts task = new(taskParts, "Submit theme via css", user);
+        return _task.RegisterTask(task);
+    }
+
+    private void Checks(User user, CssSubmissionMeta meta)
+    {
+        if ((meta.ImageBlobs?.Count ?? 0) > _config.MaxImagesPerSubmission)
+            throw new BadRequestException($"Cannot have more than {_config.MaxImagesPerSubmission} images per submission");
+
+        if (_user.GetSubmissionCountByUser(user, SubmissionStatus.AwaitingApproval) > _config.MaxActiveSubmissions)
+            throw new BadRequestException(
+                $"Cannot have more than {_config.MaxActiveSubmissions} submissions awaiting approval");
+        
+        List<string>? possibleImageBlobs = meta.ImageBlobs;
+        if (possibleImageBlobs != null && _blob.GetBlobs(possibleImageBlobs).Any(x => x.Confirmed)) 
+            throw new BadRequestException("Cannot use images that are already used elsewhere");
     }
 
     public CssSubmission CreateSubmission(string? oldThemeId, string newThemeId, CssSubmissionIntent intent,
@@ -176,4 +277,7 @@ public class CssSubmissionService
         
         return new(part1.Count(), part1.Skip((pagination.Page - 1) * pagination.PerPage).Take(pagination.PerPage).ToList());
     }
+    
+    private string CreateCssJson(string name)
+        => _config.CssToThemeJson.Replace("%THEME_NAME%", name.Replace("\"", "\\\""));
 }
