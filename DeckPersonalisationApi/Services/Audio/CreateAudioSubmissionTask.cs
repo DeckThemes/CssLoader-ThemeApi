@@ -1,22 +1,24 @@
 ﻿using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Model.Dto.External.POST;
+using DeckPersonalisationApi.Services.Css;
 using DeckPersonalisationApi.Services.Tasks;
 using DeckPersonalisationApi.Services.Tasks.Common;
 
-namespace DeckPersonalisationApi.Services.Css;
+namespace DeckPersonalisationApi.Services.Audio;
 
-public class CreateCssSubmissionTask : ITaskPart
+public class CreateAudioSubmissionTask : ITaskPart
 {
     public string Name => "Creating submission";
     private CssThemeService _service;
     private CssSubmissionService _submission;
     private BlobService _blob;
-    private ValidateCssThemeTask _validation;
+    private ValidateAudioPackTask _validation;
     private WriteAsBlobTask _download;
     private CssSubmissionMeta _meta;
     private string? _source;
     private User _author;
     private CloneGitTask? _gitSrc;
+    
     public void Execute()
     {
         if (_gitSrc != null)
@@ -28,19 +30,15 @@ public class CreateCssSubmissionTask : ITaskPart
         if (blobs.Count <= 0)
             blobs = _validation.Base?.Images.Select(x => x.Id).ToList() ?? new();
 
-        CssTheme theme = _service.CreateTheme(_validation.ThemeId, _validation.ThemeName, blobs, _download.Blob.Id, _validation.ThemeVersion,
-            _source, _author.Id, _meta.Target ?? _validation.ThemeTarget, _validation.ThemeManifestVersion, _meta.Description ?? _validation.ThemeDescription,
-            _validation.ThemeDependencies, _validation.ThemeAuthor, ThemeType.Css);
+        CssTheme theme = _service.CreateTheme(_validation.PackId, _validation.PackName, blobs, _download.Blob.Id, _validation.PackVersion,
+            _source, _author.Id, _validation.IsMusicPack ? "Music" : "Audio", _validation.PackManifestVersion, _meta.Description ?? _validation.PackDescription,
+            new(), _validation.PackAuthor, ThemeType.Audio);
 
         _submission.CreateSubmission(_validation.Base?.Id ?? null, theme.Id,
-            _validation.Base == null ? CssSubmissionIntent.NewTheme : CssSubmissionIntent.UpdateTheme, _author.Id, _validation.Errors);
+            _validation.Base == null ? CssSubmissionIntent.NewTheme : CssSubmissionIntent.UpdateTheme, _author.Id, new());
     }
-
-    public void Cleanup(bool success)
-    {
-    }
-
-    public CreateCssSubmissionTask(ValidateCssThemeTask validation, WriteAsBlobTask download, CssSubmissionMeta meta, string? source, User author)
+    
+    public CreateAudioSubmissionTask(ValidateAudioPackTask validation, WriteAsBlobTask download, CssSubmissionMeta meta, string? source, User author)
     {
         _validation = validation;
         _download = download;
@@ -49,7 +47,7 @@ public class CreateCssSubmissionTask : ITaskPart
         _author = author;
     }
     
-    public CreateCssSubmissionTask(ValidateCssThemeTask validation, WriteAsBlobTask download, CssSubmissionMeta meta, CloneGitTask? source, User author)
+    public CreateAudioSubmissionTask(ValidateAudioPackTask validation, WriteAsBlobTask download, CssSubmissionMeta meta, CloneGitTask? source, User author)
     {
         _validation = validation;
         _download = download;

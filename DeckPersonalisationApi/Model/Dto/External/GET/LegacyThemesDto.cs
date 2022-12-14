@@ -27,6 +27,8 @@ public class LegacyThemesDto
     public int ManifestVersion { get; }
     [JsonPropertyName("description")]
     public string Description { get; }
+    [JsonPropertyName("music")]
+    public bool MusicPack { get; }
 
     public LegacyThemesDto(CssTheme theme, AppConfiguration config)
     {
@@ -43,5 +45,6 @@ public class LegacyThemesDto
         Source = theme.Source ?? "";
         ManifestVersion = theme.ManifestVersion;
         Description = theme.Description;
+        MusicPack = theme.Target == "Music";
     }
 }

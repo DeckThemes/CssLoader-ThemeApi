@@ -245,7 +245,13 @@ public class CssSubmissionService
     private PaginatedResponse<CssSubmission> GetSubmissionsInternal(PaginationDto pagination, Func<IEnumerable<CssSubmission>, IEnumerable<CssSubmission>> middleware)
     {
         List<SubmissionStatus> status =
-            pagination.Filters.Select(x => Enum.Parse<SubmissionStatus>(x, true)).ToList();
+            pagination.Filters.Select(x =>
+            {
+                SubmissionStatus? a = null;
+                if (Enum.TryParse(x, true, out SubmissionStatus res))
+                    a = res;
+                return a;
+            }).Where(x => x != null).Select(x => x!.Value).ToList();
 
         IEnumerable<CssSubmission> part1 = _ctx.CssSubmissions
             .Include(x => x.ReviewedBy)
@@ -261,6 +267,11 @@ public class CssSubmissionService
         part1 = part1.Where(x => ((status.Count <= 0) || status.Contains(x.Status)));
         if (!string.IsNullOrWhiteSpace(pagination.Search))
             part1 = part1.Where(x => (x.New.Name.ToLower().Contains(pagination.Search)));
+        
+        if (pagination.Filters.Contains("CSS"))
+            part1 = part1.Where(x => x.New.Type == ThemeType.Css);
+        else if (pagination.Filters.Contains("AUDIO"))
+            part1 = part1.Where(x => x.New.Type == ThemeType.Audio);
         
         switch (pagination.Order)
         {

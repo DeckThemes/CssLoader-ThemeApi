@@ -6,6 +6,7 @@ public class CssTheme : IToDto<PartialCssThemeDto>, IToDto<MinimalCssThemeDto>, 
 {
     public string Id { get; set; }
     public string Name { get; set; }
+    public ThemeType Type { get; set; }
     public List<SavedBlob> Images { get; set; }
     public SavedBlob Download { get; set; }
     public string Version { get; set; }

@@ -68,13 +68,13 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
         Errors = _vnu.ValidateCss(validator.CssPaths, _path.DirPath);
         ThemeName = validator.Name;
 
-        List<CssTheme> t = _service.GetAnyThemesByAuthorWithName(_user, ThemeName).ToList();
+        List<CssTheme> t = _service.GetAnyThemesByAuthorWithName(_user, ThemeName, ThemeType.Css).ToList();
         if (t.Any(x => !x.Approved))
             throw new TaskFailureException("Theme seems to already be a pending submission for this theme");
         
         Base = t.FirstOrDefault();
 
-        if (_service.ThemeNameExists(ThemeName) && Base == null)
+        if (_service.ThemeNameExists(ThemeName, ThemeType.Css) && Base == null)
             throw new TaskFailureException($"Theme '{ThemeName}' already exists");
         
         ThemeAuthor = validator.Author;
@@ -84,7 +84,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
         ThemeDescription = validator?.Description ?? Base?.Description ?? "";
         ThemeDependencies = validator!.Dependencies;
 
-        List<CssTheme> dependencies = _service.GetThemesByName(ThemeDependencies).ToList();
+        List<CssTheme> dependencies = _service.GetThemesByName(ThemeDependencies, ThemeType.Css).ToList();
         if (dependencies.Count != ThemeDependencies.Count)
             throw new TaskFailureException("Not all dependencies were found on this server");
 

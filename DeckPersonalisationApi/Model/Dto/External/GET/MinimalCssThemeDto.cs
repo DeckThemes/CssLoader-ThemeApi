@@ -4,6 +4,7 @@ public class MinimalCssThemeDto
 {
     public string Id { get; }
     public string Name { get; }
+    public string Type { get; }
     public string Version { get; }
     public string Target { get; }
     public string SpecifiedAuthor { get; }
@@ -17,5 +18,6 @@ public class MinimalCssThemeDto
         Target = theme.Target;
         ManifestVersion = theme.ManifestVersion;
         SpecifiedAuthor = theme.SpecifiedAuthor;
+        Type = theme.Type.ToString();
     }
 }

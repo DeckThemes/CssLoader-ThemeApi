@@ -4,12 +4,12 @@ public class PartialCssThemeDto
 {
     public string Id { get; }
     public string Name { get; }
+    public string Type { get; }
     public List<SavedBlobDto> Images { get; }
     public SavedBlobDto Download { get; }
     public string Version { get; }
     public string Target { get; }
     public int ManifestVersion { get; }
-
     public UserGetMinimalDto Author { get; }
     public string SpecifiedAuthor { get; }
     public DateTimeOffset Submitted { get; }
@@ -30,5 +30,6 @@ public class PartialCssThemeDto
         Updated = theme.Updated;
         SpecifiedAuthor = theme.SpecifiedAuthor;
         StarCount = theme.StarCount;
+        Type = theme.Type.ToString();
     }
 }

@@ -14,7 +14,7 @@ public class AudioManifestV1Validator
     public string Author { get; protected set; }
     public string Version { get; protected set; } = "v1.0";
     public int ManifestVersion { get; protected set; }
-    public bool Music { get; protected set; }
+    public bool Music { get; protected set; } = false;
     public List<string> Ignore { get; protected set; } = new();
     public Dictionary<string, List<string>> Mappings { get; protected set; } = new();
     

@@ -4,6 +4,7 @@ public class FullCssThemeDto
 {
     public string Id { get; set; }
     public string Name { get; set; }
+    public string Type { get; set; }
     public List<SavedBlobDto> Images { get; set; }
     public SavedBlobDto Download { get; set; }
     public string Version { get; set; }
@@ -43,5 +44,6 @@ public class FullCssThemeDto
         Disabled = theme.Deleted;
         SpecifiedAuthor = theme.SpecifiedAuthor;
         StarCount = theme.StarCount;
+        Type = theme.Type.ToString();
     }
 }

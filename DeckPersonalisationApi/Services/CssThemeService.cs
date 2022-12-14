@@ -32,7 +32,7 @@ public class CssThemeService
 
     public CssTheme CreateTheme(string id, string name, List<string> imageIds, string blobId, string version,
         string? source, string authorId, string target, int manifestVersion, string description,
-        List<string> dependencyNames, string specifiedAuthor)
+        List<string> dependencyNames, string specifiedAuthor, ThemeType type)
     {
         _ctx.ChangeTracker.Clear();
         
@@ -64,6 +64,7 @@ public class CssThemeService
             Description = description,
             Dependencies = dependencies,
             Approved = false,
+            Type = type
         };
 
         _ctx.CssThemes.Add(newTheme);
@@ -150,20 +151,20 @@ public class CssThemeService
             .Include(x => x.Images)
             .FirstOrDefault(x => x.Id == id);
 
-    public bool ThemeNameExists(string name)
+    public bool ThemeNameExists(string name, ThemeType type)
         => _ctx.CssThemes.Any(x => x.Name == name && x.Approved & !x.Deleted);
 
-    public List<LegacyThemesDto> GetThemesLegacy()
+    public List<LegacyThemesDto> GetThemesLegacy(ThemeType type)
         => _ctx.CssThemes.Include(x => x.Images).Include(x => x.Download).ToList()
             .Select(x => new LegacyThemesDto(x, _config)).ToList();
     
-    public IEnumerable<CssTheme> GetThemesByName(List<string> names)
+    public IEnumerable<CssTheme> GetThemesByName(List<string> names, ThemeType type)
         => _ctx.CssThemes.Include(x => x.Author)
-            .Where(x => names.Contains(x.Name) && x.Approved && !x.Deleted).ToList();
+            .Where(x => x.Type == type).Where(x => names.Contains(x.Name) && x.Approved && !x.Deleted).ToList();
     
-    public IEnumerable<CssTheme> GetAnyThemesByAuthorWithName(User user, string name)
+    public IEnumerable<CssTheme> GetAnyThemesByAuthorWithName(User user, string name, ThemeType type)
         => _ctx.CssThemes.Include(x => x.Author).Include(x => x.Images).Include(x => x.Download)
-            .Where(x => x.Name == name && x.Author.Id == user.Id && !x.Deleted).ToList();
+            .Where(x => x.Type == type).Where(x => x.Name == name && x.Author.Id == user.Id && !x.Deleted).ToList();
 
     public PaginatedResponse<CssTheme> GetUsersThemes(User user, PaginationDto pagination)
         => GetThemesInternal(pagination, x => x.Where(y => y.Author == user && y.Approved));
@@ -209,7 +210,14 @@ public class CssThemeService
             .Include(x => x.Images);
 
         part1 = middleware(part1);
-        part1 = part1.Where(x => ((pagination.Filters.Count <= 0) || pagination.Filters.Contains(x.Target)) && !x.Deleted);
+        
+        if (pagination.Filters.Contains("CSS"))
+            part1 = part1.Where(x => x.Type == ThemeType.Css);
+        else if (pagination.Filters.Contains("AUDIO"))
+            part1 = part1.Where(x => x.Type == ThemeType.Audio);
+        
+        List<string> filters = pagination.Filters.Where(x => x is not ("CSS" or "AUDIO")).Select(x => x.ToLower()).ToList();
+        part1 = part1.Where(x => ((filters.Count <= 0) || filters.Contains(x.Target.ToLower())) && !x.Deleted);
 
         if (!string.IsNullOrWhiteSpace(pagination.Search))
             part1 = part1.Where(x => (x.Name.ToLower().Contains(pagination.Search)));

@@ -55,7 +55,8 @@ public class CssThemeController : Controller
     public IActionResult GetTheme(string id)
     {
         CssTheme? theme = _service.GetThemeById(id);
-        theme ??= _service.GetThemesByName(new() { id }).FirstOrDefault();
+        theme ??= _service.GetThemesByName(new() { id }, ThemeType.Css).FirstOrDefault();
+        theme ??= _service.GetThemesByName(new() { id }, ThemeType.Audio).FirstOrDefault();
         theme.Require("Theme not found");
         
         return new OkObjectResult(((IToDto<FullCssThemeDto>)theme!).ToDto());
@@ -88,9 +89,11 @@ public class CssThemeController : Controller
         return new OkResult();
     }
 
-    [HttpGet("legacy")]
-    public IActionResult GetThemesAsLegacy()
-    {
-        return new OkObjectResult(_service.GetThemesLegacy());
-    }
+    [HttpGet("legacy/audio")]
+    public IActionResult GetAudioPacksAsLegacy()
+        =>  new OkObjectResult(_service.GetThemesLegacy(ThemeType.Audio));
+
+    [HttpGet("legacy/css")]
+    public IActionResult GetCssThemesAsLegacy()
+        =>  new OkObjectResult(_service.GetThemesLegacy(ThemeType.Css));
 }
