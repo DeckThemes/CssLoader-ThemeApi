@@ -12,16 +12,16 @@ using Newtonsoft.Json;
 
 namespace DeckPersonalisationApi.Services;
 
-public class CssSubmissionService
+public class SubmissionService
 {
     private ApplicationContext _ctx;
-    private CssThemeService _themes;
+    private ThemeService _themes;
     private BlobService _blob;
     private UserService _user;
     private AppConfiguration _config;
     private TaskService _task;
     
-    public CssSubmissionService(ApplicationContext ctx, BlobService blob, CssThemeService themes, UserService user, AppConfiguration config, TaskService task)
+    public SubmissionService(ApplicationContext ctx, BlobService blob, ThemeService themes, UserService user, AppConfiguration config, TaskService task)
     {
         _ctx = ctx;
         _blob = blob;
@@ -31,7 +31,7 @@ public class CssSubmissionService
         _task = task;
     }
     
-    public void ApproveCssTheme(string id, string? message, User reviewer)
+    public void ApproveTheme(string id, string? message, User reviewer)
     {
         CssSubmission submission = GetSubmissionById(id).Require("Failed to find submission");
 
@@ -61,7 +61,7 @@ public class CssSubmissionService
         Utils.Utils.SendDiscordWebhook(_config, submission);
     }
 
-    public void DenyCssTheme(string id, string? message, User reviewer)
+    public void DenyTheme(string id, string? message, User reviewer)
     {
         CssSubmission submission = GetSubmissionById(id).Require("Failed to find submission");
         
@@ -85,7 +85,7 @@ public class CssSubmissionService
         Utils.Utils.SendDiscordWebhook(_config, submission);
     }
     
-        public string SubmitThemeViaGit(string url, string? commit, string subfolder, User user, CssSubmissionMeta meta)
+    public string SubmitCssThemeViaGit(string url, string? commit, string subfolder, User user, CssSubmissionMeta meta)
     {
         Checks(user, meta);
 
@@ -113,7 +113,7 @@ public class CssSubmissionService
         return _task.RegisterTask(task);
     }
 
-    public string SubmitThemeViaZip(SavedBlob blob, CssSubmissionMeta meta, User user)
+    public string SubmitCssThemeViaZip(SavedBlob blob, CssSubmissionMeta meta, User user)
     {
         Checks(user, meta);
 
@@ -139,7 +139,7 @@ public class CssSubmissionService
         return _task.RegisterTask(task);
     }
 
-    public string SubmitThemeViaCss(string cssContent, string name, CssSubmissionMeta meta, User user)
+    public string SubmitCssThemeViaCss(string cssContent, string name, CssSubmissionMeta meta, User user)
     {
         Checks(user, meta);
 

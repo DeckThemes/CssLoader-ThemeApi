@@ -12,16 +12,16 @@ using Microsoft.AspNetCore.Mvc;
 namespace DeckPersonalisationApi.Controllers;
 
 [ApiController]
-[Route("css_submissions")]
+[Route("submissions")]
 public class CssSubmissionController : Controller
 {
     private JwtService _jwt;
-    private CssThemeService _css;
-    private CssSubmissionService _submission;
+    private ThemeService _css;
+    private SubmissionService _submission;
     private UserService _user;
     private BlobService _blob;
     
-    public CssSubmissionController(JwtService jwt, CssThemeService css, CssSubmissionService submission, UserService user, BlobService blob)
+    public CssSubmissionController(JwtService jwt, ThemeService css, SubmissionService submission, UserService user, BlobService blob)
     {
         _jwt = jwt;
         _css = css;
@@ -30,7 +30,7 @@ public class CssSubmissionController : Controller
         _blob = blob;
     }
 
-    [HttpPost("git")]
+    [HttpPost("css_git")]
     [Authorize]
     [JwtRoleReject(Permissions.FromApiToken)]
     public IActionResult SubmitThemeViaGit(CssThemeGitSubmitPostDto post)
@@ -38,13 +38,13 @@ public class CssSubmissionController : Controller
         UserJwtDto dto = _jwt.DecodeToken(Request).Require("Could not find user");
         User user = _user.GetActiveUserById(dto.Id).Require("Could not find user");
 
-        string task = _submission.SubmitThemeViaGit(post.Url, string.IsNullOrWhiteSpace(post.Commit) ? null : post.Commit,
+        string task = _submission.SubmitCssThemeViaGit(post.Url, string.IsNullOrWhiteSpace(post.Commit) ? null : post.Commit,
             post.Subfolder, user, post.Meta);
 
         return new OkObjectResult(new TaskIdGetDto(task));
     }
     
-    [HttpPost("zip")]
+    [HttpPost("css_zip")]
     [Authorize]
     [JwtRoleReject(Permissions.FromApiToken)]
     public IActionResult SubmitThemeViaZip(CssThemeZipSubmissionPostDto post)
@@ -61,11 +61,11 @@ public class CssSubmissionController : Controller
         User user = _user.GetUserById(dto.Id).Require("Could not find user");
         _blob.ConfirmBlob(blob);
 
-        string task = _submission.SubmitThemeViaZip(blob, post.Meta, user);
+        string task = _submission.SubmitCssThemeViaZip(blob, post.Meta, user);
         return new OkObjectResult(new TaskIdGetDto(task));
     }
     
-    [HttpPost("css")]
+    [HttpPost("css_css")]
     [Authorize]
     [JwtRoleReject(Permissions.FromApiToken)]
     public IActionResult SubmitThemeViaCss(CssThemeCssSubmissionPostDto post)
@@ -73,7 +73,7 @@ public class CssSubmissionController : Controller
         UserJwtDto dto = _jwt.DecodeToken(Request).Require("Could not find user");
         User user = _user.GetActiveUserById(dto.Id).Require("Could not find user");
 
-        string task = _submission.SubmitThemeViaCss(post.Css, post.Name, post.Meta, user);
+        string task = _submission.SubmitCssThemeViaCss(post.Css, post.Name, post.Meta, user);
         return new OkObjectResult(new TaskIdGetDto(task));
     }
     
@@ -113,7 +113,7 @@ public class CssSubmissionController : Controller
     public IActionResult ApproveThemeSubmissions(string id, MessageDto messageDto)
     {
         User user = _user.GetUserById(_jwt.DecodeToken(Request).Require().Id).Require();
-        _submission.ApproveCssTheme(id, messageDto.Message, user);
+        _submission.ApproveTheme(id, messageDto.Message, user);
         return new OkResult();
     }
 
@@ -131,7 +131,7 @@ public class CssSubmissionController : Controller
                 throw new UnauthorisedException("Unauthorized");
         }
         
-        _submission.DenyCssTheme(id, messageDto.Message, user);
+        _submission.DenyTheme(id, messageDto.Message, user);
         return new OkResult();
     }
 }

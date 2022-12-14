@@ -8,8 +8,8 @@ namespace DeckPersonalisationApi.Services.Css;
 public class CreateCssSubmissionTask : ITaskPart
 {
     public string Name => "Creating submission";
-    private CssThemeService _service;
-    private CssSubmissionService _submission;
+    private ThemeService _service;
+    private SubmissionService _submission;
     private BlobService _blob;
     private ValidateCssThemeTask _validation;
     private WriteAsBlobTask _download;
@@ -60,8 +60,8 @@ public class CreateCssSubmissionTask : ITaskPart
     
     public void SetupServices(IServiceProvider provider)
     {
-        _service = provider.GetRequiredService<CssThemeService>();
-        _submission = provider.GetRequiredService<CssSubmissionService>();
+        _service = provider.GetRequiredService<ThemeService>();
+        _submission = provider.GetRequiredService<SubmissionService>();
         _blob = provider.GetRequiredService<BlobService>();
     }
 }

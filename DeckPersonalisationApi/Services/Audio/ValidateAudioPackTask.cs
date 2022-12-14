@@ -7,7 +7,7 @@ namespace DeckPersonalisationApi.Services.Audio;
 
 public class ValidateAudioPackTask : IIdentifierTaskPart
 {
-    private CssThemeService _service;
+    private ThemeService _service;
     private IDirTaskPart _path;
     private GetJsonTask _json;
     private User _user;
@@ -86,6 +86,6 @@ public class ValidateAudioPackTask : IIdentifierTaskPart
     }
     public void SetupServices(IServiceProvider provider)
     {
-        _service = provider.GetRequiredService<CssThemeService>();
+        _service = provider.GetRequiredService<ThemeService>();
     }
 }

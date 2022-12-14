@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DeckPersonalisationApi.Services;
 
-public class CssThemeService
+public class ThemeService
 {
     private TaskService _task;
     private ApplicationContext _ctx;
@@ -21,7 +21,7 @@ public class CssThemeService
 
     public List<string> Targets => _config.CssTargets;
 
-    public CssThemeService(TaskService task, ApplicationContext ctx, BlobService blob, UserService user, AppConfiguration config)
+    public ThemeService(TaskService task, ApplicationContext ctx, BlobService blob, UserService user, AppConfiguration config)
     {
         _task = task;
         _ctx = ctx;

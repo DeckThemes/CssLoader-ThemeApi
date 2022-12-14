@@ -13,12 +13,12 @@ namespace DeckPersonalisationApi.Controllers;
 [Route("users")]
 public class UserController : Controller
 {
-    private CssThemeService _css;
+    private ThemeService _css;
     private UserService _user;
     private JwtService _jwt;
-    private CssSubmissionService _submission;
+    private SubmissionService _submission;
 
-    public UserController(CssThemeService css, UserService user, CssSubmissionService submission, JwtService jwt)
+    public UserController(ThemeService css, UserService user, SubmissionService submission, JwtService jwt)
     {
         _css = css;
         _user = user;
@@ -26,7 +26,7 @@ public class UserController : Controller
         _jwt = jwt;
     }
 
-    [HttpGet("{id}/css_themes")]
+    [HttpGet("{id}/themes")]
     public IActionResult GetCssThemes(string id, int page = 1, int perPage = 50, string filters = "", string order = "", string search = "")
     {
         User user = _user.GetActiveUserById(id).Require();
@@ -36,7 +36,7 @@ public class UserController : Controller
         return new OkObjectResult(response.ToDto());
     }
 
-    [HttpGet("me/css_themes")]
+    [HttpGet("me/themes")]
     [Authorize]
     public IActionResult GetCssThemesMe(int page = 1, int perPage = 50, string filters = "", string order = "", string search = "")
     {
@@ -64,14 +64,14 @@ public class UserController : Controller
         return RenewValidationToken(user.Id);
     }
     
-    [HttpGet("{id}/css_themes/filters")]
-    [HttpGet("{id}/css_stars/filters")]
+    [HttpGet("{id}/themes/filters")]
+    [HttpGet("{id}/stars/filters")]
     public IActionResult GetCssThemesFilters(string id)
     {
         return new OkObjectResult(new PaginationFilters(_css.Targets, _css.Orders().ToList()));
     }
 
-    [HttpGet("{id}/css_submissions")]
+    [HttpGet("{id}/submissions")]
     [Authorize]
     [JwtRoleRequire(Permissions.ViewThemeSubmissions)]
     public IActionResult GetCssSubmissions(string id, int page = 1, int perPage = 50, string filters = "", string order = "", string search = "")
@@ -81,7 +81,7 @@ public class UserController : Controller
         return new OkObjectResult(_submission.GetSubmissionsFromUser(paginationDto, user).ToDto());
     }
 
-    [HttpGet("me/css_submissions")]
+    [HttpGet("me/submissions")]
     [Authorize]
     public IActionResult GetCssSubmissionsMe(int page = 1, int perPage = 50, string filters = "", string order = "", string search = "")
     {
@@ -89,14 +89,14 @@ public class UserController : Controller
         return GetCssSubmissions(user.Id, page, perPage, filters, order, search);
     }
     
-    [HttpGet("{id}/css_submissions/filters")]
+    [HttpGet("{id}/submissions/filters")]
     [Authorize]
     public IActionResult ViewSubmissionsFilters()
     {
         return new OkObjectResult(new PaginationFilters(_submission.Filters().ToList(), _submission.Orders().ToList()));
     }
 
-    [HttpGet("{id}/css_stars")]
+    [HttpGet("{id}/stars")]
     [Authorize]
     [JwtRoleRequire(Permissions.ManageApi)]
     public IActionResult ViewStarredThemesOfUser(string id, int page = 1, int perPage = 50, string filters = "", string order = "", string search = "")
@@ -107,7 +107,7 @@ public class UserController : Controller
         return new OkObjectResult(response.ToDto());
     }
 
-    [HttpGet("me/css_stars")]
+    [HttpGet("me/stars")]
     [Authorize]
     public IActionResult ViewMyStarredThemes(int page = 1, int perPage = 50, string filters = "", string order = "",
         string search = "")
@@ -116,7 +116,7 @@ public class UserController : Controller
         return ViewStarredThemesOfUser(user.Id, page, perPage, filters, order, search);
     }
 
-    [HttpPost("{id}/css_stars/{themeId}")]
+    [HttpPost("{id}/stars/{themeId}")]
     [Authorize]
     [JwtRoleRequire(Permissions.ManageApi)]
     public IActionResult AddStarToTheme(string id, string themeId)
@@ -127,7 +127,7 @@ public class UserController : Controller
         return new OkResult();
     }
     
-    [HttpPost("me/css_stars/{themeId}")]
+    [HttpPost("me/stars/{themeId}")]
     [Authorize]
     public IActionResult AddMyStarToTheme(string themeId)
     {
@@ -135,7 +135,7 @@ public class UserController : Controller
         return AddStarToTheme(user.Id, themeId);
     }
 
-    [HttpDelete("{id}/css_stars/{themeId}")]
+    [HttpDelete("{id}/stars/{themeId}")]
     [Authorize]
     [JwtRoleRequire(Permissions.ManageApi)]
     public IActionResult RemoveStarFromTheme(string id, string themeId)
@@ -146,7 +146,7 @@ public class UserController : Controller
         return new OkResult();
     }
     
-    [HttpDelete("me/css_stars/{themeId}")]
+    [HttpDelete("me/stars/{themeId}")]
     [Authorize]
     public IActionResult RemoveMyStarFromTheme(string themeId)
     {
@@ -154,7 +154,7 @@ public class UserController : Controller
         return RemoveStarFromTheme(user.Id, themeId);
     }
 
-    [HttpGet("{id}/css_stars/{themeId}")]
+    [HttpGet("{id}/stars/{themeId}")]
     [Authorize]
     [JwtRoleRequire(Permissions.ManageApi)]
     public IActionResult GetStarStatusOfThemeFromUser(string id, string themeId)
@@ -164,7 +164,7 @@ public class UserController : Controller
         return new OkObjectResult(new HasThemeStarredDto(_user.HasThemeStarred(user, theme)));
     }
     
-    [HttpGet("me/css_stars/{themeId}")]
+    [HttpGet("me/stars/{themeId}")]
     [Authorize]
     public IActionResult GetStarStatusOfThemeFromMe(string themeId)
     {

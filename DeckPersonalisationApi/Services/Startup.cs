@@ -66,7 +66,7 @@ public class Startup : BackgroundService
     {
         using (var scope = _services.CreateScope())
         {
-            var cssThemeService = scope.ServiceProvider.GetRequiredService<CssThemeService>();
+            var cssThemeService = scope.ServiceProvider.GetRequiredService<ThemeService>();
             cssThemeService.UpdateStars();
         }
     }

@@ -14,7 +14,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
     private GetJsonTask _json;
     private User _user;
     private List<string> _validThemeTargets = new();
-    private CssThemeService _service;
+    private ThemeService _service;
     private VnuCssVerifier _vnu;
 
     public string ThemeId { get; private set; }
@@ -109,7 +109,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
     
     public void SetupServices(IServiceProvider provider)
     {
-        _service = provider.GetRequiredService<CssThemeService>();
+        _service = provider.GetRequiredService<ThemeService>();
         _vnu = provider.GetRequiredService<VnuCssVerifier>();
     }
 

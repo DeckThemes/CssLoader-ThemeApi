@@ -45,10 +45,10 @@ builder.Services.AddSingleton(configuration);
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<BlobService>();
-builder.Services.AddScoped<CssThemeService>();
+builder.Services.AddScoped<ThemeService>();
 builder.Services.AddSingleton<TaskService>();
 builder.Services.AddScoped<VnuCssVerifier>();
-builder.Services.AddScoped<CssSubmissionService>();
+builder.Services.AddScoped<SubmissionService>();
 builder.Services.AddHostedService<Startup>();
 builder.Services.AddDbContext<ApplicationContext>(x =>
 {

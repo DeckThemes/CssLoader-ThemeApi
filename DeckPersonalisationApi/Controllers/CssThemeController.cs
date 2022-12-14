@@ -12,14 +12,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace DeckPersonalisationApi.Controllers;
 
 [ApiController]
-[Route("css_themes")]
+[Route("themes")]
 public class CssThemeController : Controller
 {
     private JwtService _jwt;
     private UserService _user;
-    private CssThemeService _service;
+    private ThemeService _service;
 
-    public CssThemeController(JwtService jwt, CssThemeService service, UserService user)
+    public CssThemeController(JwtService jwt, ThemeService service, UserService user)
     {
         _jwt = jwt;
         _service = service;
