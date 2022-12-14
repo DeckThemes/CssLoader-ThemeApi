@@ -13,7 +13,7 @@ public class CreateCssSubmissionTask : ITaskPart
     private BlobService _blob;
     private ValidateCssThemeTask _validation;
     private WriteAsBlobTask _download;
-    private CssSubmissionMeta _meta;
+    private SubmissionMeta _meta;
     private string? _source;
     private User _author;
     private CloneGitTask? _gitSrc;
@@ -40,7 +40,7 @@ public class CreateCssSubmissionTask : ITaskPart
     {
     }
 
-    public CreateCssSubmissionTask(ValidateCssThemeTask validation, WriteAsBlobTask download, CssSubmissionMeta meta, string? source, User author)
+    public CreateCssSubmissionTask(ValidateCssThemeTask validation, WriteAsBlobTask download, SubmissionMeta meta, string? source, User author)
     {
         _validation = validation;
         _download = download;
@@ -49,7 +49,7 @@ public class CreateCssSubmissionTask : ITaskPart
         _author = author;
     }
     
-    public CreateCssSubmissionTask(ValidateCssThemeTask validation, WriteAsBlobTask download, CssSubmissionMeta meta, CloneGitTask? source, User author)
+    public CreateCssSubmissionTask(ValidateCssThemeTask validation, WriteAsBlobTask download, SubmissionMeta meta, CloneGitTask? source, User author)
     {
         _validation = validation;
         _download = download;

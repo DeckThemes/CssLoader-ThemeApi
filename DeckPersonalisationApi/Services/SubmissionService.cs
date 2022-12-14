@@ -4,6 +4,7 @@ using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Model.Dto.External.GET;
 using DeckPersonalisationApi.Model.Dto.External.POST;
 using DeckPersonalisationApi.Model.Dto.Internal.GET;
+using DeckPersonalisationApi.Services.Audio;
 using DeckPersonalisationApi.Services.Css;
 using DeckPersonalisationApi.Services.Tasks;
 using DeckPersonalisationApi.Services.Tasks.Common;
@@ -85,7 +86,7 @@ public class SubmissionService
         Utils.Utils.SendDiscordWebhook(_config, submission);
     }
     
-    public string SubmitCssThemeViaGit(string url, string? commit, string subfolder, User user, CssSubmissionMeta meta)
+    public string SubmitCssThemeViaGit(string url, string? commit, string subfolder, User user, SubmissionMeta meta)
     {
         Checks(user, meta);
 
@@ -109,11 +110,11 @@ public class SubmissionService
             gitContainer, clone, folder, size, copy, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blob, submission
         };
 
-        AppTaskFromParts task = new(taskParts, "Submit theme via git", user);
+        AppTaskFromParts task = new(taskParts, "Submit css theme via git", user);
         return _task.RegisterTask(task);
     }
 
-    public string SubmitCssThemeViaZip(SavedBlob blob, CssSubmissionMeta meta, User user)
+    public string SubmitCssThemeViaZip(SavedBlob blob, SubmissionMeta meta, User user)
     {
         Checks(user, meta);
 
@@ -135,11 +136,11 @@ public class SubmissionService
             zipContainer, extractZip, size, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blobSave, submission
         };
 
-        AppTaskFromParts task = new(taskParts, "Submit theme via zip", user);
+        AppTaskFromParts task = new(taskParts, "Submit css theme via zip", user);
         return _task.RegisterTask(task);
     }
 
-    public string SubmitCssThemeViaCss(string cssContent, string name, CssSubmissionMeta meta, User user)
+    public string SubmitCssThemeViaCss(string cssContent, string name, SubmissionMeta meta, User user)
     {
         Checks(user, meta);
 
@@ -162,11 +163,39 @@ public class SubmissionService
             cssContainer, writeCss, writeJson, size, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blobSave, submission
         };
 
-        AppTaskFromParts task = new(taskParts, "Submit theme via css", user);
+        AppTaskFromParts task = new(taskParts, "Submit css theme via css", user);
+        return _task.RegisterTask(task);
+    }
+    
+    public string SubmitAudioPackViaGit(string url, string? commit, string subfolder, User user, SubmissionMeta meta)
+    {
+        Checks(user, meta);
+
+        CreateTempFolderTask gitContainer = new CreateTempFolderTask();
+        CloneGitTask clone = new CloneGitTask(url, commit, gitContainer);
+        PathTransformTask folder = new PathTransformTask(clone, subfolder);
+        FolderSizeConstraintTask size = new FolderSizeConstraintTask(folder, _config.MaxAudioPackSize);
+        CopyFileTask copy = new CopyFileTask(clone, folder, "LICENSE");
+        GetJsonTask jsonGet = new GetJsonTask(folder, "pack.json");
+        ValidateAudioPackTask audio = new ValidateAudioPackTask(folder, jsonGet, user, _config.AudioFiles);
+        WriteJsonTask jsonWrite = new WriteJsonTask(folder, "pack.json", jsonGet);
+        CreateTempFolderTask themeContainer = new CreateTempFolderTask();
+        CreateFolderTask themeFolder = new CreateFolderTask(themeContainer, audio);
+        CopyFileTask copyToThemeFolder = new CopyFileTask(folder, themeFolder, "*");
+        ZipTask zip = new ZipTask(themeContainer, gitContainer);
+        WriteAsBlobTask blob = new WriteAsBlobTask(user, zip);
+        CreateAudioSubmissionTask submission = new CreateAudioSubmissionTask(audio, blob, meta, clone, user);
+
+        List<ITaskPart> taskParts = new()
+        {
+            gitContainer, clone, folder, size, copy, jsonGet, audio, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blob, submission
+        };
+
+        AppTaskFromParts task = new(taskParts, "Submit audio pack via git", user);
         return _task.RegisterTask(task);
     }
 
-    private void Checks(User user, CssSubmissionMeta meta)
+    private void Checks(User user, SubmissionMeta meta)
     {
         if ((meta.ImageBlobs?.Count ?? 0) > _config.MaxImagesPerSubmission)
             throw new BadRequestException($"Cannot have more than {_config.MaxImagesPerSubmission} images per submission");

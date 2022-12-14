@@ -22,8 +22,10 @@ public class AppConfiguration
     public long MaxActiveSubmissions { get; private set; }
     public long MaxImagesPerSubmission { get; private set; }
     public List<string> CssTargets { get; private set; }
+    public List<string> AudioFiles { get; private set; }
     public Dictionary<string, long> ValidFileTypesAndMaxSizes { get; private set; }
     public long MaxCssThemeSize { get; private set; }
+    public long MaxAudioPackSize { get; private set; }
     public long OwnerDiscordId { get; private set; }
     public string VnuPath { get; private set; }
     public string CssToThemeJson { get; private set; }
@@ -72,6 +74,9 @@ public class AppConfiguration
         MaxImagesPerSubmission = GetInt("Config:MaxImagesPerSubmission");
         CssTargets = GetString("Config:CssTargets").Split(';').Select(x => x.Trim())
             .Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+
+        AudioFiles = GetString("Config:AudioFiles").Split(';').Select(x => x.Trim())
+            .Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
         
         ValidFileTypesAndMaxSizes = new Dictionary<string, long>();
         foreach (var s in GetString("Config:MaxUploadFileSizes").Split(";"))
@@ -84,6 +89,7 @@ public class AppConfiguration
         }
 
         MaxCssThemeSize = GetInt("Config:MaxCssThemeSize");
+        MaxAudioPackSize = GetInt("Config:MaxAudioPackSize");
         OwnerDiscordId = GetInt("Config:OwnerDiscordId");
         VnuPath = GetString("Config:VnuPath");
         CssToThemeJson = GetString("Config:CssToThemeJson");

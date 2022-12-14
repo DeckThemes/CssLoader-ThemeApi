@@ -14,7 +14,7 @@ public class CreateAudioSubmissionTask : ITaskPart
     private BlobService _blob;
     private ValidateAudioPackTask _validation;
     private WriteAsBlobTask _download;
-    private CssSubmissionMeta _meta;
+    private SubmissionMeta _meta;
     private string? _source;
     private User _author;
     private CloneGitTask? _gitSrc;
@@ -38,7 +38,7 @@ public class CreateAudioSubmissionTask : ITaskPart
             _validation.Base == null ? CssSubmissionIntent.NewTheme : CssSubmissionIntent.UpdateTheme, _author.Id, new());
     }
     
-    public CreateAudioSubmissionTask(ValidateAudioPackTask validation, WriteAsBlobTask download, CssSubmissionMeta meta, string? source, User author)
+    public CreateAudioSubmissionTask(ValidateAudioPackTask validation, WriteAsBlobTask download, SubmissionMeta meta, string? source, User author)
     {
         _validation = validation;
         _download = download;
@@ -47,7 +47,7 @@ public class CreateAudioSubmissionTask : ITaskPart
         _author = author;
     }
     
-    public CreateAudioSubmissionTask(ValidateAudioPackTask validation, WriteAsBlobTask download, CssSubmissionMeta meta, CloneGitTask? source, User author)
+    public CreateAudioSubmissionTask(ValidateAudioPackTask validation, WriteAsBlobTask download, SubmissionMeta meta, CloneGitTask? source, User author)
     {
         _validation = validation;
         _download = download;

@@ -13,7 +13,7 @@ namespace DeckPersonalisationApi.Controllers;
 
 [ApiController]
 [Route("submissions")]
-public class CssSubmissionController : Controller
+public class SubmissionController : Controller
 {
     private JwtService _jwt;
     private ThemeService _css;
@@ -21,7 +21,7 @@ public class CssSubmissionController : Controller
     private UserService _user;
     private BlobService _blob;
     
-    public CssSubmissionController(JwtService jwt, ThemeService css, SubmissionService submission, UserService user, BlobService blob)
+    public SubmissionController(JwtService jwt, ThemeService css, SubmissionService submission, UserService user, BlobService blob)
     {
         _jwt = jwt;
         _css = css;
@@ -33,7 +33,7 @@ public class CssSubmissionController : Controller
     [HttpPost("css_git")]
     [Authorize]
     [JwtRoleReject(Permissions.FromApiToken)]
-    public IActionResult SubmitThemeViaGit(CssThemeGitSubmitPostDto post)
+    public IActionResult SubmitCssThemeViaGit(GitSubmitPostDto post)
     {
         UserJwtDto dto = _jwt.DecodeToken(Request).Require("Could not find user");
         User user = _user.GetActiveUserById(dto.Id).Require("Could not find user");
@@ -44,10 +44,24 @@ public class CssSubmissionController : Controller
         return new OkObjectResult(new TaskIdGetDto(task));
     }
     
+    [HttpPost("audio_git")]
+    [Authorize]
+    [JwtRoleReject(Permissions.FromApiToken)]
+    public IActionResult SubmitAudioPackViaGit(GitSubmitPostDto post)
+    {
+        UserJwtDto dto = _jwt.DecodeToken(Request).Require("Could not find user");
+        User user = _user.GetActiveUserById(dto.Id).Require("Could not find user");
+
+        string task = _submission.SubmitAudioPackViaGit(post.Url, string.IsNullOrWhiteSpace(post.Commit) ? null : post.Commit,
+            post.Subfolder, user, post.Meta);
+
+        return new TaskIdGetDto(task).Ok();
+    }
+    
     [HttpPost("css_zip")]
     [Authorize]
     [JwtRoleReject(Permissions.FromApiToken)]
-    public IActionResult SubmitThemeViaZip(CssThemeZipSubmissionPostDto post)
+    public IActionResult SubmitThemeViaZip(ZipSubmissionPostDto post)
     {
         UserJwtDto dto = _jwt.DecodeToken(Request).Require("Could not find user");
         SavedBlob blob = _blob.GetBlob(post.Blob).Require("Could not find blob");

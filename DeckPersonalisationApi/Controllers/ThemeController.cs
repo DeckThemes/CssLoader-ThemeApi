@@ -13,13 +13,13 @@ namespace DeckPersonalisationApi.Controllers;
 
 [ApiController]
 [Route("themes")]
-public class CssThemeController : Controller
+public class ThemeController : Controller
 {
     private JwtService _jwt;
     private UserService _user;
     private ThemeService _service;
 
-    public CssThemeController(JwtService jwt, ThemeService service, UserService user)
+    public ThemeController(JwtService jwt, ThemeService service, UserService user)
     {
         _jwt = jwt;
         _service = service;
