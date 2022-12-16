@@ -35,6 +35,9 @@ public class AppConfiguration
     public long Port { get; private set; }
     public string LegacyUrlBase { get; private set; }
     public string DiscordWebhook { get; private set; }
+    public List<string> CorsAllowedOrigins { get; private set; }
+    public List<string> CorsAllowedHeaders { get; private set; }
+    public List<string> CorsAllowedMethods { get; private set; }
     
     public AppConfiguration()
     {
@@ -72,11 +75,8 @@ public class AppConfiguration
         MaxUnconfirmedBlobs = GetInt("Config:MaxUnconfirmedBlobs");
         MaxActiveSubmissions = GetInt("Config:MaxActiveSubmissions");
         MaxImagesPerSubmission = GetInt("Config:MaxImagesPerSubmission");
-        CssTargets = GetString("Config:CssTargets").Split(';').Select(x => x.Trim())
-            .Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
-
-        AudioFiles = GetString("Config:AudioFiles").Split(';').Select(x => x.Trim())
-            .Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+        CssTargets = GetList("Config:CssTargets");
+        AudioFiles = GetList("Config:AudioFiles");
         
         ValidFileTypesAndMaxSizes = new Dictionary<string, long>();
         foreach (var s in GetString("Config:MaxUploadFileSizes").Split(";"))
@@ -99,11 +99,14 @@ public class AppConfiguration
         Port = GetInt("Config:Port");
         LegacyUrlBase = GetString("Jwt:Audience") + ":" + Port + "/";
         DiscordWebhook = GetString("Config:DiscordWebhook");
+
+        CorsAllowedOrigins = GetList("Config:CorsAllowedOrigins");
+        CorsAllowedHeaders = GetList("Config:CorsAllowedHeaders");
+        CorsAllowedMethods = GetList("Config:CorsAllowedMethods");
     }
 
     private string GetString(string key)
     {
-        
         string value = _config[key].Require($"Could not find '{key}' in configuration");
         Console.WriteLine($"Reading configuration key '{key}'" + (key.StartsWith("Config") ? $". Got value '{value}'" : ""));
         return value;
@@ -114,4 +117,8 @@ public class AppConfiguration
 
     private bool GetBool(string key)
         => GetString(key).ToLower() == "true";
+
+    private List<string> GetList(string key)
+        => GetString(key).Split(';').Select(x => x.Trim())
+            .Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
 }
