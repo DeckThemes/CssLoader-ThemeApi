@@ -53,8 +53,8 @@ public class AppConfiguration
         ClientSecret = GetString("ConnectionStrings:ClientSecret");
         DbPath = GetString("ConnectionStrings:DbPath");
 
-        JwtIssuer = GetString("Jwt:Issuer");
-        JwtAudience = GetString("Jwt:Audience");
+        JwtIssuer = GetString("Jwt:Issuer") + "/";
+        JwtAudience = GetString("Jwt:Audience") + "/";
         JwtKey = GetString("Jwt:Key");
         JwtValidateIssuer = GetBool("Jwt:ValidateIssuer");
         JwtValidateAudience = GetBool("Jwt:ValidateAudience");
@@ -97,7 +97,7 @@ public class AppConfiguration
         BackgroundServiceFrequencyMinutes = GetInt("Config:BackgroundServiceFrequencyMinutes");
         UseSwagger = GetBool("Config:UseSwagger");
         Port = GetInt("Config:Port");
-        LegacyUrlBase = GetString("Config:LegacyUrl");
+        LegacyUrlBase = GetString("Jwt:Audience") + ":" + Port + "/";
         DiscordWebhook = GetString("Config:DiscordWebhook");
     }
 
