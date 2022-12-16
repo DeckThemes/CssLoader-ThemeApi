@@ -101,7 +101,7 @@ public class SubmissionController : Controller
     [HttpGet("filters")]
     [Authorize]
     [JwtRoleRequire(Permissions.ViewThemeSubmissions)]
-    public IActionResult ViewSubmissionsFilters()
+    public IActionResult ViewSubmissionsFilters(string? target = "CSS")
     {
         return new OkObjectResult(new PaginationFilters(_submission.Filters().ToList(), _submission.Orders().ToList()));
     }

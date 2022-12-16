@@ -36,9 +36,9 @@ public class ThemeController : Controller
     
     [HttpGet("filters")]
     [HttpGet("awaiting_approval/filters")]
-    public IActionResult GetThemesFilters()
+    public IActionResult GetThemesFilters(string target = "CSS")
     {
-        return new PaginationFilters(_service.Targets, _service.Orders().ToList()).Ok();
+        return new PaginationFilters(target.ToLower() == "audio" ? _service.AudioTargets : _service.CssTargets, _service.Orders().ToList()).Ok();
     }
 
     [HttpGet("awaiting_approval")]

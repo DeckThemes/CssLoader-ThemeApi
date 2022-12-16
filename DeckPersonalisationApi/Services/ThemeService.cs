@@ -19,7 +19,8 @@ public class ThemeService
     private UserService _user;
     private AppConfiguration _config;
 
-    public List<string> Targets => _config.CssTargets;
+    public List<string> CssTargets => _config.CssTargets;
+    public List<string> AudioTargets => new() { "Music", "Audio" };
 
     public ThemeService(TaskService task, ApplicationContext ctx, BlobService blob, UserService user, AppConfiguration config)
     {

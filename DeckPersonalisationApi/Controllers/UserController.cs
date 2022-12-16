@@ -66,9 +66,9 @@ public class UserController : Controller
     
     [HttpGet("{id}/themes/filters")]
     [HttpGet("{id}/stars/filters")]
-    public IActionResult GetCssThemesFilters(string id)
+    public IActionResult GetCssThemesFilters(string id, string target = "CSS")
     {
-        return new PaginationFilters(_css.Targets, _css.Orders().ToList()).Ok();
+        return new PaginationFilters(target.ToLower() == "audio" ? _css.AudioTargets : _css.CssTargets, _css.Orders().ToList()).Ok();
     }
 
     [HttpGet("{id}/submissions")]
@@ -91,7 +91,7 @@ public class UserController : Controller
     
     [HttpGet("{id}/submissions/filters")]
     [Authorize]
-    public IActionResult ViewSubmissionsFilters()
+    public IActionResult ViewSubmissionsFilters(string target = "CSS")
     {
         return new PaginationFilters(_submission.Filters().ToList(), _submission.Orders().ToList()).Ok();
     }
