@@ -63,7 +63,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("https://api.deckthemes.com", "https://deckthemes.com", "https://www.deckthemes.com");
+        policy.WithOrigins("https://api.deckthemes.com", "https://deckthemes.com", "https://www.deckthemes.com").WithHeaders("content-type");
     });
 });
 
