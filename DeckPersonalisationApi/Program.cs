@@ -66,7 +66,8 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins(configuration.CorsAllowedOrigins.ToArray())
             .WithHeaders(configuration.CorsAllowedHeaders.ToArray())
-            .WithMethods(configuration.CorsAllowedMethods.ToArray());
+            .WithMethods(configuration.CorsAllowedMethods.ToArray())
+            .AllowCredentials();
     });
 });
 
