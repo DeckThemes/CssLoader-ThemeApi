@@ -59,7 +59,7 @@ public class SubmissionController : Controller
     [HttpPost("css_zip")]
     [Authorize]
     [JwtRoleReject(Permissions.FromApiToken)]
-    public IActionResult SubmitThemeViaZip(ZipSubmissionPostDto post)
+    public IActionResult SubmitCssThemeViaZip(ZipSubmissionPostDto post)
     {
         UserJwtDto dto = _jwt.DecodeToken(Request).Require("Could not find user");
         SavedBlob blob = _blob.GetBlob(post.Blob).Require("Could not find blob");
@@ -70,10 +70,31 @@ public class SubmissionController : Controller
         if (blob.Owner.Id != dto.Id)
             throw new UnauthorisedException("Can't use a blob from someone else");
 
-        User user = _user.GetUserById(dto.Id).Require("Could not find user");
+        User user = _user.GetActiveUserById(dto.Id).Require("Could not find user");
         _blob.ConfirmBlob(blob);
 
         string task = _submission.SubmitCssThemeViaZip(blob, post.Meta, user);
+        return new TaskIdGetDto(task).Ok();
+    }
+    
+    [HttpPost("audio_zip")]
+    [Authorize]
+    [JwtRoleReject(Permissions.FromApiToken)]
+    public IActionResult SubmitAudioPackViaZip(ZipSubmissionPostDto post)
+    {
+        UserJwtDto dto = _jwt.DecodeToken(Request).Require("Could not find user");
+        SavedBlob blob = _blob.GetBlob(post.Blob).Require("Could not find blob");
+
+        if (blob.Confirmed || blob.Deleted)
+            throw new BadRequestException("Can't use a blob that's already used");
+
+        if (blob.Owner.Id != dto.Id)
+            throw new UnauthorisedException("Can't use a blob from someone else");
+
+        User user = _user.GetActiveUserById(dto.Id).Require("Could not find user");
+        _blob.ConfirmBlob(blob);
+
+        string task = _submission.SubmitAudioPackViaZip(blob, post.Meta, user);
         return new TaskIdGetDto(task).Ok();
     }
     
@@ -125,7 +146,7 @@ public class SubmissionController : Controller
     [JwtRoleReject(Permissions.FromApiToken)]
     public IActionResult ApproveThemeSubmissions(string id, MessageDto messageDto)
     {
-        User user = _user.GetUserById(_jwt.DecodeToken(Request).Require().Id).Require();
+        User user = _user.GetActiveUserById(_jwt.DecodeToken(Request).Require().Id).Require();
         _submission.ApproveTheme(id, messageDto.Message, user);
         return new OkResult();
     }
@@ -136,7 +157,7 @@ public class SubmissionController : Controller
     public IActionResult DenyThemeSubmission(string id, MessageDto messageDto)
     {
         var token = _jwt.DecodeToken(Request).Require();
-        User user = _user.GetUserById(token.Id).Require();
+        User user = _user.GetActiveUserById(token.Id).Require();
 
         if ((token.Permissions & Permissions.ApproveThemeSubmissions) != Permissions.ApproveThemeSubmissions)
         {

@@ -159,7 +159,7 @@ public class UserController : Controller
     [JwtRoleRequire(Permissions.ManageApi)]
     public IActionResult GetStarStatusOfThemeFromUser(string id, string themeId)
     {
-        User user = _user.GetUserById(id).Require("User not found");
+        User user = _user.GetActiveUserById(id).Require("User not found");
         CssTheme theme = _theme.GetThemeById(themeId).Require("Theme not found");
         return new HasThemeStarredDto(_user.HasThemeStarred(user, theme)).Ok();
     }

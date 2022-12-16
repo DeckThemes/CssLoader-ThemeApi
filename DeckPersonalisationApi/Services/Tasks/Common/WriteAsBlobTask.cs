@@ -19,8 +19,9 @@ public class WriteAsBlobTask : ITaskPart
         if (!File.Exists(path))
             throw new TaskFailureException("File does not exist");
 
-        Stream file = File.OpenRead(path);
+        FileStream file = File.OpenRead(path);
         Blob = _blob.CreateBlob(file, Path.GetFileName(path), _user.Id);
+        file.Close();
     }
 
     public void Cleanup(bool success)

@@ -95,6 +95,7 @@ public class AudioManifestV1Validator
         VerifyAuthor();
         VerifyVersion();
         VerifyDescription();
+        VerifyMusicBool();
 
         if (Music)
             _validFiles = new() { "menu_music.mp3" };

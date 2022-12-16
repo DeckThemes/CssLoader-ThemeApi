@@ -110,7 +110,7 @@ public class UserService
 
     public string? GetApiToken(string userId)
     {
-        User? user = GetUserById(userId);
+        User? user = GetActiveUserById(userId);
         if (user == null)
             return null;
 
@@ -123,7 +123,7 @@ public class UserService
 
     public void ResetValidationToken(string userId)
     {
-        User? user = GetUserById(userId);
+        User? user = GetActiveUserById(userId);
         if (user == null)
             throw new NotFoundException("User not found");
 

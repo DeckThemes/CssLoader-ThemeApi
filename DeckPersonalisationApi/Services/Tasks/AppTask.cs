@@ -34,7 +34,7 @@ public abstract class AppTask : IToDto<TaskGetDto>
         {
             x.TaskCompleted = DateTimeOffset.Now;
             if (x.Success)
-                x.Status = $"{Name} Completed Successfully";
+                x.Status = $"{Name} completed Successfully";
         };
     }
 

@@ -194,6 +194,32 @@ public class SubmissionService
         AppTaskFromParts task = new(taskParts, "Submit audio pack via git", user);
         return _task.RegisterTask(task);
     }
+    
+    public string SubmitAudioPackViaZip(SavedBlob blob, SubmissionMeta meta, User user)
+    {
+        Checks(user, meta);
+
+        CreateTempFolderTask zipContainer = new CreateTempFolderTask();
+        ExtractZipTask extractZip = new ExtractZipTask(zipContainer, blob, _config.MaxAudioPackSize);
+        FolderSizeConstraintTask size = new FolderSizeConstraintTask(zipContainer, _config.MaxAudioPackSize);
+        GetJsonTask jsonGet = new GetJsonTask(zipContainer, "pack.json");
+        ValidateAudioPackTask audio = new ValidateAudioPackTask(zipContainer, jsonGet, user, _config.AudioFiles);
+        WriteJsonTask jsonWrite = new WriteJsonTask(zipContainer, "pack.json", jsonGet);
+        CreateTempFolderTask themeContainer = new CreateTempFolderTask();
+        CreateFolderTask themeFolder = new CreateFolderTask(themeContainer, audio);
+        CopyFileTask copyToThemeFolder = new CopyFileTask(zipContainer, themeFolder, "*");
+        ZipTask zip = new ZipTask(themeContainer, zipContainer);
+        WriteAsBlobTask blobSave = new WriteAsBlobTask(user, zip);
+        CreateAudioSubmissionTask submission = new CreateAudioSubmissionTask(audio, blobSave, meta, "[Zip Deploy]", user);
+
+        List<ITaskPart> taskParts = new()
+        {
+            zipContainer, extractZip, size, jsonGet, audio, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blobSave, submission
+        };
+
+        AppTaskFromParts task = new(taskParts, "Submit audio pack via zip", user);
+        return _task.RegisterTask(task);
+    }
 
     private void Checks(User user, SubmissionMeta meta)
     {
