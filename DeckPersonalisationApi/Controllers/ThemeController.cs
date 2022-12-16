@@ -17,12 +17,12 @@ public class ThemeController : Controller
 {
     private JwtService _jwt;
     private UserService _user;
-    private ThemeService _service;
+    private ThemeService _theme;
 
-    public ThemeController(JwtService jwt, ThemeService service, UserService user)
+    public ThemeController(JwtService jwt, ThemeService theme, UserService user)
     {
         _jwt = jwt;
-        _service = service;
+        _theme = theme;
         _user = user;
     }
 
@@ -30,7 +30,7 @@ public class ThemeController : Controller
     public IActionResult GetThemes(int page = 1, int perPage = 50, string filters = "", string order = "", string search = "")
     {
         PaginationDto paginationDto = new(page, perPage, filters, order, search);
-        PaginatedResponse<CssTheme> response = _service.GetApprovedThemes(paginationDto);
+        PaginatedResponse<CssTheme> response = _theme.GetApprovedThemes(paginationDto);
         return response.Ok();
     }
     
@@ -38,7 +38,7 @@ public class ThemeController : Controller
     [HttpGet("awaiting_approval/filters")]
     public IActionResult GetThemesFilters(string target = "CSS")
     {
-        return new PaginationFilters(target.ToLower() == "audio" ? _service.AudioTargets : _service.CssTargets, _service.Orders().ToList()).Ok();
+        return new PaginationFilters(target.ToLower() == "audio" ? _theme.AudioTargets : _theme.CssTargets, _theme.Orders().ToList()).Ok();
     }
 
     [HttpGet("awaiting_approval")]
@@ -47,16 +47,16 @@ public class ThemeController : Controller
     public IActionResult GetAwaitingApprovalThemes(int page = 1, int perPage = 50, string filters = "", string order = "", string search = "")
     {
         PaginationDto paginationDto = new(page, perPage, filters, order, search);
-        PaginatedResponse<CssTheme> response = _service.GetNonApprovedThemes(paginationDto);
+        PaginatedResponse<CssTheme> response = _theme.GetNonApprovedThemes(paginationDto);
         return response.Ok();
     }
 
     [HttpGet("{id}")]
     public IActionResult GetTheme(string id)
     {
-        CssTheme? theme = _service.GetThemeById(id);
-        theme ??= _service.GetThemesByName(new() { id }, ThemeType.Css).FirstOrDefault();
-        theme ??= _service.GetThemesByName(new() { id }, ThemeType.Audio).FirstOrDefault();
+        CssTheme? theme = _theme.GetThemeById(id);
+        theme ??= _theme.GetThemesByName(new() { id }, ThemeType.Css).FirstOrDefault();
+        theme ??= _theme.GetThemesByName(new() { id }, ThemeType.Audio).FirstOrDefault();
         theme = theme.Require("Theme not found");
 
         return ((IToDto<FullCssThemeDto>)theme).Ok();
@@ -68,9 +68,9 @@ public class ThemeController : Controller
     [JwtRoleReject(Permissions.FromApiToken)]
     public IActionResult EditTheme(string id, CssThemeDirectPatchDto patch)
     {
-        CssTheme theme = _service.GetThemeById(id).Require();
+        CssTheme theme = _theme.GetThemeById(id).Require();
         User? author = (patch.Author == null) ? null : _user.GetActiveUserById(patch.Author).Require();
-        _service.EditTheme(theme, patch.Description, patch.Target, author);
+        _theme.EditTheme(theme, patch.Description, patch.Target, author);
         return new OkResult();
     }
 
@@ -80,20 +80,20 @@ public class ThemeController : Controller
     public IActionResult DeleteTheme(string id)
     {
         UserJwtDto jwt = _jwt.DecodeToken(Request).Require();
-        CssTheme theme = _service.GetThemeById(id).Require();
+        CssTheme theme = _theme.GetThemeById(id).Require();
 
         if (!jwt.HasPermission(Permissions.EditAnyPost) && theme.Author.Id != jwt.Id)
             throw new NotFoundException("Could not find theme");
         
-        _service.DeleteTheme(theme, true, true);
+        _theme.DeleteTheme(theme, true, true);
         return new OkResult();
     }
 
     [HttpGet("legacy/audio")]
     public IActionResult GetAudioPacksAsLegacy()
-        =>  _service.GetThemesLegacy(ThemeType.Audio).Ok();
+        =>  _theme.GetThemesLegacy(ThemeType.Audio).Ok();
 
     [HttpGet("legacy/css")]
     public IActionResult GetCssThemesAsLegacy()
-        =>  _service.GetThemesLegacy(ThemeType.Css).Ok();
+        =>  _theme.GetThemesLegacy(ThemeType.Css).Ok();
 }

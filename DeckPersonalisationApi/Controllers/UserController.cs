@@ -13,14 +13,14 @@ namespace DeckPersonalisationApi.Controllers;
 [Route("users")]
 public class UserController : Controller
 {
-    private ThemeService _css;
+    private ThemeService _theme;
     private UserService _user;
     private JwtService _jwt;
     private SubmissionService _submission;
 
-    public UserController(ThemeService css, UserService user, SubmissionService submission, JwtService jwt)
+    public UserController(ThemeService theme, UserService user, SubmissionService submission, JwtService jwt)
     {
-        _css = css;
+        _theme = theme;
         _user = user;
         _submission = submission;
         _jwt = jwt;
@@ -32,7 +32,7 @@ public class UserController : Controller
         User user = _user.GetActiveUserById(id).Require();
 
         PaginationDto paginationDto = new(page, perPage, filters, order, search);
-        PaginatedResponse<CssTheme> response = _css.GetUsersThemes(user, paginationDto);
+        PaginatedResponse<CssTheme> response = _theme.GetUsersThemes(user, paginationDto);
         return response.Ok();
     }
 
@@ -68,7 +68,7 @@ public class UserController : Controller
     [HttpGet("{id}/stars/filters")]
     public IActionResult GetCssThemesFilters(string id, string target = "CSS")
     {
-        return new PaginationFilters(target.ToLower() == "audio" ? _css.AudioTargets : _css.CssTargets, _css.Orders().ToList()).Ok();
+        return new PaginationFilters(target.ToLower() == "audio" ? _theme.AudioTargets : _theme.CssTargets, _theme.Orders().ToList()).Ok();
     }
 
     [HttpGet("{id}/submissions")]
@@ -103,7 +103,7 @@ public class UserController : Controller
     {
         User user = _user.GetActiveUserById(id).Require();
         PaginationDto paginationDto = new(page, perPage, filters, order, search);
-        PaginatedResponse<CssTheme> response = _css.GetStarredThemesByUser(paginationDto, user);
+        PaginatedResponse<CssTheme> response = _theme.GetStarredThemesByUser(paginationDto, user);
         return response.Ok();
     }
 
@@ -122,7 +122,7 @@ public class UserController : Controller
     public IActionResult AddStarToTheme(string id, string themeId)
     {
         User user = _user.GetActiveUserById(id).Require();
-        CssTheme theme = _css.GetThemeById(themeId).Require("Theme not found");
+        CssTheme theme = _theme.GetThemeById(themeId).Require("Theme not found");
         _user.AddStarToTheme(user, theme);
         return new OkResult();
     }
@@ -141,7 +141,7 @@ public class UserController : Controller
     public IActionResult RemoveStarFromTheme(string id, string themeId)
     {
         User user = _user.GetActiveUserById(id).Require();
-        CssTheme theme = _css.GetThemeById(themeId).Require("Theme not found");
+        CssTheme theme = _theme.GetThemeById(themeId).Require("Theme not found");
         _user.RemoveStarFromTheme(user, theme);
         return new OkResult();
     }
@@ -160,7 +160,7 @@ public class UserController : Controller
     public IActionResult GetStarStatusOfThemeFromUser(string id, string themeId)
     {
         User user = _user.GetUserById(id).Require("User not found");
-        CssTheme theme = _css.GetThemeById(themeId).Require("Theme not found");
+        CssTheme theme = _theme.GetThemeById(themeId).Require("Theme not found");
         return new HasThemeStarredDto(_user.HasThemeStarred(user, theme)).Ok();
     }
     
