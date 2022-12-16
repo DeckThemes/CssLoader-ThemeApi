@@ -58,6 +58,15 @@ builder.Services.AddDbContext<ApplicationContext>(x =>
     else
         x.UseSqlite(conn);
 });
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("https://api.deckthemes.com", "https://deckthemes.com", "https://www.deckthemes.com");
+    });
+});
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -111,7 +120,7 @@ app.UseExceptionHandler(x =>
         }
     });
 });
-
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseJwtRoleAttributes();
