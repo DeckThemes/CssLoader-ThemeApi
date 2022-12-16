@@ -1,4 +1,5 @@
 ﻿using DeckPersonalisationApi.Exceptions;
+using DeckPersonalisationApi.Extensions;
 using DeckPersonalisationApi.Middleware.JwtRole;
 using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Model.Dto.External.GET;
@@ -31,7 +32,7 @@ public class BlobController : Controller
         SavedBlob? image = _service.GetBlob(id);
 
         if (image == null || image.Deleted)
-            return new NotFoundResult();
+            throw new NotFoundException("Could not find image");
 
         string path = _service.GetFullFilePath(image);
         Stream stream = System.IO.File.OpenRead(path);
@@ -41,29 +42,19 @@ public class BlobController : Controller
 
     [HttpGet]
     [Authorize]
-    public IActionResult GetImagesFromUser()
+    public IActionResult GetBlobsFromUser()
     {
-        UserJwtDto? dto = _jwt.DecodeToken(Request);
-
-        if (dto == null)
-            throw new UnauthorisedException("User does not exist");
-
-        User? user = _user.GetUserById(dto.Id);
-        
-        if (user == null)
-            throw new UnauthorisedException("User does not exist");
-
-        return new OkObjectResult(_service.GetBlobsByUser(user).Select(x => x.Id).ToList());
+        UserJwtDto dto = _jwt.DecodeToken(Request).Require("Decoding JWT failed");
+        User user = _user.GetActiveUserById(dto.Id).Require("User does not exist");
+        return _service.GetBlobsByUser(user).Select(x => x.Id).ToList().Ok();
     }
 
     [HttpPost]
     [Authorize]
     [JwtRoleReject(Permissions.FromApiToken)]
-    public IActionResult PostImage(IFormFile file)
+    public IActionResult PostBlob(IFormFile file)
     {
-        UserJwtDto dto = _jwt.DecodeToken(Request)!;
-
-        return new OkObjectResult(
-            new TokenGetDto(_service.CreateBlob(file.OpenReadStream(), file.FileName, dto.Id).Id));
+        UserJwtDto dto = _jwt.DecodeToken(Request).Require();
+        return _service.CreateBlob(file.OpenReadStream(), file.FileName, dto.Id).Ok();
     }
 }

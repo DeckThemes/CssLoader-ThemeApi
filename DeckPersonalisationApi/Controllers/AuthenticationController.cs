@@ -32,19 +32,19 @@ public class AuthenticationController : Controller
     [HttpGet("oauth_redirect")]
     public IActionResult GetDiscordUrl(string redirect = "https://localhost/")
     {
-        return new OkObjectResult(new UriDto(_user.BuildDiscordOauthUri(redirect)));
+        return new UriDto(_user.BuildDiscordOauthUri(redirect)).Ok();
     }
 
     [HttpPost("authenticate_discord")]
     public IActionResult GetToken(DiscordAuthenticatePostDto auth)
     {
-        return new OkObjectResult(new TokenGetDto(_user.GenerateTokenViaDiscord(auth.Code, auth.RedirectUrl)));
+        return new TokenGetDto(_user.GenerateTokenViaDiscord(auth.Code, auth.RedirectUrl)).Ok();
     }
 
     [HttpPost("authenticate_token")]
     public IActionResult GetTokenViaApiToken(ApiTokenPostDto auth)
     {
-        return new OkObjectResult(new TokenGetDto(_user.GenerateTokenViaApiToken(auth.Token)));
+        return new TokenGetDto(_user.GenerateTokenViaApiToken(auth.Token)).Ok();
     }
 
     [HttpPost("refresh_token")]
@@ -63,7 +63,7 @@ public class AuthenticationController : Controller
 
         UserJwtDto token = _jwt.DecodeToken(key).Require("Cannot extract token");
         User user = _user.GetActiveUserById(token.Id).Require("Cannot find user");
-        return new ObjectResult(new TokenGetDto(_jwt.RenewToken(key, user)));
+        return new TokenGetDto(_jwt.RenewToken(key, user)).Ok();
     }
 
     [HttpGet("me_full")]
@@ -71,17 +71,9 @@ public class AuthenticationController : Controller
     [Authorize]
     public IActionResult GetFullUser()
     {
-        UserJwtDto? token = _jwt.DecodeToken(Request);
-
-        if (token == null)
-            return new NotFoundResult();
-
-        User? user = _user.GetUserById(token.Id);
-
-        if (user == null)
-            return new NotFoundResult();
-
-        return new ObjectResult(new UserGetDto(user));
+        UserJwtDto token = _jwt.DecodeToken(Request).Require();
+        User user = _user.GetUserById(token.Id).Require();
+        return user.Ok();
     }
     
     [HttpGet("me")]
@@ -89,11 +81,6 @@ public class AuthenticationController : Controller
     [Authorize]
     public IActionResult GetUser()
     {
-        UserJwtDto? token = _jwt.DecodeToken(Request);
-
-        if (token == null)
-            return new NotFoundResult();
-
-        return new OkObjectResult(token.ToDto());
+        return _jwt.DecodeToken(Request).Require().Ok();
     }
 }

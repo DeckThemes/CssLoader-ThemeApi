@@ -1,8 +1,9 @@
 ﻿using DeckPersonalisationApi.Model;
+using DeckPersonalisationApi.Model.Dto.External.GET;
 
 namespace DeckPersonalisationApi.Services.Tasks;
 
-public abstract class AppTask
+public abstract class AppTask : IToDto<TaskGetDto>
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Name { get; set; } = "App Task";
@@ -40,4 +41,10 @@ public abstract class AppTask
     public abstract void SetupServices(IServiceProvider provider);
 
     public abstract void Run();
+
+    public TaskGetDto ToDto()
+        => new(this);
+
+    public object ToDtoObject()
+        => ToDto();
 }

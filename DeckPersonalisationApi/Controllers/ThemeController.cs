@@ -31,14 +31,14 @@ public class ThemeController : Controller
     {
         PaginationDto paginationDto = new(page, perPage, filters, order, search);
         PaginatedResponse<CssTheme> response = _service.GetApprovedThemes(paginationDto);
-        return new OkObjectResult(response.ToDto());
+        return response.Ok();
     }
     
     [HttpGet("filters")]
     [HttpGet("awaiting_approval/filters")]
     public IActionResult GetThemesFilters()
     {
-        return new OkObjectResult(new PaginationFilters(_service.Targets, _service.Orders().ToList()));
+        return new PaginationFilters(_service.Targets, _service.Orders().ToList()).Ok();
     }
 
     [HttpGet("awaiting_approval")]
@@ -48,7 +48,7 @@ public class ThemeController : Controller
     {
         PaginationDto paginationDto = new(page, perPage, filters, order, search);
         PaginatedResponse<CssTheme> response = _service.GetNonApprovedThemes(paginationDto);
-        return new OkObjectResult(response.ToDto());
+        return response.Ok();
     }
 
     [HttpGet("{id}")]
@@ -57,9 +57,9 @@ public class ThemeController : Controller
         CssTheme? theme = _service.GetThemeById(id);
         theme ??= _service.GetThemesByName(new() { id }, ThemeType.Css).FirstOrDefault();
         theme ??= _service.GetThemesByName(new() { id }, ThemeType.Audio).FirstOrDefault();
-        theme.Require("Theme not found");
-        
-        return new OkObjectResult(((IToDto<FullCssThemeDto>)theme!).ToDto());
+        theme = theme.Require("Theme not found");
+
+        return ((IToDto<FullCssThemeDto>)theme).Ok();
     }
 
     [HttpPatch("{id}")]
@@ -91,9 +91,9 @@ public class ThemeController : Controller
 
     [HttpGet("legacy/audio")]
     public IActionResult GetAudioPacksAsLegacy()
-        =>  new OkObjectResult(_service.GetThemesLegacy(ThemeType.Audio));
+        =>  _service.GetThemesLegacy(ThemeType.Audio).Ok();
 
     [HttpGet("legacy/css")]
     public IActionResult GetCssThemesAsLegacy()
-        =>  new OkObjectResult(_service.GetThemesLegacy(ThemeType.Css));
+        =>  _service.GetThemesLegacy(ThemeType.Css).Ok();
 }

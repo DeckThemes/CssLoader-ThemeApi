@@ -33,7 +33,7 @@ public class UserController : Controller
 
         PaginationDto paginationDto = new(page, perPage, filters, order, search);
         PaginatedResponse<CssTheme> response = _css.GetUsersThemes(user, paginationDto);
-        return new OkObjectResult(response.ToDto());
+        return response.Ok();
     }
 
     [HttpGet("me/themes")]
@@ -68,7 +68,7 @@ public class UserController : Controller
     [HttpGet("{id}/stars/filters")]
     public IActionResult GetCssThemesFilters(string id)
     {
-        return new OkObjectResult(new PaginationFilters(_css.Targets, _css.Orders().ToList()));
+        return new PaginationFilters(_css.Targets, _css.Orders().ToList()).Ok();
     }
 
     [HttpGet("{id}/submissions")]
@@ -78,7 +78,7 @@ public class UserController : Controller
     {
         PaginationDto paginationDto = new(page, perPage, filters, order, search);
         User user = _user.GetActiveUserById(id).Require();
-        return new OkObjectResult(_submission.GetSubmissionsFromUser(paginationDto, user).ToDto());
+        return _submission.GetSubmissionsFromUser(paginationDto, user).Ok();
     }
 
     [HttpGet("me/submissions")]
@@ -93,7 +93,7 @@ public class UserController : Controller
     [Authorize]
     public IActionResult ViewSubmissionsFilters()
     {
-        return new OkObjectResult(new PaginationFilters(_submission.Filters().ToList(), _submission.Orders().ToList()));
+        return new PaginationFilters(_submission.Filters().ToList(), _submission.Orders().ToList()).Ok();
     }
 
     [HttpGet("{id}/stars")]
@@ -104,7 +104,7 @@ public class UserController : Controller
         User user = _user.GetActiveUserById(id).Require();
         PaginationDto paginationDto = new(page, perPage, filters, order, search);
         PaginatedResponse<CssTheme> response = _css.GetStarredThemesByUser(paginationDto, user);
-        return new OkObjectResult(response.ToDto());
+        return response.Ok();
     }
 
     [HttpGet("me/stars")]
@@ -161,7 +161,7 @@ public class UserController : Controller
     {
         User user = _user.GetUserById(id).Require("User not found");
         CssTheme theme = _css.GetThemeById(themeId).Require("Theme not found");
-        return new OkObjectResult(new HasThemeStarredDto(_user.HasThemeStarred(user, theme)));
+        return new HasThemeStarredDto(_user.HasThemeStarred(user, theme)).Ok();
     }
     
     [HttpGet("me/stars/{themeId}")]

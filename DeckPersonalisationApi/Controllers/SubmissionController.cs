@@ -16,15 +16,13 @@ namespace DeckPersonalisationApi.Controllers;
 public class SubmissionController : Controller
 {
     private JwtService _jwt;
-    private ThemeService _css;
     private SubmissionService _submission;
     private UserService _user;
     private BlobService _blob;
     
-    public SubmissionController(JwtService jwt, ThemeService css, SubmissionService submission, UserService user, BlobService blob)
+    public SubmissionController(JwtService jwt, SubmissionService submission, UserService user, BlobService blob)
     {
         _jwt = jwt;
-        _css = css;
         _submission = submission;
         _user = user;
         _blob = blob;
@@ -41,7 +39,7 @@ public class SubmissionController : Controller
         string task = _submission.SubmitCssThemeViaGit(post.Url, string.IsNullOrWhiteSpace(post.Commit) ? null : post.Commit,
             post.Subfolder, user, post.Meta);
 
-        return new OkObjectResult(new TaskIdGetDto(task));
+        return new TaskIdGetDto(task).Ok();
     }
     
     [HttpPost("audio_git")]
@@ -76,7 +74,7 @@ public class SubmissionController : Controller
         _blob.ConfirmBlob(blob);
 
         string task = _submission.SubmitCssThemeViaZip(blob, post.Meta, user);
-        return new OkObjectResult(new TaskIdGetDto(task));
+        return new TaskIdGetDto(task).Ok();
     }
     
     [HttpPost("css_css")]
@@ -88,7 +86,7 @@ public class SubmissionController : Controller
         User user = _user.GetActiveUserById(dto.Id).Require("Could not find user");
 
         string task = _submission.SubmitCssThemeViaCss(post.Css, post.Name, post.Meta, user);
-        return new OkObjectResult(new TaskIdGetDto(task));
+        return new TaskIdGetDto(task).Ok();
     }
     
     [HttpGet]
@@ -97,7 +95,7 @@ public class SubmissionController : Controller
     public IActionResult ViewSubmissions(int page = 1, int perPage = 50, string filters = "", string order = "", string search = "")
     {
         PaginationDto pagination = new(page, perPage, filters, order, search);
-        return new OkObjectResult(_submission.GetSubmissions(pagination).ToDto());
+        return _submission.GetSubmissions(pagination).Ok();
     }
     
     [HttpGet("filters")]
@@ -124,6 +122,7 @@ public class SubmissionController : Controller
     [HttpPut("{id}/approve")]
     [Authorize]
     [JwtRoleRequire(Permissions.ApproveThemeSubmissions)]
+    [JwtRoleReject(Permissions.FromApiToken)]
     public IActionResult ApproveThemeSubmissions(string id, MessageDto messageDto)
     {
         User user = _user.GetUserById(_jwt.DecodeToken(Request).Require().Id).Require();
@@ -133,6 +132,7 @@ public class SubmissionController : Controller
 
     [HttpPut("{id}/deny")]
     [Authorize]
+    [JwtRoleReject(Permissions.FromApiToken)]
     public IActionResult DenyThemeSubmission(string id, MessageDto messageDto)
     {
         var token = _jwt.DecodeToken(Request).Require();
