@@ -29,6 +29,7 @@ public class BlobController : Controller
     [HttpGet("{id}")]
     public IActionResult GetBlob(string id)
     {
+        id = id.Split(".").First();
         SavedBlob? image = _service.GetBlob(id);
 
         if (image == null || image.Deleted)

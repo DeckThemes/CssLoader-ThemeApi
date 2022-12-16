@@ -49,7 +49,7 @@ public class Utils
                 embed.WithTitle($"Approved: {submission.New.Name}").WithColor(Color.Green);
                 
                 if (submission.New.Images.Count >= 1)
-                    embed.WithImageUrl(configuration.LegacyUrlBase + "blobs/" + submission.New.Images.First().Id);
+                    embed.WithImageUrl(configuration.LegacyUrlBase + "blobs/" + submission.New.Images.First().Id + ".jpg");
             }
             else
             {
