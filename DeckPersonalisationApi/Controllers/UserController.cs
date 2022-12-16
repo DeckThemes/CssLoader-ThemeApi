@@ -173,7 +173,6 @@ public class UserController : Controller
     }
 
     [HttpGet("{id}")]
-    [Authorize]
     public IActionResult GetUser(string id)
         => _user.GetUserById(id).Require().Ok();
 
