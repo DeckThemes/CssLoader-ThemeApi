@@ -36,9 +36,7 @@ public class AppConfiguration
     public string LegacyUrlBase { get; private set; }
     public string DiscordWebhook { get; private set; }
     public List<string> CorsAllowedOrigins { get; private set; }
-    public List<string> CorsAllowedHeaders { get; private set; }
-    public List<string> CorsAllowedMethods { get; private set; }
-    
+
     public AppConfiguration()
     {
         _config = new ConfigurationBuilder()
@@ -101,8 +99,6 @@ public class AppConfiguration
         DiscordWebhook = GetString("Config:DiscordWebhook");
 
         CorsAllowedOrigins = GetList("Config:CorsAllowedOrigins");
-        CorsAllowedHeaders = GetList("Config:CorsAllowedHeaders");
-        CorsAllowedMethods = GetList("Config:CorsAllowedMethods");
     }
 
     private string GetString(string key)
