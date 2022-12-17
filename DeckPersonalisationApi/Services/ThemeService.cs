@@ -138,7 +138,11 @@ public class ThemeService
             theme.Description = description;
 
         if (author != null)
+        {
             theme.Author = author;
+            theme.Download.Owner = author;
+            theme.Images.ForEach(x => x.Owner = author);
+        }
 
         _ctx.CssThemes.Update(theme);
         _ctx.SaveChanges();
