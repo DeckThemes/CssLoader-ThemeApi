@@ -95,7 +95,7 @@ public class AppConfiguration
         BackgroundServiceFrequencyMinutes = GetInt("Config:BackgroundServiceFrequencyMinutes");
         UseSwagger = GetBool("Config:UseSwagger");
         Port = GetInt("Config:Port");
-        LegacyUrlBase = GetString("Jwt:Audience") + ":" + Port + "/";
+        LegacyUrlBase = GetString("Jwt:Audience") + (Port is 80 or 443 ? "" : ":" + Port) + "/";
         DiscordWebhook = GetString("Config:DiscordWebhook");
 
         CorsAllowedOrigins = GetList("Config:CorsAllowedOrigins");
