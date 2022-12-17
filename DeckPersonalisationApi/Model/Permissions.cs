@@ -33,6 +33,19 @@ public static class PermissionExt
         return perms;
     }
 
+    public static Permissions FromList(List<string> items)
+    {
+        Permissions permissions = Permissions.None;
+        foreach (var item in items)
+        {
+            Permissions temp;
+            if (Enum.TryParse(item, out temp))
+                permissions |= temp;
+        }
+
+        return permissions;
+    }
+
     public static bool HasPermission(this Permissions permissions, Permissions has)
         => ((permissions & has) == has);
 }

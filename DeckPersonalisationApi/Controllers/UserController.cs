@@ -180,10 +180,15 @@ public class UserController : Controller
     [Authorize]
     [JwtRoleRequire(Permissions.ManageApi)]
     [JwtRoleReject(Permissions.FromApiToken)]
-    public IActionResult EditUser(string id, UserPutDto put)
+    public IActionResult EditUser(string id, UserPatchDto patch)
     {
         User user = _user.GetUserById(id).Require();
-        _user.SetUserActiveState(user, put.Active);
+        if (patch.Active.HasValue)
+            _user.SetUserActiveState(user, patch.Active.Value);
+        
+        if (patch.Permissions != null)
+            _user.SetUserPermissions(user, PermissionExt.FromList(patch.Permissions));
+        
         return new OkResult();
     }
     
