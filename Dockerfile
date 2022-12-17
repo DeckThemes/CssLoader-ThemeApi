@@ -14,7 +14,7 @@ RUN dotnet publish -c release -o /app
 
 # Set up VNU
 WORKDIR /
-ADD https://github.com/validator/validator/releases/download/20.6.30/vnu.linux.zip /
+ADD https://github.com/validator/validator/releases/download/latest/vnu.linux.zip /
 RUN apt update
 RUN apt install -y unzip
 RUN unzip /vnu.linux.zip
