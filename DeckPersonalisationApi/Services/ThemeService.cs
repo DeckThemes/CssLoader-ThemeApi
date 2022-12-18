@@ -160,8 +160,13 @@ public class ThemeService
         => _ctx.CssThemes.Any(x => x.Name == name && x.Approved && !x.Deleted && x.Type == type);
 
     public List<LegacyThemesDto> GetThemesLegacy(ThemeType type)
-        => _ctx.CssThemes.Include(x => x.Images).Include(x => x.Download).ToList()
-            .Where(x => x.Type == type).Select(x => new LegacyThemesDto(x, _config)).ToList();
+        => _ctx.CssThemes
+            .Include(x => x.Images)
+            .Include(x => x.Download)
+            .Where(x => x.Type == type && x.Approved && !x.Deleted)
+            .ToList()
+            .Select(x => new LegacyThemesDto(x, _config))
+            .ToList();
     
     public IEnumerable<CssTheme> GetThemesByName(List<string> names, ThemeType type)
         => _ctx.CssThemes.Include(x => x.Author)
