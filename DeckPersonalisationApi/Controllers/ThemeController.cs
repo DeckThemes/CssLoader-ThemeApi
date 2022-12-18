@@ -59,7 +59,7 @@ public class ThemeController : Controller
         theme ??= _theme.GetThemesByName(new() { id }, ThemeType.Audio).FirstOrDefault();
         theme = theme.Require("Theme not found");
 
-        return ((IToDto<FullCssThemeDto>)theme).Ok();
+        return ((IToDto<FullCssThemeDto>)theme).ToDto().Ok();
     }
 
     [HttpPatch("{id}")]
