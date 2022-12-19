@@ -95,6 +95,8 @@ public class SubmissionService
         PathTransformTask folder = new PathTransformTask(clone, subfolder);
         FolderSizeConstraintTask size = new FolderSizeConstraintTask(folder, _config.MaxCssThemeSize);
         CopyFileTask copy = new CopyFileTask(clone, folder, "LICENSE");
+        DeleteFileTask delUserConfig = new DeleteFileTask(folder, "config_USER.json");
+        DeleteFileTask delRootConfig = new DeleteFileTask(folder, "config_ROOT.json");
         GetJsonTask jsonGet = new GetJsonTask(folder, "theme.json");
         ValidateCssThemeTask css = new ValidateCssThemeTask(folder, jsonGet, user, _config.CssTargets);
         WriteJsonTask jsonWrite = new WriteJsonTask(folder, "theme.json", jsonGet);
@@ -107,7 +109,7 @@ public class SubmissionService
 
         List<ITaskPart> taskParts = new()
         {
-            gitContainer, clone, folder, size, copy, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blob, submission
+            gitContainer, clone, folder, size, copy, delUserConfig, delRootConfig, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blob, submission
         };
 
         AppTaskFromParts task = new(taskParts, "Submit css theme via git", user);
@@ -122,6 +124,8 @@ public class SubmissionService
         ExtractZipTask extractZip = new ExtractZipTask(zipContainer, blob, _config.MaxCssThemeSize);
         FolderSizeConstraintTask size = new FolderSizeConstraintTask(zipContainer, _config.MaxCssThemeSize);
         PathTransformTask path = new PathTransformTask(zipContainer);
+        DeleteFileTask delUserConfig = new DeleteFileTask(path, "config_USER.json");
+        DeleteFileTask delRootConfig = new DeleteFileTask(path, "config_ROOT.json");
         GetJsonTask jsonGet = new GetJsonTask(path, "theme.json");
         ValidateCssThemeTask css = new ValidateCssThemeTask(path, jsonGet, user, _config.CssTargets);
         WriteJsonTask jsonWrite = new WriteJsonTask(path, "theme.json", jsonGet);
@@ -134,7 +138,7 @@ public class SubmissionService
 
         List<ITaskPart> taskParts = new()
         {
-            zipContainer, extractZip, size, path, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blobSave, submission
+            zipContainer, extractZip, size, path, delUserConfig, delRootConfig, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blobSave, submission
         };
 
         AppTaskFromParts task = new(taskParts, "Submit css theme via zip", user);
