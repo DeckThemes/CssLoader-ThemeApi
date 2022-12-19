@@ -209,7 +209,9 @@ public class ThemeService
         "Last Updated",
         "First Updated",
         "Most Downloaded",
-        "Least Downloaded"
+        "Least Downloaded",
+        "Most Stars",
+        "Least Stars"
     };
 
     private PaginatedResponse<CssTheme> GetThemesInternal(PaginationDto pagination, Func<IEnumerable<CssTheme>, IEnumerable<CssTheme>> middleware)
@@ -251,7 +253,13 @@ public class ThemeService
                 part1 = part1.OrderByDescending(x => x.Download.DownloadCount);
                 break;
             case "Least Downloaded":
-                part1 = part1.OrderByDescending(x => x.Download.DownloadCount);
+                part1 = part1.OrderBy(x => x.Download.DownloadCount);
+                break;
+            case "Most Stars":
+                part1 = part1.OrderByDescending(x => x.StarCount);
+                break;
+            case "Least Stars":
+                part1 = part1.OrderBy(x => x.StarCount);
                 break;
             default:
                 throw new BadRequestException($"Order type '{pagination.Order}' not found");
