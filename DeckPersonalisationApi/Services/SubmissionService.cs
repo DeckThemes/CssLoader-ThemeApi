@@ -121,19 +121,20 @@ public class SubmissionService
         CreateTempFolderTask zipContainer = new CreateTempFolderTask();
         ExtractZipTask extractZip = new ExtractZipTask(zipContainer, blob, _config.MaxCssThemeSize);
         FolderSizeConstraintTask size = new FolderSizeConstraintTask(zipContainer, _config.MaxCssThemeSize);
-        GetJsonTask jsonGet = new GetJsonTask(zipContainer, "theme.json");
-        ValidateCssThemeTask css = new ValidateCssThemeTask(zipContainer, jsonGet, user, _config.CssTargets);
-        WriteJsonTask jsonWrite = new WriteJsonTask(zipContainer, "theme.json", jsonGet);
+        PathTransformTask path = new PathTransformTask(zipContainer);
+        GetJsonTask jsonGet = new GetJsonTask(path, "theme.json");
+        ValidateCssThemeTask css = new ValidateCssThemeTask(path, jsonGet, user, _config.CssTargets);
+        WriteJsonTask jsonWrite = new WriteJsonTask(path, "theme.json", jsonGet);
         CreateTempFolderTask themeContainer = new CreateTempFolderTask();
         CreateFolderTask themeFolder = new CreateFolderTask(themeContainer, css);
-        CopyFileTask copyToThemeFolder = new CopyFileTask(zipContainer, themeFolder, "*");
-        ZipTask zip = new ZipTask(themeContainer, zipContainer);
+        CopyFileTask copyToThemeFolder = new CopyFileTask(path, themeFolder, "*");
+        ZipTask zip = new ZipTask(themeContainer, path);
         WriteAsBlobTask blobSave = new WriteAsBlobTask(user, zip);
         CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blobSave, meta, "[Zip Deploy]", user);
 
         List<ITaskPart> taskParts = new()
         {
-            zipContainer, extractZip, size, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blobSave, submission
+            zipContainer, extractZip, size, path, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blobSave, submission
         };
 
         AppTaskFromParts task = new(taskParts, "Submit css theme via zip", user);
@@ -202,19 +203,20 @@ public class SubmissionService
         CreateTempFolderTask zipContainer = new CreateTempFolderTask();
         ExtractZipTask extractZip = new ExtractZipTask(zipContainer, blob, _config.MaxAudioPackSize);
         FolderSizeConstraintTask size = new FolderSizeConstraintTask(zipContainer, _config.MaxAudioPackSize);
-        GetJsonTask jsonGet = new GetJsonTask(zipContainer, "pack.json");
-        ValidateAudioPackTask audio = new ValidateAudioPackTask(zipContainer, jsonGet, user, _config.AudioFiles);
-        WriteJsonTask jsonWrite = new WriteJsonTask(zipContainer, "pack.json", jsonGet);
+        PathTransformTask path = new PathTransformTask(zipContainer);
+        GetJsonTask jsonGet = new GetJsonTask(path, "pack.json");
+        ValidateAudioPackTask audio = new ValidateAudioPackTask(path, jsonGet, user, _config.AudioFiles);
+        WriteJsonTask jsonWrite = new WriteJsonTask(path, "pack.json", jsonGet);
         CreateTempFolderTask themeContainer = new CreateTempFolderTask();
         CreateFolderTask themeFolder = new CreateFolderTask(themeContainer, audio);
-        CopyFileTask copyToThemeFolder = new CopyFileTask(zipContainer, themeFolder, "*");
-        ZipTask zip = new ZipTask(themeContainer, zipContainer);
+        CopyFileTask copyToThemeFolder = new CopyFileTask(path, themeFolder, "*");
+        ZipTask zip = new ZipTask(themeContainer, path);
         WriteAsBlobTask blobSave = new WriteAsBlobTask(user, zip);
         CreateAudioSubmissionTask submission = new CreateAudioSubmissionTask(audio, blobSave, meta, "[Zip Deploy]", user);
 
         List<ITaskPart> taskParts = new()
         {
-            zipContainer, extractZip, size, jsonGet, audio, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blobSave, submission
+            zipContainer, extractZip, size, path, jsonGet, audio, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blobSave, submission
         };
 
         AppTaskFromParts task = new(taskParts, "Submit audio pack via zip", user);
