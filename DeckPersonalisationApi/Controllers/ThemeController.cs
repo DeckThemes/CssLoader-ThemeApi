@@ -90,10 +90,10 @@ public class ThemeController : Controller
     }
 
     [HttpGet("legacy/audio")]
-    public IActionResult GetAudioPacksAsLegacy()
-        =>  _theme.GetThemesLegacy(ThemeType.Audio).Ok();
+    public IActionResult GetAudioPacksAsLegacy(bool approved = true)
+        =>  _theme.GetThemesLegacy(ThemeType.Audio, approved).Ok();
 
     [HttpGet("legacy/css")]
-    public IActionResult GetCssThemesAsLegacy()
-        =>  _theme.GetThemesLegacy(ThemeType.Css).Ok();
+    public IActionResult GetCssThemesAsLegacy(bool approved = true)
+        =>  _theme.GetThemesLegacy(ThemeType.Css, approved).Ok();
 }

@@ -159,11 +159,11 @@ public class ThemeService
     public bool ThemeNameExists(string name, ThemeType type)
         => _ctx.CssThemes.Any(x => x.Name == name && x.Approved && !x.Deleted && x.Type == type);
 
-    public List<LegacyThemesDto> GetThemesLegacy(ThemeType type)
+    public List<LegacyThemesDto> GetThemesLegacy(ThemeType type, bool approved = true)
         => _ctx.CssThemes
             .Include(x => x.Images)
             .Include(x => x.Download)
-            .Where(x => x.Type == type && x.Approved && !x.Deleted)
+            .Where(x => x.Type == type && x.Approved == approved && !x.Deleted)
             .ToList()
             .Select(x => new LegacyThemesDto(x, _config))
             .ToList();
