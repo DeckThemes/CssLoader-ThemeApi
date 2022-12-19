@@ -19,11 +19,11 @@ public class BlobService
     }
 
     public SavedBlob? GetBlob(string? id)
-        => _ctx.Blobs.Include(x => x.Owner).FirstOrDefault(x => x.Id == id);
+        => Query().Include(x => x.Owner).FirstOrDefault(x => x.Id == id);
 
     public IEnumerable<SavedBlob> GetBlobs(List<string> ids)
     {
-        List<SavedBlob> blobs = _ctx.Blobs.Where(x => ids.Contains(x.Id)).ToList();
+        List<SavedBlob> blobs = Query().Where(x => ids.Contains(x.Id)).ToList();
         if (blobs.Count != ids.Count)
             throw new NotFoundException("Failed to get all blob ids");
 
@@ -31,10 +31,10 @@ public class BlobService
     }
 
     public List<SavedBlob> GetBlobsByUser(User user)
-        => _ctx.Blobs.Where(x => x.Owner == user).ToList();
+        => Query().Where(x => x.Owner == user).ToList();
 
     public int GetBlobCountByUser(User user)
-        => _ctx.Blobs.Count(x => x.Owner == user && !x.Confirmed);
+        => Query().Count(x => x.Owner == user && !x.Confirmed);
 
     public string GetFullFilePath(SavedBlob blob)
         => Path.Join(blob.Confirmed ? _conf.BlobPath : _conf.TempBlobPath, $"{blob.Id}.{blob.Type.GetExtension()}");
@@ -101,7 +101,6 @@ public class BlobService
         _ctx.ChangeTracker.Clear();
         User user = _user.GetActiveUserById(userId).Require("User not found");
         string ext = filename.Split('.').Last();
-        BlobType type = BlobTypeEx.FromExtensionToBlobType(ext);
 
         Dictionary<string, long> fileSizeLimits = _conf.ValidFileTypesAndMaxSizes;
 
@@ -114,6 +113,7 @@ public class BlobService
         if (GetBlobCountByUser(user) > _conf.MaxUnconfirmedBlobs)
             throw new BadRequestException("User has reached the max upload limit");
 
+        BlobType type = BlobTypeEx.FromExtensionToBlobType(ext);
         string id = Guid.NewGuid().ToString();
         string path = $"{id}.{ext}";
         var file = File.Create(Path.Join(_conf.TempBlobPath, path));
@@ -137,7 +137,7 @@ public class BlobService
 
     public int RemoveExpiredBlobs()
     {
-        List<SavedBlob> unconfirmedBlobs = _ctx.Blobs.Where(x => !x.Confirmed).ToList();
+        List<SavedBlob> unconfirmedBlobs = Query().Where(x => !x.Confirmed).ToList();
         List<SavedBlob> unconfirmedAndExpiredBlobs =
             unconfirmedBlobs.Where(x => (x.Uploaded + TimeSpan.FromMinutes(_conf.BlobTtlMinutes)) < DateTimeOffset.Now).ToList();
         DeleteBlobs(unconfirmedAndExpiredBlobs);
@@ -155,4 +155,6 @@ public class BlobService
 
         _ctx.SaveChanges();
     }
+
+    private IQueryable<SavedBlob> Query() => _ctx.Blobs.Where(x => !x.Deleted);
 }
