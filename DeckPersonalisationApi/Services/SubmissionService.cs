@@ -89,6 +89,9 @@ public class SubmissionService
     public string SubmitCssThemeViaGit(string url, string? commit, string subfolder, User user, SubmissionMeta meta)
     {
         Checks(user, meta);
+        
+        if (meta.Target != null)
+            ValidateCssTarget(meta.Target);
 
         CreateTempFolderTask gitContainer = new CreateTempFolderTask();
         CloneGitTask clone = new CloneGitTask(url, commit, gitContainer);
@@ -119,6 +122,9 @@ public class SubmissionService
     public string SubmitCssThemeViaZip(SavedBlob blob, SubmissionMeta meta, User user)
     {
         Checks(user, meta);
+        
+        if (meta.Target != null)
+            ValidateCssTarget(meta.Target);
 
         CreateTempFolderTask zipContainer = new CreateTempFolderTask();
         ExtractZipTask extractZip = new ExtractZipTask(zipContainer, blob, _config.MaxCssThemeSize);
@@ -148,6 +154,9 @@ public class SubmissionService
     public string SubmitCssThemeViaCss(string cssContent, string name, SubmissionMeta meta, User user)
     {
         Checks(user, meta);
+        
+        if (meta.Target != null)
+            ValidateCssTarget(meta.Target);
 
         CreateTempFolderTask cssContainer = new CreateTempFolderTask();
         WriteStringToFileTask writeCss = new WriteStringToFileTask(cssContainer, "shared.css", cssContent);
@@ -239,6 +248,12 @@ public class SubmissionService
         List<string>? possibleImageBlobs = meta.ImageBlobs;
         if (possibleImageBlobs != null && _blob.GetBlobs(possibleImageBlobs).Any(x => x.Confirmed)) 
             throw new BadRequestException("Cannot use images that are already used elsewhere");
+    }
+
+    private void ValidateCssTarget(string target)
+    {
+        if (!_config.CssTargets.Contains(target))
+            throw new BadRequestException($"Invalid CSS target {target}");
     }
 
     public CssSubmission CreateSubmission(string? oldThemeId, string newThemeId, CssSubmissionIntent intent,
