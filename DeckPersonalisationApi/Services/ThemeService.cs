@@ -195,6 +195,9 @@ public class ThemeService
 
         foreach (var (item1, item2) in themes)
         {
+            if (item1.StarCount == item2)
+                continue;
+            
             item1.StarCount = item2;
             _ctx.CssThemes.Update(item1);
         }
