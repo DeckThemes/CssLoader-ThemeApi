@@ -55,10 +55,15 @@ public class ThemeController : Controller
     public IActionResult GetTheme(string id)
     {
         CssTheme? theme = _theme.GetThemeById(id);
-        theme ??= _theme.GetThemesByName(new() { id }, ThemeType.Css).FirstOrDefault();
-        theme ??= _theme.GetThemesByName(new() { id }, ThemeType.Audio).FirstOrDefault();
-        theme = theme.Require("Theme not found");
 
+        if (theme == null)
+        {
+            theme ??= _theme.GetThemesByName(new() { id }, ThemeType.Css).FirstOrDefault();
+            theme ??= _theme.GetThemesByName(new() { id }, ThemeType.Audio).FirstOrDefault();
+            theme = theme.Require("Theme not found");
+            theme = _theme.GetThemeById(theme.Id).Require();
+        }
+        
         return ((IToDto<FullCssThemeDto>)theme).ToDto().Ok();
     }
 
