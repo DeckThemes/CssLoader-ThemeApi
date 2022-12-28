@@ -86,7 +86,7 @@ public class UserService
                 Username = $"{userResponse.Username}#{userResponse.Discriminator}",
                 LastLoginDate = DateTimeOffset.Now,
                 AvatarToken = userResponse.Avatar,
-                ValidationToken = GetFixedLengthString(32)
+                ValidationToken = Utils.Utils.GetFixedLengthString(32)
             };
 
             _ctx.Users.Add(user);
@@ -114,7 +114,7 @@ public class UserService
         if (user == null)
             return null;
 
-        user.ApiToken = GetFixedLengthString(24);
+        user.ApiToken = Utils.Utils.GetFixedLengthString(24);
 
         _ctx.Users.Update(user);
         _ctx.SaveChanges();
@@ -127,7 +127,7 @@ public class UserService
         if (user == null)
             throw new NotFoundException("User not found");
 
-        user.ValidationToken = GetFixedLengthString(24);
+        user.ValidationToken = Utils.Utils.GetFixedLengthString(24);
 
         _ctx.Users.Update(user);
         _ctx.SaveChanges();
@@ -182,16 +182,4 @@ public class UserService
     public User? GetUserById(string id) => _ctx.Users.Include(x => x.CssStars).FirstOrDefault(x => x.Id == id);
     public User? GetActiveUserById(string id) => _ctx.Users.Include(x => x.CssStars).FirstOrDefault(x => x.Id == id && x.Active == true);
     public long GetSubmissionCountByUser(User user, SubmissionStatus status) => _ctx.CssSubmissions.Count(x => x.Owner == user && x.Status == status);
-    
-    private static string GetFixedLengthString(int len)
-    {
-        const string possibleAllChars = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789";
-        StringBuilder sb = new StringBuilder();
-        Random randomNumber = new Random();
-        for (int i = 0; i < len; i++)
-        {
-            sb.Append(possibleAllChars[randomNumber.Next(0, possibleAllChars.Length)]);
-        }
-        return sb.ToString();
-    }
 }

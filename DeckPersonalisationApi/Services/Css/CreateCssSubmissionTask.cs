@@ -17,6 +17,7 @@ public class CreateCssSubmissionTask : ITaskPart
     private string? _source;
     private User _author;
     private CloneGitTask? _gitSrc;
+    private string? _overrideVersion;
     public void Execute()
     {
         if (_gitSrc != null)
@@ -28,7 +29,7 @@ public class CreateCssSubmissionTask : ITaskPart
         if (blobs.Count <= 0)
             blobs = _validation.Base?.Images.Select(x => x.Id).ToList() ?? new();
 
-        CssTheme theme = _service.CreateTheme(_validation.ThemeId, _validation.ThemeName, blobs, _download.Blob.Id, _validation.ThemeVersion,
+        CssTheme theme = _service.CreateTheme(_validation.ThemeId, _validation.ThemeName, blobs, _download.Blob.Id, _overrideVersion ?? _validation.ThemeVersion,
             _source, _author.Id, _meta.Target ?? _validation.ThemeTarget, _validation.ThemeManifestVersion, _meta.Description ?? _validation.ThemeDescription,
             _validation.ThemeDependencies, _validation.ThemeAuthor, ThemeType.Css);
 
@@ -40,13 +41,14 @@ public class CreateCssSubmissionTask : ITaskPart
     {
     }
 
-    public CreateCssSubmissionTask(ValidateCssThemeTask validation, WriteAsBlobTask download, SubmissionMeta meta, string? source, User author)
+    public CreateCssSubmissionTask(ValidateCssThemeTask validation, WriteAsBlobTask download, SubmissionMeta meta, string? source, User author, string? overrideVersion = null)
     {
         _validation = validation;
         _download = download;
         _meta = meta;
         _source = source;
         _author = author;
+        _overrideVersion = overrideVersion;
     }
     
     public CreateCssSubmissionTask(ValidateCssThemeTask validation, WriteAsBlobTask download, SubmissionMeta meta, CloneGitTask? source, User author)

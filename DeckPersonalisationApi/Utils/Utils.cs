@@ -1,4 +1,5 @@
-﻿using DeckPersonalisationApi.Model;
+﻿using System.Text;
+using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Services;
 using Discord;
 using Discord.Webhook;
@@ -63,4 +64,18 @@ public class Utils
             Console.WriteLine($"Sending discord webhook failed! {e.Message}");
         }
     }
+    
+    public static string GetFixedLengthString(int len, string chars = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789")
+    {
+        StringBuilder sb = new StringBuilder();
+        Random randomNumber = new Random();
+        for (int i = 0; i < len; i++)
+        {
+            sb.Append(chars[randomNumber.Next(0, chars.Length)]);
+        }
+        return sb.ToString();
+    }
+
+    public static string GetFixedLengthHexString(int len)
+        => GetFixedLengthString(len, "1234567890abcdef");
 }

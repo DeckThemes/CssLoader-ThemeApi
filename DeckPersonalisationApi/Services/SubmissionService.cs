@@ -170,7 +170,7 @@ public class SubmissionService
         CopyFileTask copyToThemeFolder = new CopyFileTask(cssContainer, themeFolder, "*");
         ZipTask zip = new ZipTask(themeContainer, cssContainer);
         WriteAsBlobTask blobSave = new WriteAsBlobTask(user, zip);
-        CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blobSave, meta, "[Css Only Deploy]", user);
+        CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blobSave, meta, "[Css Only Deploy]", user, Utils.Utils.GetFixedLengthHexString(4));
 
         List<ITaskPart> taskParts = new()
         {
