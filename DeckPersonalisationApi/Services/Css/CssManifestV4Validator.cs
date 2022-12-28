@@ -4,8 +4,8 @@ using Newtonsoft.Json.Linq;
 namespace DeckPersonalisationApi.Services.Css;
 
 /*
- * V4 manifests add an image-picker component'
- * v1.3.0 -> Present
+ * V4 manifests add an 'image-picker' component
+ * v1.3.0 -> v1.3.2
  */
 public class CssManifestV4Validator : CssManifestV3Validator
 {

@@ -52,6 +52,9 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
             case 4:
                 validator = new CssManifestV4Validator(_path.DirPath!, _json.Json!, _user, _validThemeTargets);
                 break;
+            case 5:
+                validator = new CssManifestV5Validator(_path.DirPath!, _json.Json!, _user, _validThemeTargets);
+                break;
             default:
                 throw new TaskFailureException($"Invalid manifest version '{manifestVersion}'");
         }
