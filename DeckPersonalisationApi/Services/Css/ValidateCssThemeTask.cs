@@ -64,8 +64,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
         {
             throw new TaskFailureException(e.Message);
         }
-
-        Errors = _vnu.ValidateCss(validator.CssPaths, _path.DirPath);
+        
         ThemeName = validator.Name;
 
         List<CssTheme> t = _service.GetAnyThemesByAuthorWithName(_user, ThemeName, ThemeType.Css).ToList();
@@ -93,6 +92,13 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
         ThemeId = guid;
         
         _json.Json!["id"] = internalId;
+        
+        List<string> extraErrors = new();
+        
+        if (Base != null && Base.Version == ThemeVersion)
+            extraErrors.Add("Theme has same version as base theme");
+
+        Errors = _vnu.ValidateCss(validator.CssPaths, _path.DirPath, extraErrors);
     }
 
     public void Cleanup(bool success)

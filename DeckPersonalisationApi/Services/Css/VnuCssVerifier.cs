@@ -14,7 +14,7 @@ public class VnuCssVerifier
         _terminal.Silence = true;
     }
 
-    public List<string> ValidateCss(List<string> cssFiles, string workDir)
+    public List<string> ValidateCss(List<string> cssFiles, string workDir, List<string> extraErrors)
     {
         _terminal.WorkingDirectory = workDir;
         string fullWorkDirPath = Path.GetFullPath(workDir);
@@ -34,6 +34,8 @@ public class VnuCssVerifier
             
             errors.ForEach(x => Console.WriteLine($"[VNU FATAL] {x}"));
         }
+        
+        errors.AddRange(extraErrors);
 
         return errors;
     }
