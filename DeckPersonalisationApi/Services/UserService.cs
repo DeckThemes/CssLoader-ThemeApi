@@ -114,7 +114,7 @@ public class UserService
         if (user == null)
             return null;
 
-        user.ApiToken = Utils.Utils.GetFixedLengthString(24);
+        user.ApiToken = Utils.Utils.GetFixedLengthString(12);
 
         _ctx.Users.Update(user);
         _ctx.SaveChanges();
@@ -127,7 +127,7 @@ public class UserService
         if (user == null)
             throw new NotFoundException("User not found");
 
-        user.ValidationToken = Utils.Utils.GetFixedLengthString(24);
+        user.ValidationToken = Utils.Utils.GetFixedLengthString(32);
 
         _ctx.Users.Update(user);
         _ctx.SaveChanges();
