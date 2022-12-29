@@ -246,8 +246,16 @@ public class SubmissionService
                 $"Cannot have more than {_config.MaxActiveSubmissions} submissions awaiting approval");
         
         List<string>? possibleImageBlobs = meta.ImageBlobs;
-        if (possibleImageBlobs != null && _blob.GetBlobs(possibleImageBlobs).Any(x => x.Confirmed)) 
+
+        if (possibleImageBlobs == null)
+            return;
+        
+        List<SavedBlob> blobs = _blob.GetBlobs(possibleImageBlobs).ToList();
+        if (blobs.Any(x => x.Confirmed)) 
             throw new BadRequestException("Cannot use images that are already used elsewhere");
+
+        if (blobs.Any(x => x.Type == BlobType.Zip))
+            throw new BadRequestException("Cannot use zip as an image");
     }
 
     private void ValidateCssTarget(string target)

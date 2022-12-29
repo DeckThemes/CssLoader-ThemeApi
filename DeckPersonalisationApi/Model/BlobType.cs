@@ -5,6 +5,7 @@ public enum BlobType
     None,
     Jpg,
     Zip,
+    Png,
 }
 
 public static class BlobTypeEx
@@ -15,6 +16,8 @@ public static class BlobTypeEx
         {
             case BlobType.Jpg:
                 return "jpg";
+            case BlobType.Png:
+                return "png";
             case BlobType.Zip:
                 return "zip";
             default:
@@ -28,6 +31,8 @@ public static class BlobTypeEx
         {
             case BlobType.Jpg:
                 return "image/jpg";
+            case BlobType.Png:
+                return "image/png";
             case BlobType.Zip:
                 return "application/zip";
             default:
@@ -41,6 +46,8 @@ public static class BlobTypeEx
         {
             case "jpg":
                 return BlobType.Jpg;
+            case "png":
+                return BlobType.Png;
             case "zip":
                 return BlobType.Zip;
             default:
