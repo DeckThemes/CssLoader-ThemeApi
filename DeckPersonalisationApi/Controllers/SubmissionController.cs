@@ -136,9 +136,16 @@ public class SubmissionController : Controller
     [HttpGet("filters")]
     [Authorize]
     [JwtRoleRequire(Permissions.ViewThemeSubmissions)]
-    public IActionResult ViewSubmissionsFilters(string? target = "CSS")
+    public IActionResult ViewSubmissionsFilters(string type = "")
     {
-        return new OkObjectResult(new PaginationFilters(_submission.Filters().ToList(), _submission.Orders().ToList()));
+        ThemeType? themeType = null;
+
+        if (type.ToLower() == "css")
+            themeType = ThemeType.Css;
+        else if (type.ToLower() == "audio")
+            themeType = ThemeType.Audio;
+        
+        return new OkObjectResult(new PaginationFilters(_submission.FiltersWithCount(themeType, null), _submission.Orders().ToList()));
     }
 
     [HttpGet("{id}")]
