@@ -22,8 +22,7 @@ public class Utils
         DirectoryInfo[] dis = d.GetDirectories();
         foreach (DirectoryInfo di in dis) 
         {
-            if (di.Name != ".git")
-                size += DirSize(di);   
+            size += DirSize(di);   
         }
         return size;  
     }

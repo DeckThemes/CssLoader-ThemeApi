@@ -47,6 +47,15 @@ public class CloneGitTask : IDirTaskPart
         {
             throw new TaskFailureException("Failed to get current commit");
         }
+
+        try
+        {
+            Directory.Delete(Path.Join(Repo.Path, ".git"), true);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Failed to delete .git folder: {e.Message}");
+        }
     }
 
     public void Cleanup(bool success)

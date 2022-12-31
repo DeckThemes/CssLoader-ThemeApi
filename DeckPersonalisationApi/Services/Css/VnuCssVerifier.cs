@@ -23,7 +23,7 @@ public class VnuCssVerifier
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             fullWorkDirPath = fullWorkDirPath.Replace("\\", "/");
         
-        _terminal.Exec(_config.VnuPath, $"--css --asciiquotes --verbose {string.Join(' ', cssFiles.Select(x => $"\"{x}\""))}").GetAwaiter().GetResult();
+        _terminal.Exec(_config.VnuPath, new List<string>{"-css", "--asciiquotes", "--verbose"}.Concat(cssFiles).ToList()).GetAwaiter().GetResult();
 
         List<string> errors = new List<string>(_terminal.StdErr).Where(x => x.Contains("error:")).Select(x => x.Replace(fullWorkDirPath, "")).ToList();
         

@@ -23,7 +23,9 @@ public class Terminal
         OnNewErrLine += (terminal, s) => Log($"[{proc?.Id}] [StdErr] {s}");
     }
 
-    public async Task<bool> Exec(string fileName, string args)
+    public Task<bool> Exec(string filename, params string[] args)
+        => Exec(filename, args.ToList());
+    public async Task<bool> Exec(string fileName, List<string> args)
     {
         IsActive = true;
         Killed = false;
@@ -34,7 +36,6 @@ public class Terminal
         proc = new();
         proc.StartInfo = new()
         {
-            Arguments = args,
             FileName = fileName,
             RedirectStandardError = true,
             RedirectStandardOutput = true,
@@ -42,6 +43,8 @@ public class Terminal
             CreateNoWindow = true,
             UseShellExecute = false
         };
+        
+        args.ForEach(x => proc.StartInfo.ArgumentList.Add(x));
 
         if (!string.IsNullOrWhiteSpace(WorkingDirectory))
             proc.StartInfo.WorkingDirectory = WorkingDirectory;

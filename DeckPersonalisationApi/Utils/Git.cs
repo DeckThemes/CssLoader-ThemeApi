@@ -17,7 +17,7 @@ public class Git
         Terminal t = new();
         t.Silence = true;
         t.WorkingDirectory = workingDir;
-        await t.Exec("git", $"clone {url} .");
+        await t.Exec("git", "clone", url, ".");
 
         if (t.ExitCode != 0)
             throw new Exception("Git clone failed");
@@ -37,55 +37,71 @@ public class Git
 
     public async Task Fetch(string branch)
     {
-        await _terminal.Exec("git", $"fetch {branch}");
+        await _terminal.Exec("git", $"fetch", branch);
         ThrowOnInvalidErrorCode();
     }
 
     public async Task ResetHard(string commit)
     {
-        await _terminal.Exec("git", $"reset --hard {commit}");
+        await _terminal.Exec("git", "reset", "--hard", commit);
         ThrowOnInvalidErrorCode();
     }
 
     public async Task Clean()
     {
-        await _terminal.Exec("git", "clean -xdf");
+        await _terminal.Exec("git", "clean", "-xdf");
         ThrowOnInvalidErrorCode();
     }
 
     public async Task Add(string path)
     {
-        await _terminal.Exec("git", $"add {path}");
+        await _terminal.Exec("git", "add", path);
         ThrowOnInvalidErrorCode();
     }
 
     public async Task Commit(string message)
     {
-        await _terminal.Exec("git", $"commit -m \"{message}\"");
+        await _terminal.Exec("git", "commit", "-m", message);
         ThrowOnInvalidErrorCode();
     }
 
     public async Task Push(bool force = false)
     {
-        await _terminal.Exec("git", "push" + (force ? " --force" : ""));
+        List<string> args = new()
+        {
+            "push"
+        };
+        
+        if (force)
+            args.Add("--force");
+        
+        await _terminal.Exec("git", args);
         ThrowOnInvalidErrorCode();
     }
     
     public async Task Push(string branch, bool force = false)
     {
-        await _terminal.Exec("git", $"push --set-upstream origin {branch}" + (force ? " --force" : ""));
+        List<string> args = new()
+        {
+            "push", "--set-upstream origin", branch,
+        };
+        
+        if (force)
+            args.Add("--force");
+        
+        await _terminal.Exec("git", args);
         ThrowOnInvalidErrorCode();
     }
 
     public async Task Checkout(string branch)
     {
-        await _terminal.Exec("git", $"checkout {branch}");
+        await _terminal.Exec("git", "checkout", branch);
         ThrowOnInvalidErrorCode();
     }
 
     public async Task<int> GetStagedFileCount()
     {
-        await _terminal.Exec("git", "status -s");
+        await _terminal.Exec("git", "status", "-s");
         ThrowOnInvalidErrorCode();
         return _terminal.StdOut.Count;
     }
@@ -102,29 +118,28 @@ public class Git
         List<string> branches = await GetBranches();
 
         if (branches.Contains(name))
-            await _terminal.Exec("git", $"branch -D {name}");
-
-
-        await _terminal.Exec("git", $"branch {name}");
+            await _terminal.Exec("git", "branch", "-D", name);
+        
+        await _terminal.Exec("git", "branch", name);
     }
 
     public async Task<string> GetLatestCommitHash()
     {
-        await _terminal.Exec("git", "rev-parse --short HEAD");
+        await _terminal.Exec("git", "rev-parse", "--short", "HEAD");
         ThrowOnInvalidErrorCode();
         return _terminal.StdOut.First().Trim();
     }
 
     public async Task<bool> DoesPullRequestExist(string branchName)
     {
-        await _terminal.Exec("gh", $"pr list --json headRefName,author --head \"{branchName}\" --author \"@me\"");
+        await _terminal.Exec("gh", "pr", "list", "--json", "headRefName,author", "--head", branchName, "--author", "@me");
         ThrowOnInvalidErrorCode();
         return _terminal.StdOut.First().Trim() != "[]";
     }
 
     public async Task<string> CreatePullRequest(string title, string body)
     {
-        await _terminal.Exec("gh", $"pr create --title \"{title}\" --body \"{body}\"");
+        await _terminal.Exec("gh", "pr", "create", "--title", title, "--body", body);
         ThrowOnInvalidErrorCode();
         return _terminal.StdOut.Last();
     }
