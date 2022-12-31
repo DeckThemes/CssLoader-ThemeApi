@@ -88,11 +88,6 @@ public class SubmissionService
     
     public string SubmitCssThemeViaGit(string url, string? commit, string subfolder, User user, SubmissionMeta meta)
     {
-        Checks(user, meta);
-        
-        if (meta.Target != null)
-            ValidateCssTarget(meta.Target);
-
         CreateTempFolderTask gitContainer = new CreateTempFolderTask();
         CloneGitTask clone = new CloneGitTask(url, commit, gitContainer);
         PathTransformTask folder = new PathTransformTask(clone, subfolder);
@@ -121,11 +116,6 @@ public class SubmissionService
 
     public string SubmitCssThemeViaZip(SavedBlob blob, SubmissionMeta meta, User user)
     {
-        Checks(user, meta);
-        
-        if (meta.Target != null)
-            ValidateCssTarget(meta.Target);
-
         CreateTempFolderTask zipContainer = new CreateTempFolderTask();
         ExtractZipTask extractZip = new ExtractZipTask(zipContainer, blob, _config.MaxCssThemeSize);
         FolderSizeConstraintTask size = new FolderSizeConstraintTask(zipContainer, _config.MaxCssThemeSize);
@@ -153,14 +143,9 @@ public class SubmissionService
 
     public string SubmitCssThemeViaCss(string cssContent, string name, SubmissionMeta meta, User user)
     {
-        Checks(user, meta);
-        
-        if (meta.Target != null)
-            ValidateCssTarget(meta.Target);
-
         CreateTempFolderTask cssContainer = new CreateTempFolderTask();
         WriteStringToFileTask writeCss = new WriteStringToFileTask(cssContainer, "shared.css", cssContent);
-        WriteStringToFileTask writeJson = new WriteStringToFileTask(cssContainer, "theme.json", CreateCssJson(name));
+        WriteStringToFileTask writeJson = new WriteStringToFileTask(cssContainer, "theme.json", CreateCssJson(name, Utils.Utils.GetFixedLengthHexString(4)));
         FolderSizeConstraintTask size = new FolderSizeConstraintTask(cssContainer, _config.MaxCssThemeSize);
         GetJsonTask jsonGet = new GetJsonTask(cssContainer, "theme.json");
         ValidateCssThemeTask css = new ValidateCssThemeTask(cssContainer, jsonGet, user, _config.CssTargets);
@@ -170,7 +155,7 @@ public class SubmissionService
         CopyFileTask copyToThemeFolder = new CopyFileTask(cssContainer, themeFolder, "*");
         ZipTask zip = new ZipTask(themeContainer, cssContainer);
         WriteAsBlobTask blobSave = new WriteAsBlobTask(user, zip);
-        CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blobSave, meta, "[Css Only Deploy]", user, Utils.Utils.GetFixedLengthHexString(4));
+        CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blobSave, meta, "[Css Only Deploy]", user);
 
         List<ITaskPart> taskParts = new()
         {
@@ -183,8 +168,6 @@ public class SubmissionService
     
     public string SubmitAudioPackViaGit(string url, string? commit, string subfolder, User user, SubmissionMeta meta)
     {
-        Checks(user, meta);
-
         CreateTempFolderTask gitContainer = new CreateTempFolderTask();
         CloneGitTask clone = new CloneGitTask(url, commit, gitContainer);
         PathTransformTask folder = new PathTransformTask(clone, subfolder);
@@ -211,8 +194,6 @@ public class SubmissionService
     
     public string SubmitAudioPackViaZip(SavedBlob blob, SubmissionMeta meta, User user)
     {
-        Checks(user, meta);
-
         CreateTempFolderTask zipContainer = new CreateTempFolderTask();
         ExtractZipTask extractZip = new ExtractZipTask(zipContainer, blob, _config.MaxAudioPackSize);
         FolderSizeConstraintTask size = new FolderSizeConstraintTask(zipContainer, _config.MaxAudioPackSize);
@@ -236,34 +217,6 @@ public class SubmissionService
         return _task.RegisterTask(task);
     }
 
-    private void Checks(User user, SubmissionMeta meta)
-    {
-        if ((meta.ImageBlobs?.Count ?? 0) > _config.MaxImagesPerSubmission)
-            throw new BadRequestException($"Cannot have more than {_config.MaxImagesPerSubmission} images per submission");
-
-        if (_user.GetSubmissionCountByUser(user, SubmissionStatus.AwaitingApproval) > _config.MaxActiveSubmissions)
-            throw new BadRequestException(
-                $"Cannot have more than {_config.MaxActiveSubmissions} submissions awaiting approval");
-        
-        List<string>? possibleImageBlobs = meta.ImageBlobs;
-
-        if (possibleImageBlobs == null)
-            return;
-        
-        List<SavedBlob> blobs = _blob.GetBlobs(possibleImageBlobs).ToList();
-        if (blobs.Any(x => x.Confirmed)) 
-            throw new BadRequestException("Cannot use images that are already used elsewhere");
-
-        if (blobs.Any(x => x.Type == BlobType.Zip))
-            throw new BadRequestException("Cannot use zip as an image");
-    }
-
-    private void ValidateCssTarget(string target)
-    {
-        if (!_config.CssTargets.Contains(target))
-            throw new BadRequestException($"Invalid CSS target {target}");
-    }
-
     public CssSubmission CreateSubmission(string? oldThemeId, string newThemeId, CssSubmissionIntent intent,
         string authorId, List<string> errors)
     {
@@ -274,6 +227,11 @@ public class SubmissionService
         
         if ((intent != CssSubmissionIntent.NewTheme && oldTheme == null) || newTheme == null || author == null)
             throw new Exception("Intent validation failed");
+
+        string txtErrors = JsonConvert.SerializeObject(errors);
+
+        if (txtErrors.Length > _config.MaxErrorStoreCharacters)
+            txtErrors = $"[\"{errors.Count} errors were found. Too many to store...\"]";
         
         CssSubmission submission = new()
         {
@@ -284,7 +242,7 @@ public class SubmissionService
             Status = SubmissionStatus.AwaitingApproval,
             Submitted = DateTimeOffset.Now,
             Owner = author,
-            Errors = JsonConvert.SerializeObject(errors)
+            Errors = txtErrors
         };
 
         _ctx.CssSubmissions.Add(submission);
@@ -373,6 +331,6 @@ public class SubmissionService
         return new(part1.Count(), part1.Skip((pagination.Page - 1) * pagination.PerPage).Take(pagination.PerPage).ToList());
     }
     
-    private string CreateCssJson(string name)
-        => _config.CssToThemeJson.Replace("%THEME_NAME%", name.Replace("\"", "\\\""));
+    private string CreateCssJson(string name, string version)
+        => _config.CssToThemeJson.Replace("%THEME_NAME%", name.Replace("\"", "\\\"")).Replace("%THEME_VERSION%", version.Replace("\"", "\\\""));
 }

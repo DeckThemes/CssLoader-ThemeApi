@@ -36,6 +36,12 @@ public class AppConfiguration
     public string LegacyUrlBase { get; private set; }
     public string DiscordWebhook { get; private set; }
     public List<string> CorsAllowedOrigins { get; private set; }
+    public long MaxNameLength { get; private set; }
+    public long MaxAuthorLength { get; private set; }
+    public long MaxVersionLength { get; private set; }
+    public long MaxDescriptionLength { get; private set; }
+    public long MaxCssOnlySubmissionSize { get; private set; }
+    public long MaxErrorStoreCharacters { get; private set; }
 
     public AppConfiguration()
     {
@@ -97,8 +103,14 @@ public class AppConfiguration
         Port = GetInt("Config:Port");
         LegacyUrlBase = GetString("Jwt:Audience") + (Port is 80 or 443 ? "" : ":" + Port) + "/";
         DiscordWebhook = GetString("Config:DiscordWebhook");
-
         CorsAllowedOrigins = GetList("Config:CorsAllowedOrigins");
+
+        MaxNameLength = GetInt("Config:MaxNameLength");
+        MaxAuthorLength = GetInt("Config:MaxAuthorLength");
+        MaxVersionLength = GetInt("Config:MaxVersionLength");
+        MaxDescriptionLength = GetInt("Config:MaxDescriptionLength");
+        MaxCssOnlySubmissionSize = GetInt("Config:MaxCssOnlySubmissionSize");
+        MaxErrorStoreCharacters = GetInt("Config:MaxErrorStoreCharacters");
     }
 
     private string GetString(string key)

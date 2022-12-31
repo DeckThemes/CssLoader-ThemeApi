@@ -19,13 +19,15 @@ public class SubmissionController : Controller
     private SubmissionService _submission;
     private UserService _user;
     private BlobService _blob;
+    private AppConfiguration _config;
     
-    public SubmissionController(JwtService jwt, SubmissionService submission, UserService user, BlobService blob)
+    public SubmissionController(JwtService jwt, SubmissionService submission, UserService user, BlobService blob, AppConfiguration config)
     {
         _jwt = jwt;
         _submission = submission;
         _user = user;
         _blob = blob;
+        _config = config;
     }
 
     [HttpPost("css_git")]
@@ -36,6 +38,7 @@ public class SubmissionController : Controller
         UserJwtDto dto = _jwt.DecodeToken(Request).Require("Could not find user");
         User user = _user.GetActiveUserById(dto.Id).Require("Could not find user");
 
+        ValidateMeta(user, post.Meta, ThemeType.Css);
         string task = _submission.SubmitCssThemeViaGit(post.Url, string.IsNullOrWhiteSpace(post.Commit) ? null : post.Commit,
             post.Subfolder, user, post.Meta);
 
@@ -50,6 +53,7 @@ public class SubmissionController : Controller
         UserJwtDto dto = _jwt.DecodeToken(Request).Require("Could not find user");
         User user = _user.GetActiveUserById(dto.Id).Require("Could not find user");
 
+        ValidateMeta(user, post.Meta, ThemeType.Audio);
         string task = _submission.SubmitAudioPackViaGit(post.Url, string.IsNullOrWhiteSpace(post.Commit) ? null : post.Commit,
             post.Subfolder, user, post.Meta);
 
@@ -71,8 +75,9 @@ public class SubmissionController : Controller
             throw new UnauthorisedException("Can't use a blob from someone else");
 
         User user = _user.GetActiveUserById(dto.Id).Require("Could not find user");
+        ValidateMeta(user, post.Meta, ThemeType.Css);
+        
         _blob.ConfirmBlob(blob);
-
         string task = _submission.SubmitCssThemeViaZip(blob, post.Meta, user);
         return new TaskIdGetDto(task).Ok();
     }
@@ -92,8 +97,9 @@ public class SubmissionController : Controller
             throw new UnauthorisedException("Can't use a blob from someone else");
 
         User user = _user.GetActiveUserById(dto.Id).Require("Could not find user");
+        ValidateMeta(user, post.Meta, ThemeType.Audio);
+        
         _blob.ConfirmBlob(blob);
-
         string task = _submission.SubmitAudioPackViaZip(blob, post.Meta, user);
         return new TaskIdGetDto(task).Ok();
     }
@@ -105,6 +111,14 @@ public class SubmissionController : Controller
     {
         UserJwtDto dto = _jwt.DecodeToken(Request).Require("Could not find user");
         User user = _user.GetActiveUserById(dto.Id).Require("Could not find user");
+        
+        ValidateMeta(user, post.Meta, ThemeType.Css);
+
+        if (post.Name.Length >= _config.MaxNameLength)
+            throw new BadRequestException($"Name can be max {_config.MaxNameLength} characters");
+
+        if (post.Css.Length >= _config.MaxCssOnlySubmissionSize)
+            throw new BadRequestException($"Css body can only be max {_config.MaxCssOnlySubmissionSize} characters");
 
         string task = _submission.SubmitCssThemeViaCss(post.Css, post.Name, post.Meta, user);
         return new TaskIdGetDto(task).Ok();
@@ -168,5 +182,56 @@ public class SubmissionController : Controller
         
         _submission.DenyTheme(id, messageDto.Message, user);
         return new OkResult();
+    }
+
+    private void ValidateMeta(User user, SubmissionMeta meta, ThemeType type)
+    {
+        CheckIfUserIsAllowedToMakeSubmission(user);
+        CheckImageBlobs(user, meta.ImageBlobs);
+        ValidateMetaDescription(meta.Description);
+        
+        if (type == ThemeType.Css)
+            ValidateMetaTarget(meta.Target);
+    }
+    
+    private void CheckIfUserIsAllowedToMakeSubmission(User user)
+    {
+        if (_user.GetSubmissionCountByUser(user, SubmissionStatus.AwaitingApproval) > _config.MaxActiveSubmissions)
+            throw new BadRequestException(
+                $"Cannot have more than {_config.MaxActiveSubmissions} submissions awaiting approval");
+    }
+    
+    private void CheckImageBlobs(User user, List<string>? incoming = null)
+    {
+        if (incoming is not { Count: > 0 })
+            return;
+        
+        if (incoming.Count > _config.MaxImagesPerSubmission)
+            throw new BadRequestException($"Cannot have more than {_config.MaxImagesPerSubmission} images per submission");
+        
+        List<SavedBlob> blobs = _blob.GetBlobs(incoming).ToList();
+        if (blobs.Any(x => x.Confirmed)) 
+            throw new BadRequestException("Cannot use images that are already used elsewhere");
+
+        if (blobs.Any(x => x.Type == BlobType.Zip))
+            throw new BadRequestException("Cannot use zip as an image");
+    }
+    
+    private void ValidateMetaTarget(string? target)
+    {
+        if (target == null)
+            return;
+        
+        if (!_config.CssTargets.Contains(target))
+            throw new BadRequestException($"Invalid CSS target {target}");
+    }
+
+    private void ValidateMetaDescription(string? description)
+    {
+        if (description == null)
+            return;
+
+        if (description.Length > _config.MaxDescriptionLength)
+            throw new BadRequestException($"Descriptions can be max {_config.MaxDescriptionLength} characters");
     }
 }

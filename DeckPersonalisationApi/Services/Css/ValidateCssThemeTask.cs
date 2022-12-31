@@ -14,6 +14,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
     private GetJsonTask _json;
     private User _user;
     private List<string> _validThemeTargets = new();
+    private AppConfiguration _config;
     private ThemeService _service;
     private VnuCssVerifier _vnu;
 
@@ -101,6 +102,18 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
         if (Base != null && Base.Version == ThemeVersion)
             extraErrors.Add("Theme has same version as base theme");
 
+        if (ThemeName.Length > _config.MaxNameLength)
+            throw new TaskFailureException($"Name field can only be max {_config.MaxNameLength} characters");
+        
+        if (ThemeAuthor.Length > _config.MaxAuthorLength)
+            throw new TaskFailureException($"Author field can only be max {_config.MaxNameLength} characters");
+        
+        if (ThemeVersion.Length > _config.MaxVersionLength)
+            throw new TaskFailureException($"Version field can only be max {_config.MaxNameLength} characters");
+        
+        if (ThemeDescription.Length > _config.MaxDescriptionLength)
+            throw new TaskFailureException($"Description field can only be max {_config.MaxNameLength} characters");
+        
         Errors = _vnu.ValidateCss(validator.CssPaths, _path.DirPath, extraErrors);
     }
 
@@ -120,6 +133,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
     {
         _service = provider.GetRequiredService<ThemeService>();
         _vnu = provider.GetRequiredService<VnuCssVerifier>();
+        _config = provider.GetRequiredService<AppConfiguration>();
     }
 
     public string Identifier => ThemeName;

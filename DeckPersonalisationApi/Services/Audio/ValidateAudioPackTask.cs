@@ -12,6 +12,7 @@ public class ValidateAudioPackTask : IIdentifierTaskPart
     private GetJsonTask _json;
     private User _user;
     private List<string> _validPackTargets = new();
+    private AppConfiguration _config;
     
     public string PackId { get; private set; }
     public string PackName { get; private set; }
@@ -83,9 +84,22 @@ public class ValidateAudioPackTask : IIdentifierTaskPart
         PackId = guid;
         
         _json.Json!["id"] = internalId;
+        
+        if (PackName.Length > _config.MaxNameLength)
+            throw new TaskFailureException($"Name field can only be max {_config.MaxNameLength} characters");
+        
+        if (PackAuthor.Length > _config.MaxAuthorLength)
+            throw new TaskFailureException($"Author field can only be max {_config.MaxNameLength} characters");
+        
+        if (PackVersion.Length > _config.MaxVersionLength)
+            throw new TaskFailureException($"Version field can only be max {_config.MaxNameLength} characters");
+        
+        if (PackDescription.Length > _config.MaxDescriptionLength)
+            throw new TaskFailureException($"Description field can only be max {_config.MaxNameLength} characters");
     }
     public void SetupServices(IServiceProvider provider)
     {
         _service = provider.GetRequiredService<ThemeService>();
+        _config = provider.GetRequiredService<AppConfiguration>();
     }
 }
