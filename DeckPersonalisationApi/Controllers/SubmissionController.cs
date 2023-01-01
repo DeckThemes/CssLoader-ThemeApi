@@ -136,9 +136,16 @@ public class SubmissionController : Controller
     [HttpGet("filters")]
     [Authorize]
     [JwtRoleRequire(Permissions.ViewThemeSubmissions)]
-    public IActionResult ViewSubmissionsFilters(string? target = "CSS")
+    public IActionResult ViewSubmissionsFilters(string type = "")
     {
-        return new OkObjectResult(new PaginationFilters(_submission.Filters().ToList(), _submission.Orders().ToList()));
+        ThemeType? themeType = null;
+
+        if (type.ToLower() == "css")
+            themeType = ThemeType.Css;
+        else if (type.ToLower() == "audio")
+            themeType = ThemeType.Audio;
+        
+        return new OkObjectResult(new PaginationFilters(_submission.FiltersWithCount(themeType, null), _submission.Orders().ToList()));
     }
 
     [HttpGet("{id}")]
@@ -215,6 +222,9 @@ public class SubmissionController : Controller
 
         if (blobs.Any(x => x.Type == BlobType.Zip))
             throw new BadRequestException("Cannot use zip as an image");
+
+        if (blobs.Any(x => x.Owner.Id != user.Id))
+            throw new BadRequestException("One or more provided images are not yours");
     }
     
     private void ValidateMetaTarget(string? target)

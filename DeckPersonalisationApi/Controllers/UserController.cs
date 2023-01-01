@@ -65,11 +65,45 @@ public class UserController : Controller
     }
     
     [HttpGet("{id}/themes/filters")]
-    [HttpGet("{id}/stars/filters")]
-    public IActionResult GetCssThemesFilters(string id, string target = "CSS")
+    public IActionResult GetCssThemesFilters(string id, string type = "")
     {
-        return new PaginationFilters(target.ToLower() == "audio" ? _theme.AudioTargets : _theme.CssTargets, _theme.Orders().ToList()).Ok();
+        if (id == "me")
+            id = _jwt.DecodeToken(Request).Require().Id;
+        
+        User user = _user.GetActiveUserById(id).Require();
+        ThemeType? themeType = null;
+
+        if (type.ToLower() == "css")
+            themeType = ThemeType.Css;
+        else if (type.ToLower() == "audio")
+            themeType = ThemeType.Audio;
+        
+        return new PaginationFilters(_theme.FiltersWithCount(themeType, user), _theme.Orders().ToList()).Ok();
     }
+    
+    [HttpGet("{id}/stars/filters")]
+    [Authorize]
+    [JwtRoleRequire(Permissions.ManageApi)]
+    public IActionResult GetCssThemesFiltersStars(string id, string type = "")
+    {
+        if (id == "me")
+            id = _jwt.DecodeToken(Request).Require().Id;
+        
+        User user = _user.GetActiveUserById(id).Require();
+        ThemeType? themeType = null;
+
+        if (type.ToLower() == "css")
+            themeType = ThemeType.Css;
+        else if (type.ToLower() == "audio")
+            themeType = ThemeType.Audio;
+        
+        return new PaginationFilters(_theme.FiltersWithCount(themeType, user, true), _theme.Orders().ToList()).Ok();
+    }
+
+    [HttpGet("me/stars/filters")]
+    [Authorize]
+    public IActionResult GetCssThemesFiltersStarsMe(string type = "")
+        => GetCssThemesFiltersStars("me", type);
 
     [HttpGet("{id}/submissions")]
     [Authorize]
@@ -91,10 +125,27 @@ public class UserController : Controller
     
     [HttpGet("{id}/submissions/filters")]
     [Authorize]
-    public IActionResult ViewSubmissionsFilters(string target = "CSS")
+    [JwtRoleRequire(Permissions.ManageApi)]
+    public IActionResult ViewSubmissionsFilters(string id, string type = "")
     {
-        return new PaginationFilters(_submission.Filters().ToList(), _submission.Orders().ToList()).Ok();
+        if (id == "me")
+            id = _jwt.DecodeToken(Request).Require().Id;
+        
+        User user = _user.GetActiveUserById(id).Require();
+        ThemeType? themeType = null;
+        
+        if (type.ToLower() == "css")
+            themeType = ThemeType.Css;
+        else if (type.ToLower() == "audio")
+            themeType = ThemeType.Audio;
+        
+        return new PaginationFilters(_submission.FiltersWithCount(themeType, user), _submission.Orders().ToList()).Ok();
     }
+
+    [HttpGet("me/submissions/filters")]
+    [Authorize]
+    public IActionResult ViewSubmissionFiltersMe(string target = "")
+        => ViewSubmissionsFilters("me", target);
 
     [HttpGet("{id}/stars")]
     [Authorize]

@@ -217,6 +217,50 @@ public class ThemeService
         "Least Stars"
     };
 
+    public Dictionary<string, long> FiltersWithCount(ThemeType? type, User? user, bool stars = false, bool approved = true)
+    {
+        IEnumerable<CssTheme> part1 = _ctx.CssThemes
+            .Include(x => x.Author)
+            .Where(x => !x.Deleted && x.Approved == approved);
+            
+        if (type != null)   
+            part1 = part1.Where(x => x.Type == type.Value);
+
+        if (user != null)
+        {
+            if (stars)
+                part1 = part1.Where(x => x.Author.CssStars.Contains(x));
+            else
+                part1 = part1.Where(x => x.Author.Id == user.Id);
+        }
+
+        var items = part1
+            .GroupBy(x => x.Target)
+            .Select(x => new Tuple<string, long>(x.Key, x.Count()))
+            .ToList()
+            .OrderByDescending(x => x.Item2)
+            .ToList();
+        
+        Dictionary<string, long> filters = new();
+        items.ForEach(x => filters.Add(x.Item1, x.Item2));
+        
+        if (type == ThemeType.Css || type == null)
+            CssTargets.ForEach(x =>
+            {
+                if (!filters.ContainsKey(x))
+                    filters.Add(x, 0);
+            });
+
+        if (type == ThemeType.Audio || type == null)
+            AudioTargets.ForEach(x =>
+            {
+                if (!filters.ContainsKey(x))
+                    filters.Add(x, 0);
+            });
+
+        return filters;
+    }
+
     private PaginatedResponse<CssTheme> GetThemesInternal(PaginationDto pagination, Func<IEnumerable<CssTheme>, IEnumerable<CssTheme>> middleware)
     {
         IEnumerable<CssTheme> part1 = _ctx.CssThemes
