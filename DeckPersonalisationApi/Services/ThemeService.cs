@@ -229,11 +229,15 @@ public class ThemeService
         if (user != null)
         {
             if (stars)
-                part1 = part1
-                    .Include(x => x.Author.CssThemes)
-                    .Where(x => x.Author.CssStars.Contains(x));
+            {
+                List<string> starIds = user.CssStars.Select(x => x.Id).ToList();
+                part1 = part1.Where(x => starIds.Contains(x.Id));
+                
+            }
             else
+            {
                 part1 = part1.Where(x => x.Author.Id == user.Id);
+            }
         }
 
         var items = part1
