@@ -219,7 +219,7 @@ public class ThemeService
 
     public Dictionary<string, long> FiltersWithCount(ThemeType? type, User? user, bool stars = false, bool approved = true)
     {
-        IEnumerable<CssTheme> part1 = _ctx.CssThemes
+        IQueryable<CssTheme> part1 = _ctx.CssThemes
             .Include(x => x.Author)
             .Where(x => !x.Deleted && x.Approved == approved);
             
@@ -229,7 +229,9 @@ public class ThemeService
         if (user != null)
         {
             if (stars)
-                part1 = part1.Where(x => x.Author.CssStars.Contains(x));
+                part1 = part1
+                    .Include(x => x.Author.CssThemes)
+                    .Where(x => x.Author.CssStars.Contains(x));
             else
                 part1 = part1.Where(x => x.Author.Id == user.Id);
         }
