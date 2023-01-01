@@ -259,21 +259,39 @@ public class SubmissionService
         "First to Last",
     };
     
-    public Dictionary<string, long> FiltersWithCount(ThemeType? status, User? user)
+    public Dictionary<string, long> FiltersWithCount(ThemeType? type, User? user)
     {
         IEnumerable<CssSubmission> part1 = _ctx.CssSubmissions
             .Include(x => x.Owner)
             .Include(x => x.New);
 
-        if (status != null)   
-            part1 = part1.Where(x => x.New.Type == status.Value);
+        if (type != null)   
+            part1 = part1.Where(x => x.New.Type == type.Value);
 
         if (user != null)
             part1 = part1.Where(x => x.Owner.Id == user.Id);
 
-        var items = part1.GroupBy(x => x.Status).Select(x => new Tuple<SubmissionStatus, long>(x.Key, x.Count())).ToList();
+        var items = part1
+            .GroupBy(x => x.Status)
+            .Select(x => new Tuple<SubmissionStatus, long>(x.Key, x.Count()))
+            .ToList()
+            .OrderByDescending(x => x.Item2)
+            .ToList();
+        
         Dictionary<string, long> filters = new();
         items.ForEach(x => filters.Add(x.Item1.ToString(), x.Item2));
+        
+        new List<string>()
+        {
+            SubmissionStatus.Approved.ToString(),
+            SubmissionStatus.Denied.ToString(),
+            SubmissionStatus.AwaitingApproval.ToString()
+        }.ForEach(x =>
+        {
+            if (!filters.ContainsKey(x))
+                filters.Add(x, 0);
+        });
+        
         return filters;
     }
 

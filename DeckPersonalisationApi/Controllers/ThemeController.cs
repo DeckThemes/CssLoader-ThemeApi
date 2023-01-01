@@ -35,7 +35,6 @@ public class ThemeController : Controller
     }
     
     [HttpGet("filters")]
-    [HttpGet("awaiting_approval/filters")]
     public IActionResult GetThemesFilters(string type = "")
     {
         ThemeType? themeType = null;
@@ -46,6 +45,21 @@ public class ThemeController : Controller
             themeType = ThemeType.Audio;
 
         return new PaginationFilters(_theme.FiltersWithCount(themeType, null), _theme.Orders().ToList()).Ok();
+    }
+    
+    [HttpGet("awaiting_approval/filters")]
+    [Authorize]
+    [JwtRoleRequire(Permissions.ViewThemeSubmissions)]
+    public IActionResult GetUnapprovedThemesFilters(string type = "")
+    {
+        ThemeType? themeType = null;
+
+        if (type.ToLower() == "css")
+            themeType = ThemeType.Css;
+        else if (type.ToLower() == "audio")
+            themeType = ThemeType.Audio;
+
+        return new PaginationFilters(_theme.FiltersWithCount(themeType, null, approved: false), _theme.Orders().ToList()).Ok();
     }
 
     [HttpGet("awaiting_approval")]

@@ -222,6 +222,9 @@ public class SubmissionController : Controller
 
         if (blobs.Any(x => x.Type == BlobType.Zip))
             throw new BadRequestException("Cannot use zip as an image");
+
+        if (blobs.Any(x => x.Owner.Id != user.Id))
+            throw new BadRequestException("One or more provided images are not yours");
     }
     
     private void ValidateMetaTarget(string? target)
