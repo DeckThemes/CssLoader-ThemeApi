@@ -95,6 +95,18 @@ public class BlobService
         _ctx.Blobs.Update(blob);
     }
 
+    public SavedBlob CopyBlob(SavedBlob blob)
+    {
+        string file = GetFullFilePath(blob);
+
+        if (!File.Exists(file))
+            throw new Exception("Failed to open original");
+
+        FileStream stream = File.OpenRead(file);
+        SavedBlob result = CreateBlob(stream, $"a.{blob.Type.GetExtension()}", blob.Owner.Id);
+        stream.Close();
+        return result;
+    }
 
     public SavedBlob CreateBlob(Stream blob, string filename, string userId)
     {

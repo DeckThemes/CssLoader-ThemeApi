@@ -25,9 +25,9 @@ public class CreateCssSubmissionTask : ITaskPart
         List<string> blobs = 
             _meta.ImageBlobs ?? new();
 
-        if (blobs.Count <= 0)
-            blobs = _validation.Base?.Images.Select(x => x.Id).ToList() ?? new();
-
+        if (blobs.Count <= 0 && _validation.Base != null)
+            blobs = _validation.Base.Images.Select(x => _blob.CopyBlob(x)).Select(x => x.Id).ToList();
+        
         CssTheme theme = _service.CreateTheme(_validation.ThemeId, _validation.ThemeName, blobs, _download.Blob.Id, _validation.ThemeVersion,
             _source, _author.Id, _meta.Target ?? _validation.ThemeTarget, _validation.ThemeManifestVersion, _meta.Description ?? _validation.ThemeDescription,
             _validation.ThemeDependencies, _validation.ThemeAuthor, ThemeType.Css);

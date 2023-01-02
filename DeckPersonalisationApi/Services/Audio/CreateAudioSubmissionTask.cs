@@ -27,9 +27,9 @@ public class CreateAudioSubmissionTask : ITaskPart
         List<string> blobs = 
             _meta.ImageBlobs ?? new();
 
-        if (blobs.Count <= 0)
-            blobs = _validation.Base?.Images.Select(x => x.Id).ToList() ?? new();
-
+        if (blobs.Count <= 0 && _validation.Base != null)
+            blobs = _validation.Base.Images.Select(x => _blob.CopyBlob(x)).Select(x => x.Id).ToList();
+        
         CssTheme theme = _service.CreateTheme(_validation.PackId, _validation.PackName, blobs, _download.Blob.Id, _validation.PackVersion,
             _source, _author.Id, _validation.IsMusicPack ? "Music" : "Audio", _validation.PackManifestVersion, _meta.Description ?? _validation.PackDescription,
             new(), _validation.PackAuthor, ThemeType.Audio);
