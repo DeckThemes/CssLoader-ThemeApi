@@ -75,7 +75,7 @@ public class SubmissionService
         newTheme = _themes.GetThemeById(newTheme.Id).Require("Failed to find new theme");
         oldTheme = (oldTheme == null) ? null : _themes.GetThemeById(oldTheme.Id).Require("Failed to find old theme");
 
-        _themes.DeleteTheme(newTheme, oldTheme?.Images.All(x => newTheme.Images.Any(y => y.Id == x.Id)) ?? true, (oldTheme == null) || oldTheme.Download.Id == newTheme.Download.Id);
+        _themes.DeleteTheme(newTheme, !oldTheme?.Images.All(x => newTheme.Images.Any(y => y.Id == x.Id)) ?? true, (oldTheme == null) || oldTheme.Download.Id != newTheme.Download.Id);
         
         submission.ReviewedBy = reviewer;
         submission.Status = SubmissionStatus.Denied;
