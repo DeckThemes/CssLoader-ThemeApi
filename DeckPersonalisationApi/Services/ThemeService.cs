@@ -81,10 +81,14 @@ public class ThemeService
         
         if (original.Author.Id != overlay.Author.Id)
             throw new BadRequestException("Cannot overlay theme from another author");
-        
-        if (original.Download.Id != overlay.Download.Id)
-            _blob.DeleteBlob(original.Download);
 
+        if (original.Download.Id != overlay.Download.Id)
+        {
+            overlay.Download.DownloadCount = original.Download.DownloadCount;
+            _ctx.Blobs.Update(overlay.Download);
+            _blob.DeleteBlob(original.Download);
+        }
+        
         _blob.DeleteBlobs(original.Images.Where(x => overlay.Images.All(y => y.Id != x.Id)).ToList());
         
         original.Images = overlay.Images;
