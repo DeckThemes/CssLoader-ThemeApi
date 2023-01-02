@@ -289,7 +289,7 @@ public class ThemeService
         part1 = part1.Where(x => ((filters.Count <= 0) || filters.Contains(x.Target.ToLower())) && !x.Deleted);
 
         if (!string.IsNullOrWhiteSpace(pagination.Search))
-            part1 = part1.Where(x => (x.Name.ToLower().Contains(pagination.Search)));
+            part1 = part1.Where(x => (x.Name.ToLower().Contains(pagination.Search) || x.SpecifiedAuthor.ToLower().Contains(pagination.Search)));
         
         switch (pagination.Order)
         {
