@@ -160,6 +160,11 @@ public class ThemeService
             .Include(x => x.Images)
             .FirstOrDefault(x => x.Id == id);
 
+    public IEnumerable<CssTheme> GetThemesByIds(List<string> ids)
+        => _ctx.CssThemes
+            .Where(x => ids.Contains(x.Id))
+            .ToList();
+
     public bool ThemeNameExists(string name, ThemeType type)
         => _ctx.CssThemes.Any(x => x.Name == name && x.Approved && !x.Deleted && x.Type == type);
 

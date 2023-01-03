@@ -72,6 +72,17 @@ public class ThemeController : Controller
         return response.Ok();
     }
 
+    [HttpGet("ids")]
+    public IActionResult GetThemes(string ids) // ids is split on `.`
+    {
+        List<string> idsList = ids.Split('.').Select(x => x.Trim()).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+
+        if (idsList.Count <= 0)
+            return new List<string>().Ok();
+
+        return _theme.GetThemesByIds(idsList).Select(x => ((IToDto<MinimalCssThemeDto>)x).ToDto()).Ok();
+    }
+
     [HttpGet("{id}")]
     public IActionResult GetTheme(string id)
     {
