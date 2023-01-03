@@ -144,6 +144,7 @@ public class UserService
 
         UserJwtDto jwt = new(user);
         jwt.Permissions |= Permissions.FromApiToken;
+        jwt.ValidationToken = token;
         return _jwt.CreateToken(jwt);
     }
     

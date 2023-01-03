@@ -69,9 +69,12 @@ public class JwtService
             throw new BadRequestException("Validation failed on token. Please re-login");
         
         UserJwtDto refreshedToken = new(user);
-        
+
         if (dto.Permissions.HasPermission(Permissions.FromApiToken))
+        {
+            refreshedToken.ValidationToken = user.ApiToken!;
             refreshedToken.Permissions |= Permissions.FromApiToken;
+        }
         
         return CreateToken(refreshedToken);
     }
