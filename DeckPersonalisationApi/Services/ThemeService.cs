@@ -152,18 +152,25 @@ public class ThemeService
         _ctx.SaveChanges();
     }
 
-    public CssTheme? GetThemeById(string id)
-        => _ctx.CssThemes
+    public CssTheme? GetThemeById(string id, bool strict = true)
+    {
+        IQueryable<CssTheme> db = _ctx.CssThemes
             .Include(x => x.Dependencies)
             .Include(x => x.Author)
             .Include(x => x.Download)
-            .Include(x => x.Images)
-            .FirstOrDefault(x => x.Id == id);
+            .Include(x => x.Images);
 
-    public IEnumerable<CssTheme> GetThemesByIds(List<string> ids)
-        => _ctx.CssThemes
-            .Where(x => ids.Contains(x.Id))
-            .ToList();
+        return (strict) ? db.FirstOrDefault(x => x.Id == id) : db.FirstOrDefault(x => x.Id == id || x.Name == id);
+    }
+
+    public IEnumerable<CssTheme> GetThemesByIds(List<string> ids, bool strict = true)
+        => (strict)
+            ? _ctx.CssThemes
+                .Where(x => ids.Contains(x.Id))
+                .ToList()
+            : _ctx.CssThemes
+                .Where(x => ids.Contains(x.Id) || ids.Contains(x.Name))
+                .ToList();
 
     public bool ThemeNameExists(string name, ThemeType type)
         => _ctx.CssThemes.Any(x => x.Name == name && x.Approved && !x.Deleted && x.Type == type);

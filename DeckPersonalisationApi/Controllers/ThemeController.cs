@@ -80,24 +80,12 @@ public class ThemeController : Controller
         if (idsList.Count <= 0)
             return new List<string>().Ok();
 
-        return _theme.GetThemesByIds(idsList).Select(x => ((IToDto<MinimalCssThemeDto>)x).ToDto()).Ok();
+        return _theme.GetThemesByIds(idsList, false).Select(x => ((IToDto<MinimalCssThemeDto>)x).ToDto()).Ok();
     }
 
     [HttpGet("{id}")]
     public IActionResult GetTheme(string id)
-    {
-        CssTheme? theme = _theme.GetThemeById(id);
-
-        if (theme == null)
-        {
-            theme ??= _theme.GetThemesByName(new() { id }, ThemeType.Css).FirstOrDefault();
-            theme ??= _theme.GetThemesByName(new() { id }, ThemeType.Audio).FirstOrDefault();
-            theme = theme.Require("Theme not found");
-            theme = _theme.GetThemeById(theme.Id).Require();
-        }
-        
-        return ((IToDto<FullCssThemeDto>)theme).ToDto().Ok();
-    }
+        => ((IToDto<FullCssThemeDto>)_theme.GetThemeById(id, false).Require("Theme not found")).ToDto().Ok();
 
     [HttpPatch("{id}")]
     [Authorize]
