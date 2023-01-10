@@ -3,6 +3,7 @@
 using System.Text;
 using DeckPersonalisationApi;
 using DeckPersonalisationApi.Exceptions;
+using DeckPersonalisationApi.Middleware.CacheControl;
 using DeckPersonalisationApi.Middleware.CookieConverter;
 using DeckPersonalisationApi.Middleware.JwtRole;
 using DeckPersonalisationApi.Model;
@@ -103,6 +104,7 @@ builder.Services.AddSwaggerGen(options =>
 var app = builder.Build();
 
 app.UseAuthTokenCookieToAuthHeader();
+app.UseCacheControlMiddleware();
 
 // Configure the HTTP request pipeline.
 if (configuration.UseSwagger)
