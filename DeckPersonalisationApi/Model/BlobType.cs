@@ -45,6 +45,7 @@ public static class BlobTypeEx
         switch (extension.ToLower())
         {
             case "jpg":
+            case "jpeg":
                 return BlobType.Jpg;
             case "png":
                 return BlobType.Png;
