@@ -15,15 +15,22 @@ public class CacheControlMiddleware
     {
         context.Response.OnStarting(state => {
             var httpContext = (HttpContext)state;
-            
-            if (httpContext.Response.ContentType == BlobType.Jpg.GetContentType() ||
-                httpContext.Response.ContentType == BlobType.Png.GetContentType())
+
+            try
             {
-                httpContext.Response.Headers.Add("Cache-Control", "public, max-age=86400");
+                if (httpContext.Response.ContentType == BlobType.Jpg.GetContentType() ||
+                    httpContext.Response.ContentType == BlobType.Png.GetContentType())
+                {
+                    httpContext.Response.Headers.CacheControl = "public, max-age=86400";
+                }
+                else
+                {
+                    httpContext.Response.Headers.CacheControl = "no-store";
+                }
             }
-            else
+            catch (Exception e)
             {
-                httpContext.Response.Headers.Add("Cache-Control", "no-store");
+                Console.WriteLine($"[FAIL] Failed to write CacheControl header: {e.Message}");
             }
 
             return Task.CompletedTask;
