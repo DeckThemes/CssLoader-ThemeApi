@@ -56,7 +56,6 @@ public class UserController : Controller
     
     [HttpPost("me/logout_all")]
     [Authorize]
-    [JwtRoleRequire(Permissions.ManageApi)]
     [JwtRoleReject(Permissions.FromApiToken)]
     public IActionResult RenewMyValidationToken()
     {
