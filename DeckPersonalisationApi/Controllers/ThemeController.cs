@@ -116,9 +116,9 @@ public class ThemeController : Controller
 
     [HttpGet("legacy/audio")]
     public IActionResult GetAudioPacksAsLegacy(bool approved = true)
-        =>  _theme.GetThemesLegacy(ThemeType.Audio, approved).Ok();
+        =>  _theme.GetThemesLegacy(ThemeType.Audio, approved ? PostVisibility.Public : PostVisibility.Private).Ok();
 
     [HttpGet("legacy/css")]
     public IActionResult GetCssThemesAsLegacy(bool approved = true)
-        =>  _theme.GetThemesLegacy(ThemeType.Css, approved).Ok();
+        =>  _theme.GetThemesLegacy(ThemeType.Css, approved ? PostVisibility.Public : PostVisibility.Private).Ok();
 }

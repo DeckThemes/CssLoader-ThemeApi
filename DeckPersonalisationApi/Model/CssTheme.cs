@@ -1,4 +1,5 @@
-﻿using DeckPersonalisationApi.Model.Dto.External.GET;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using DeckPersonalisationApi.Model.Dto.External.GET;
 
 namespace DeckPersonalisationApi.Model;
 
@@ -18,9 +19,11 @@ public class CssTheme : IToDto<PartialCssThemeDto>, IToDto<MinimalCssThemeDto>, 
     public string Target { get; set; }
     public int ManifestVersion { get; set; }
     public string Description { get; set; }
+    [InverseProperty("DependenciesOf")]
     public List<CssTheme> Dependencies { get; set; }
-    public bool Approved { get; set; }
-    public bool Deleted { get; set; }
+    [InverseProperty("Dependencies")]
+    public List<CssTheme> DependenciesOf { get; set; }
+    public PostVisibility Visibility { get; set; }
     public ICollection<User> UserStars { get; set; }
     public long StarCount { get; set; }
 

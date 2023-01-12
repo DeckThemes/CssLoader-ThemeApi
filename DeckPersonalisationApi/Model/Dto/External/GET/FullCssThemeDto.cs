@@ -19,6 +19,7 @@ public class FullCssThemeDto
     public List<MinimalCssThemeDto> Dependencies { get; set; }
     public bool Approved { get; set; }
     public bool Disabled { get; set; }
+    public string Visibility { get; set; }
     public long StarCount { get; set; }
 
     public FullCssThemeDto()
@@ -40,8 +41,9 @@ public class FullCssThemeDto
         ManifestVersion = theme.ManifestVersion;
         Description = theme.Description;
         Dependencies = theme.Dependencies.Select(x => ((IToDto<MinimalCssThemeDto>)x).ToDto()).ToList();
-        Approved = theme.Approved;
-        Disabled = theme.Deleted;
+        Visibility = theme.Visibility.ToString();
+        Approved = theme.Visibility == PostVisibility.Public;
+        Disabled = theme.Visibility == PostVisibility.Deleted;
         SpecifiedAuthor = theme.SpecifiedAuthor;
         StarCount = theme.StarCount;
         Type = theme.Type.ToString();

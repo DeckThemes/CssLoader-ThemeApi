@@ -43,7 +43,11 @@ public class ThemeService
         User author = _user.GetActiveUserById(authorId).Require("User not found");
         List<SavedBlob> imageBlobs = _blob.GetBlobs(imageIds).ToList();
         SavedBlob blob = _blob.GetBlob(blobId).Require();
-        List<CssTheme> dependencies = _ctx.CssThemes.Where(x => dependencyNames.Contains(x.Name)).ToList();
+        List<CssTheme> dependencies = new();
+
+        if (type == ThemeType.Css && dependencyNames.Count > 0)
+            dependencies = GetThemesByName(dependencyNames, ThemeType.Css).ToList();
+        
 
         _blob.ConfirmBlobs(imageBlobs);
         _blob.ConfirmBlob(blob);
@@ -64,7 +68,7 @@ public class ThemeService
             ManifestVersion = manifestVersion,
             Description = description,
             Dependencies = dependencies,
-            Approved = false,
+            Visibility = PostVisibility.Private,
             Type = type
         };
 
@@ -109,7 +113,7 @@ public class ThemeService
     public void DeleteTheme(CssTheme theme, bool deleteImages = false, bool deleteDownload = false)
     {
         theme = GetThemeById(theme.Id).Require("Could not find theme");
-        theme.Deleted = true;
+        theme.Visibility = PostVisibility.Deleted;
         _ctx.CssThemes.Update(theme);
         if (deleteImages)
             _blob.DeleteBlobs(theme.Images);
@@ -123,7 +127,7 @@ public class ThemeService
     public void ApproveTheme(CssTheme theme)
     {
         theme = GetThemeById(theme.Id).Require("Could not find theme");
-        theme.Approved = true;
+        theme.Visibility = PostVisibility.Public;
         _ctx.CssThemes.Update(theme);
         _ctx.SaveChanges();
     }
@@ -167,42 +171,44 @@ public class ThemeService
         => (strict)
             ? _ctx.CssThemes
                 .Where(x => ids.Contains(x.Id))
+                .Where(x => x.Visibility == PostVisibility.Public)
                 .ToList()
             : _ctx.CssThemes
                 .Where(x => ids.Contains(x.Id) || ids.Contains(x.Name))
+                .Where(x => x.Visibility == PostVisibility.Public)
                 .ToList();
 
     public bool ThemeNameExists(string name, ThemeType type)
-        => _ctx.CssThemes.Any(x => x.Name == name && x.Approved && !x.Deleted && x.Type == type);
+        => _ctx.CssThemes.Any(x => x.Name == name && x.Visibility == PostVisibility.Public && x.Type == type);
 
-    public List<LegacyThemesDto> GetThemesLegacy(ThemeType type, bool approved = true)
+    public List<LegacyThemesDto> GetThemesLegacy(ThemeType type, PostVisibility visibility)
         => _ctx.CssThemes
             .Include(x => x.Images)
             .Include(x => x.Download)
-            .Where(x => x.Type == type && x.Approved == approved && !x.Deleted)
+            .Where(x => x.Type == type && x.Visibility == visibility)
             .ToList()
             .Select(x => new LegacyThemesDto(x, _config))
             .ToList();
     
     public IEnumerable<CssTheme> GetThemesByName(List<string> names, ThemeType type)
         => _ctx.CssThemes.Include(x => x.Author)
-            .Where(x => x.Type == type).Where(x => names.Contains(x.Name) && x.Approved && !x.Deleted).ToList();
+            .Where(x => x.Type == type).Where(x => names.Contains(x.Name) && x.Visibility == PostVisibility.Public).ToList();
     
     public IEnumerable<CssTheme> GetAnyThemesByAuthorWithName(User user, string name, ThemeType type)
         => _ctx.CssThemes.Include(x => x.Author).Include(x => x.Images).Include(x => x.Download)
-            .Where(x => x.Type == type).Where(x => x.Name == name && x.Author.Id == user.Id && !x.Deleted).ToList();
+            .Where(x => x.Type == type).Where(x => x.Name == name && x.Author.Id == user.Id && x.Visibility != PostVisibility.Deleted).ToList();
 
     public PaginatedResponse<CssTheme> GetUsersThemes(User user, PaginationDto pagination)
-        => GetThemesInternal(pagination, x => x.Where(y => y.Author == user && y.Approved));
+        => GetThemesInternal(pagination, x => x.Where(y => y.Author == user), PostVisibility.Public);
 
     public PaginatedResponse<CssTheme> GetApprovedThemes(PaginationDto pagination)
-        => GetThemesInternal(pagination, x => x.Where(y => y.Approved));
+        => GetThemesInternal(pagination, null, PostVisibility.Public);
     
     public PaginatedResponse<CssTheme> GetNonApprovedThemes(PaginationDto pagination)
-        => GetThemesInternal(pagination, x => x.Where(y => !y.Approved));
+        => GetThemesInternal(pagination,null, PostVisibility.Private);
 
     public PaginatedResponse<CssTheme> GetStarredThemesByUser(PaginationDto pagination, User user)
-        => GetThemesInternal(pagination, x => x.Where(y => user.CssStars.Contains(y)));
+        => GetThemesInternal(pagination, x => x.Where(y => user.CssStars.Contains(y)), null);
 
     public void UpdateStars()
     {
@@ -237,7 +243,7 @@ public class ThemeService
     {
         IQueryable<CssTheme> part1 = _ctx.CssThemes
             .Include(x => x.Author)
-            .Where(x => !x.Deleted && x.Approved == approved);
+            .Where(x => x.Visibility == PostVisibility.Public);
             
         if (type != null)   
             part1 = part1.Where(x => x.Type == type.Value);
@@ -283,14 +289,25 @@ public class ThemeService
         return filters;
     }
 
-    private PaginatedResponse<CssTheme> GetThemesInternal(PaginationDto pagination, Func<IEnumerable<CssTheme>, IEnumerable<CssTheme>> middleware)
+    private PaginatedResponse<CssTheme> GetThemesInternal(PaginationDto pagination, Func<IEnumerable<CssTheme>, IEnumerable<CssTheme>>? middleware = null, PostVisibility? status = PostVisibility.Public)
     {
         IEnumerable<CssTheme> part1 = _ctx.CssThemes
             .Include(x => x.Author)
             .Include(x => x.Download)
             .Include(x => x.Images);
 
-        part1 = middleware(part1);
+        if (status.HasValue)
+        {
+            PostVisibility actualVisibility = status.Value;
+            part1 = part1.Where(x => x.Visibility == actualVisibility);
+        }
+        else
+        {
+            part1 = part1.Where(x => x.Visibility != PostVisibility.Deleted);
+        }
+        
+        if (middleware != null)
+            part1 = middleware(part1);
         
         if (pagination.Filters.Contains("CSS"))
             part1 = part1.Where(x => x.Type == ThemeType.Css);
@@ -298,7 +315,7 @@ public class ThemeService
             part1 = part1.Where(x => x.Type == ThemeType.Audio);
         
         List<string> filters = pagination.Filters.Where(x => x is not ("CSS" or "AUDIO")).Select(x => x.ToLower()).ToList();
-        part1 = part1.Where(x => ((filters.Count <= 0) || filters.Contains(x.Target.ToLower())) && !x.Deleted);
+        part1 = part1.Where(x => ((filters.Count <= 0) || filters.Contains(x.Target.ToLower())));
 
         if (!string.IsNullOrWhiteSpace(pagination.Search))
             part1 = part1.Where(x => (x.Name.ToLower().Contains(pagination.Search) || x.SpecifiedAuthor.ToLower().Contains(pagination.Search)));

@@ -66,7 +66,7 @@ public class ValidateAudioPackTask : IIdentifierTaskPart
         PackName = validator.Name;
 
         List<CssTheme> t = _service.GetAnyThemesByAuthorWithName(_user, PackName, ThemeType.Audio).ToList();
-        if (t.Any(x => !x.Approved))
+        if (t.Any(x => x.Visibility == PostVisibility.Private))
             throw new TaskFailureException("Theme seems to already be a pending submission for this theme");
         
         Base = t.FirstOrDefault();

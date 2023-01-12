@@ -72,7 +72,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
         ThemeName = validator.Name;
 
         List<CssTheme> t = _service.GetAnyThemesByAuthorWithName(_user, ThemeName, ThemeType.Css).ToList();
-        if (t.Any(x => !x.Approved))
+        if (t.Any(x => x.Visibility == PostVisibility.Private))
             throw new TaskFailureException("Theme seems to already be a pending submission for this theme");
         
         Base = t.FirstOrDefault();
