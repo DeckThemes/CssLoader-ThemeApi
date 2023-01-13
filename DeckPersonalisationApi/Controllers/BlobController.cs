@@ -33,7 +33,7 @@ public class BlobController : Controller
         SavedBlob? image = _service.GetBlob(id);
 
         if (image == null || image.Deleted)
-            throw new NotFoundException("Could not find blob");
+            throw new NotFoundException($"Could not find blob with id '{id}'");
 
         string path = _service.GetFullFilePath(image);
         Stream stream = System.IO.File.OpenRead(path);
