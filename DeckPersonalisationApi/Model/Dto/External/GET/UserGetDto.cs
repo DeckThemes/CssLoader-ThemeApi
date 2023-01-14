@@ -8,7 +8,7 @@ public class UserGetDto
     public List<string> Permissions { get; set; }
     public DateTimeOffset LastLoginDate { get; set; }
     public bool Active { get; set; }
-    public bool HasApiKey { get; set; }
+    public bool HasDeckKey { get; set; }
 
     public UserGetDto(User user)
     {
@@ -18,6 +18,6 @@ public class UserGetDto
         LastLoginDate = user.LastLoginDate;
         Active = user.Active;
         Avatar = user.GetAvatarUri();
-        HasApiKey = user.ApiToken != null;
+        HasDeckKey = user.ApiToken != null;
     }
 }
