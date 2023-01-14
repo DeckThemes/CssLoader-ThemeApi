@@ -73,7 +73,7 @@ public class AuthenticationController : Controller
     {
         UserJwtDto token = _jwt.DecodeToken(Request).Require();
         User user = _user.GetUserById(token.Id).Require();
-        return user.Ok();
+        return ((IToDto<UserGetDto>)user).ToDto().Ok();
     }
     
     [HttpGet("me")]
