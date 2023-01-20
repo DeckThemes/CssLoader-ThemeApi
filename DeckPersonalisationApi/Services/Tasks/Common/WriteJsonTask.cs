@@ -2,7 +2,7 @@
 
 public class WriteJsonTask : ITaskPart
 {
-    public string Name => $"Reading data to {_fileName}";
+    public string Name => $"Writing data to {_fileName}";
     private IDirTaskPart _path;
     private string _fileName;
     private GetJsonTask _json;

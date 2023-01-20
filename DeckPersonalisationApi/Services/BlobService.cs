@@ -127,7 +127,7 @@ public class BlobService
 
         BlobType type = BlobTypeEx.FromExtensionToBlobType(ext);
         string id = Guid.NewGuid().ToString();
-        string path = $"{id}.{ext}";
+        string path = $"{id}.{type.GetExtension()}";
         var file = File.Create(Path.Join(_conf.TempBlobPath, path));
         blob.CopyTo(file);
         file.Close();
