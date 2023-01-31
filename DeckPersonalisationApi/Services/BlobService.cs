@@ -21,10 +21,10 @@ public class BlobService
     public SavedBlob? GetBlob(string? id)
         => Query().Include(x => x.Owner).FirstOrDefault(x => x.Id == id);
 
-    public IEnumerable<SavedBlob> GetBlobs(List<string> ids)
+    public IEnumerable<SavedBlob> GetBlobs(List<string> ids, bool strict = true)
     {
         List<SavedBlob> blobs = Query().Where(x => ids.Contains(x.Id)).ToList();
-        if (blobs.Count != ids.Count)
+        if (blobs.Count != ids.Count && strict)
             throw new NotFoundException("Failed to get all blob ids");
 
         return blobs;
@@ -158,7 +158,7 @@ public class BlobService
 
     public void WriteDownloadCache(Dictionary<string, int> cache)
     {
-        List<SavedBlob> blobs = GetBlobs(cache.Keys.ToList()).ToList();
+        List<SavedBlob> blobs = GetBlobs(cache.Keys.ToList(), false).ToList();
         foreach (var savedBlob in blobs)
         {
             savedBlob.DownloadCount += cache[savedBlob.Id];
