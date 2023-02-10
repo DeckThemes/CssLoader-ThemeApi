@@ -234,6 +234,9 @@ public class SubmissionController : Controller
         
         if (!_config.CssTargets.Contains(target))
             throw new BadRequestException($"Invalid CSS target {target}");
+
+        if (target == "Preset")
+            throw new BadRequestException("Meta Target cannot be 'Preset'");
     }
 
     private void ValidateMetaDescription(string? description)

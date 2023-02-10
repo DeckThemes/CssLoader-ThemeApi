@@ -28,7 +28,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
     public string ThemeDescription { get; private set; }
     public List<string> ThemeDependencies { get; private set; } = new();
     public List<string> Errors { get; private set; } = new();
-    
+    public List<CssFlag> ThemeFlags { get; private set; } = new();
     
     public void Execute()
     {
@@ -55,6 +55,9 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
                 break;
             case 5:
                 validator = new CssManifestV5Validator(_path.DirPath!, _json.Json!, _user, _validThemeTargets);
+                break;
+            case 6:
+                validator = new CssManifestV6Validator(_path.DirPath!, _json.Json!, _user, _validThemeTargets);
                 break;
             default:
                 throw new TaskFailureException($"Invalid manifest version '{manifestVersion}'");
@@ -86,6 +89,12 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
         ThemeManifestVersion = manifestVersion;
         ThemeDescription = validator?.Description ?? Base?.Description ?? "";
         ThemeDependencies = validator!.Dependencies;
+        ThemeFlags = validator.Flags;
+
+        if (ThemeFlags.Contains(CssFlag.Preset))
+            ThemeTarget = "Preset";
+        else if (ThemeTarget == "Preset")
+            throw new TaskFailureException("Target 'Preset' is not a user-pickable value");
 
         List<CssTheme> dependencies = _service.GetThemesByName(ThemeDependencies, ThemeType.Css).ToList();
         if (dependencies.Count != ThemeDependencies.Count)
