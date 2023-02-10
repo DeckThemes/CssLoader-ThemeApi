@@ -323,6 +323,15 @@ public class SubmissionService
                     a = res;
                 return a;
             }).Where(x => x != null).Select(x => x!.Value).ToList();
+        
+        List<SubmissionStatus> negativeStatus =
+            pagination.Filters.Select(x =>
+            {
+                SubmissionStatus? a = null;
+                if (Enum.TryParse(x, true, out SubmissionStatus res))
+                    a = res;
+                return a;
+            }).Where(x => x != null).Select(x => x!.Value).ToList();
 
         IEnumerable<CssSubmission> part1 = _ctx.CssSubmissions
             .Include(x => x.ReviewedBy)
@@ -335,7 +344,12 @@ public class SubmissionService
             .Include(x => x.Old);
 
         part1 = middleware(part1);
-        part1 = part1.Where(x => ((status.Count <= 0) || status.Contains(x.Status)));
+        
+        if (status.Count > 0)
+            part1 = part1.Where(x => status.Contains(x.Status));
+        else if (negativeStatus.Count > 0)
+            part1 = part1.Where(x => !negativeStatus.Contains(x.Status));
+        
         if (!string.IsNullOrWhiteSpace(pagination.Search))
             part1 = part1.Where(x => (x.New.Name.ToLower().Contains(pagination.Search)));
         

@@ -315,7 +315,12 @@ public class ThemeService
             part1 = part1.Where(x => x.Type == ThemeType.Audio);
         
         List<string> filters = pagination.Filters.Where(x => x is not ("CSS" or "AUDIO")).Select(x => x.ToLower()).ToList();
-        part1 = part1.Where(x => ((filters.Count <= 0) || filters.Contains(x.Target.ToLower())));
+        List<string> negativeFilters = pagination.NegativeFilters.Select(x => x.ToLower()).ToList();
+        
+        if (filters.Count > 0)
+            part1 = part1.Where(x => filters.Contains(x.Target.ToLower()));
+        else if (negativeFilters.Count > 0)
+            part1 = part1.Where(x => !negativeFilters.Contains(x.Target.ToLower()));
 
         if (!string.IsNullOrWhiteSpace(pagination.Search))
             part1 = part1.Where(x => (x.Name.ToLower().Contains(pagination.Search) || x.SpecifiedAuthor.ToLower().Contains(pagination.Search)));
