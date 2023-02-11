@@ -73,6 +73,21 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
         }
         
         ThemeName = validator.Name;
+        ThemeTarget = validator.Target ?? Base?.Target ?? "Other";
+        ThemeFlags = validator.Flags;
+        ThemeAuthor = validator.Author;
+        ThemeVersion = validator.Version;
+        ThemeManifestVersion = manifestVersion;
+        ThemeDescription = validator?.Description ?? Base?.Description ?? "";
+        ThemeDependencies = validator!.Dependencies;
+
+        if (ThemeFlags.Contains(CssFlag.Preset))
+        {
+            ThemeName += " (P)";
+            ThemeTarget = "Preset";
+        }
+        else if (ThemeTarget == "Preset")
+            throw new TaskFailureException("Target 'Preset' is not a user-pickable value");
 
         List<CssTheme> t = _service.GetAnyThemesByAuthorWithName(_user, ThemeName, ThemeType.Css).ToList();
         if (t.Any(x => x.Visibility == PostVisibility.Private))
@@ -82,19 +97,6 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
 
         if (_service.ThemeNameExists(ThemeName, ThemeType.Css) && Base == null)
             throw new TaskFailureException($"Theme '{ThemeName}' already exists");
-        
-        ThemeAuthor = validator.Author;
-        ThemeVersion = validator.Version;
-        ThemeTarget = validator?.Target ?? Base?.Target ?? "Other";
-        ThemeManifestVersion = manifestVersion;
-        ThemeDescription = validator?.Description ?? Base?.Description ?? "";
-        ThemeDependencies = validator!.Dependencies;
-        ThemeFlags = validator.Flags;
-
-        if (ThemeFlags.Contains(CssFlag.Preset))
-            ThemeTarget = "Preset";
-        else if (ThemeTarget == "Preset")
-            throw new TaskFailureException("Target 'Preset' is not a user-pickable value");
 
         List<CssTheme> dependencies = _service.GetThemesByName(ThemeDependencies, ThemeType.Css).ToList();
         if (dependencies.Count != ThemeDependencies.Count)
@@ -105,6 +107,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
         ThemeId = guid;
         
         _json.Json!["id"] = internalId;
+        _json.Json!["name"] = ThemeName;
         
         List<string> extraErrors = new();
         
