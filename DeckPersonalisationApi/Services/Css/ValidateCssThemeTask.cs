@@ -28,7 +28,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
     public string ThemeDescription { get; private set; }
     public List<string> ThemeDependencies { get; private set; } = new();
     public List<string> Errors { get; private set; } = new();
-    
+    public List<CssFlag> ThemeFlags { get; private set; } = new();
     
     public void Execute()
     {
@@ -56,6 +56,9 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
             case 5:
                 validator = new CssManifestV5Validator(_path.DirPath!, _json.Json!, _user, _validThemeTargets);
                 break;
+            case 6:
+                validator = new CssManifestV6Validator(_path.DirPath!, _json.Json!, _user, _validThemeTargets);
+                break;
             default:
                 throw new TaskFailureException($"Invalid manifest version '{manifestVersion}'");
         }
@@ -70,6 +73,21 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
         }
         
         ThemeName = validator.Name;
+        ThemeTarget = validator.Target ?? Base?.Target ?? "Other";
+        ThemeFlags = validator.Flags;
+        ThemeAuthor = validator.Author;
+        ThemeVersion = validator.Version;
+        ThemeManifestVersion = manifestVersion;
+        ThemeDescription = validator?.Description ?? Base?.Description ?? "";
+        ThemeDependencies = validator!.Dependencies;
+
+        if (ThemeFlags.Contains(CssFlag.Preset))
+        {
+            ThemeName += " (P)";
+            ThemeTarget = "Preset";
+        }
+        else if (ThemeTarget == "Preset")
+            throw new TaskFailureException("Target 'Preset' is not a user-pickable value");
 
         List<CssTheme> t = _service.GetAnyThemesByAuthorWithName(_user, ThemeName, ThemeType.Css).ToList();
         if (t.Any(x => x.Visibility == PostVisibility.Private))
@@ -79,13 +97,6 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
 
         if (_service.ThemeNameExists(ThemeName, ThemeType.Css) && Base == null)
             throw new TaskFailureException($"Theme '{ThemeName}' already exists");
-        
-        ThemeAuthor = validator.Author;
-        ThemeVersion = validator.Version;
-        ThemeTarget = validator?.Target ?? Base?.Target ?? "Other";
-        ThemeManifestVersion = manifestVersion;
-        ThemeDescription = validator?.Description ?? Base?.Description ?? "";
-        ThemeDependencies = validator!.Dependencies;
 
         List<CssTheme> dependencies = _service.GetThemesByName(ThemeDependencies, ThemeType.Css).ToList();
         if (dependencies.Count != ThemeDependencies.Count)
@@ -96,6 +107,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
         ThemeId = guid;
         
         _json.Json!["id"] = internalId;
+        _json.Json!["name"] = ThemeName;
         
         List<string> extraErrors = new();
         

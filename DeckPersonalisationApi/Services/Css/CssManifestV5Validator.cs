@@ -5,7 +5,7 @@ namespace DeckPersonalisationApi.Services.Css;
 
 /*
  * V5 manifests add the ability to define css variables in place of files
- * v1.4.0 -> Present
+ * v1.4.0 -> v1.4.1
  */
 public class CssManifestV5Validator : CssManifestV4Validator
 {

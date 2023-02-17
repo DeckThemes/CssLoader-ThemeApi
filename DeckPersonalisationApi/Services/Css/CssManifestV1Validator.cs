@@ -22,6 +22,7 @@ public class CssManifestV1Validator
     public string? Description { get; protected set; }
     public List<string> Dependencies { get; protected set; } = new();
     public List<string> CssPaths { get; protected set; } = new();
+    public List<CssFlag> Flags { get; protected set; } = new();
 
     public CssManifestV1Validator(string themePath, JObject json, User user, List<string> validTargets)
     {
@@ -151,6 +152,12 @@ public class CssManifestV1Validator
         }
     }
 
+    protected virtual void VerifyFlags()
+    {
+        if (_json.ContainsKey("flags"))
+            throw new Exception($"Flags are not supported on manifest v{ManifestVersion}");
+    }
+
     public virtual void FullVerify()
     {
         VerifyName();
@@ -161,5 +168,6 @@ public class CssManifestV1Validator
         VerifyDependencies();
         VerifyInjects();
         VerifyPatches();
+        VerifyFlags();
     }
 }

@@ -59,7 +59,7 @@ public class ThemeController : Controller
         else if (type.ToLower() == "audio")
             themeType = ThemeType.Audio;
 
-        return new PaginationFilters(_theme.FiltersWithCount(themeType, null, approved: false), _theme.Orders().ToList()).Ok();
+        return new PaginationFilters(_theme.FiltersWithCount(themeType, null, visibility: PostVisibility.Private), _theme.Orders().ToList()).Ok();
     }
 
     [HttpGet("awaiting_approval")]

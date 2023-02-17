@@ -8,13 +8,16 @@ public class PaginationDto
     public int PerPage { get; set; } = 50;
     public string Search { get; set; } = "";
     public List<string> Filters { get; set; } = new();
+    public List<string> NegativeFilters { get; set; } = new();
     public string Order { get; set; } = "";
 
     public PaginationDto(int page, int perPage, string filters, string order, string search)
     {
         Page = page;
         PerPage = perPage;
-        Filters = filters.Split('.').Select(x => x.Trim()).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+        List<string> unsortedFilters = filters.Split('.').Select(x => x.Trim()).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+        Filters = unsortedFilters.Where(x => !x.StartsWith("-")).ToList();
+        NegativeFilters = unsortedFilters.Where(x => x.StartsWith("-")).Select(x => x.Substring(1)).ToList();
         Order = order;
         Search = search.ToLower();
 
