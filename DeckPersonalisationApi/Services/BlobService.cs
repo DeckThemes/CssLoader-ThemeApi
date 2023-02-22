@@ -10,9 +10,11 @@ public class BlobService
     private UserService _user;
     private AppConfiguration _conf;
     private ApplicationContext _ctx;
+    private ILogger<BlobService> _logger;
 
-    public BlobService(UserService user, AppConfiguration config, ApplicationContext ctx)
+    public BlobService(ILogger<BlobService> logger, UserService user, AppConfiguration config, ApplicationContext ctx)
     {
+        _logger = logger;
         _user = user;
         _conf = config;
         _ctx = ctx;
@@ -24,11 +26,18 @@ public class BlobService
     public IEnumerable<SavedBlob> GetBlobs(List<string> ids, bool strict = true)
     {
         List<SavedBlob> blobs = Query().Where(x => ids.Contains(x.Id)).ToList();
+        
+        if (blobs.Count != ids.Count)
+            _logger.LogWarning($"Failed to get all blob ids! Requested: {StringifyArray(ids)}, Got {blobs.Select(x => x.Id).ToList()}");
+        
         if (blobs.Count != ids.Count && strict)
             throw new NotFoundException("Failed to get all blob ids");
 
         return blobs;
     }
+
+    private string StringifyArray(List<string> items)
+        => items.Count > 0 ? $"[\"{string.Join("\",\"", items)}\"]" : "[]";
 
     public List<SavedBlob> GetBlobsByUser(User user)
         => Query().Where(x => x.Owner == user).ToList();
@@ -166,6 +175,7 @@ public class BlobService
         }
 
         _ctx.SaveChanges();
+        _logger.LogInformation($"Updated {blobs.Count} blobs with new downloads");
     }
 
     private IQueryable<SavedBlob> Query() => _ctx.Blobs.Where(x => !x.Deleted);

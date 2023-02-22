@@ -29,14 +29,14 @@ public class Startup : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
             _logger.LogInformation($"Running background service at {DateTime.Now:HH:mm:ss}");
-            await Task.Run(RemoveExpiredBlobs);
-            await Task.Run(WriteBlobDownloads);
-            await Task.Run(UpdateStars);
+            await RemoveExpiredBlobs();
+            await WriteBlobDownloads();
+            await UpdateStars();
             await Task.Delay(TimeSpan.FromMinutes(_conf.BackgroundServiceFrequencyMinutes), stoppingToken);
         }
     }
 
-    private void RemoveExpiredBlobs()
+    private async Task RemoveExpiredBlobs()
     {
         using (var scope = _services.CreateScope())
         {
@@ -49,20 +49,22 @@ public class Startup : BackgroundService
         }
     }
 
-    private void WriteBlobDownloads()
+    private async Task WriteBlobDownloads()
     {
         using (var scope = _services.CreateScope())
         {
             var blobService = scope.ServiceProvider.GetRequiredService<BlobService>();
             var taskService = scope.ServiceProvider.GetRequiredService<TaskService>();
-            blobService.WriteDownloadCache(taskService.RolloverRegisteredDownloads());
+            var cache = taskService.RolloverRegisteredDownloads();
+            await Task.Delay(100);
+            blobService.WriteDownloadCache(cache);
             
             // Sneaky extra
             taskService.ClearOldTasks();
         }
     }
 
-    private void UpdateStars()
+    private async Task UpdateStars()
     {
         using (var scope = _services.CreateScope())
         {
