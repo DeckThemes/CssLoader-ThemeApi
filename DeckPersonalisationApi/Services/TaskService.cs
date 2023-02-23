@@ -1,12 +1,13 @@
-﻿using DeckPersonalisationApi.Services.Tasks;
+﻿using System.Collections.Concurrent;
+using DeckPersonalisationApi.Services.Tasks;
 
 namespace DeckPersonalisationApi.Services;
 
 public class TaskService
 {
-    private Dictionary<string, AppTask> _tasks = new();
+    private ConcurrentDictionary<string, AppTask> _tasks = new();
     private IServiceProvider _services;
-    private Dictionary<string, int> _blobDlCache = new();
+    private ConcurrentDictionary<string, int> _blobDlCache = new();
     private AppConfiguration _config;
     private bool _lock = false;
 
@@ -22,7 +23,7 @@ public class TaskService
     public string RegisterTask(AppTask task)
     {
         task.Id = Guid.NewGuid().ToString();
-        _tasks.Add(task.Id, task);
+        _tasks.TryAdd(task.Id, task);
         StartNewTask();
         return task.Id;
     }
@@ -64,7 +65,7 @@ public class TaskService
 
     public Dictionary<string, int> RolloverRegisteredDownloads()
     {
-        Dictionary<string, int> cache = _blobDlCache;
+        Dictionary<string, int> cache = new(_blobDlCache);
         _blobDlCache = new();
         return cache;
     }
@@ -78,6 +79,6 @@ public class TaskService
                 toDelete.Add(key);
         }
         
-        toDelete.ForEach(x => _tasks.Remove(x));
+        toDelete.ForEach(x => _tasks.TryRemove(x, out var y));
     }
 }

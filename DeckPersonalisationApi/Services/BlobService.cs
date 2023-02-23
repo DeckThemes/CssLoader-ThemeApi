@@ -25,12 +25,13 @@ public class BlobService
 
     public IEnumerable<SavedBlob> GetBlobs(List<string> ids, bool strict = true)
     {
-        List<SavedBlob> blobs = Query().Where(x => ids.Contains(x.Id)).ToList();
+        List<string> uniqueIds = ids.Distinct().ToList();
+        List<SavedBlob> blobs = Query().Where(x => uniqueIds.Contains(x.Id)).ToList();
         
-        if (blobs.Count != ids.Count)
-            _logger.LogWarning($"Failed to get all blob ids! Requested: {StringifyArray(ids)}, Got {blobs.Select(x => x.Id).ToList()}");
+        if (blobs.Count != uniqueIds.Count)
+            _logger.LogWarning($"Failed to get all blob ids! Requested: {StringifyArray(uniqueIds)}, Got {StringifyArray(blobs.Select(x => x.Id).ToList())}");
         
-        if (blobs.Count != ids.Count && strict)
+        if (blobs.Count != uniqueIds.Count && strict)
             throw new NotFoundException("Failed to get all blob ids");
 
         return blobs;
