@@ -182,5 +182,17 @@ public class UserService
 
     public User? GetUserById(string id) => _ctx.Users.Include(x => x.CssStars).FirstOrDefault(x => x.Id == id);
     public User? GetActiveUserById(string id) => _ctx.Users.Include(x => x.CssStars).FirstOrDefault(x => x.Id == id && x.Active == true);
+    public List<User> GetUserByAnyPermission(Permissions permissions) => _ctx.Users.Where(x => (x.Permissions & permissions) != 0).ToList();
+    public List<User> GetUsersByIds(List<string> ids) => _ctx.Users.Where(x => ids.Contains(x.Id)).ToList();
+    public void UpdateBulk(List<User> updatedUsers)
+    {
+        if (updatedUsers.Count <= 0)
+            return;
+        
+        foreach (var updatedUser in updatedUsers)
+            _ctx.Users.Update(updatedUser);
+
+        _ctx.SaveChanges();
+    }
     public long GetSubmissionCountByUser(User user, SubmissionStatus status) => _ctx.CssSubmissions.Count(x => x.Owner == user && x.Status == status);
 }
