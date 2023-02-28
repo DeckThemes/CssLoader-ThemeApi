@@ -89,57 +89,7 @@ public class Startup : BackgroundService
 
     private async Task UpdatePremiumStatus()
     {
-        
-        await _bot.Cache();
-        using (var scope = _services.CreateScope())
-        {
-            var userService = scope.ServiceProvider.GetRequiredService<UserService>();
-            List<User> currentPremiumUsers =
-                userService.GetUserByAnyPermission(Permissions.PremiumTier1 | Permissions.PremiumTier2 |
-                                                   Permissions.PremiumTier3);
-
-            List<DiscordApiUser> tier1 = _bot.GetUsersWithRoles(_conf.DiscordPremiumTier1Role.ToString());
-            List<DiscordApiUser> tier2 = _bot.GetUsersWithRoles(_conf.DiscordPremiumTier2Role.ToString());
-            List<DiscordApiUser> tier3 = _bot.GetUsersWithRoles(_conf.DiscordPremiumTier3Role.ToString());
-            
-            UpdateUserLists(currentPremiumUsers, tier1);
-            UpdateUserLists(currentPremiumUsers, tier2);
-            UpdateUserLists(currentPremiumUsers, tier3);
-            
-            // Remove old users
-            currentPremiumUsers.ForEach(x => x.Permissions &= ~(Permissions.PremiumTier1 | Permissions.PremiumTier2 |
-                                                               Permissions.PremiumTier3));
-            userService.UpdateBulk(currentPremiumUsers);
-            
-            // Add new users
-            long newCount = 0;
-            newCount += UpdateTierUsers(tier1, Permissions.PremiumTier1, userService);
-            newCount += UpdateTierUsers(tier2, Permissions.PremiumTier2, userService);
-            newCount += UpdateTierUsers(tier3, Permissions.PremiumTier3, userService);
-            
-            _logger.LogInformation($"Removed tier from {currentPremiumUsers.Count} users, Added tier to {newCount} users");
-        }
-    }
-
-    private int UpdateTierUsers(List<DiscordApiUser> tierList, Permissions tier, UserService userService)
-    {
-        List<User> tierUsers = userService.GetUsersByIds(tierList.Select(x => $"Discord|{x.Id}").ToList());
-        tierUsers.ForEach(x => x.Permissions |= tier);
-        userService.UpdateBulk(tierUsers);
-        return tierUsers.Count;
-    }
-
-    private void UpdateUserLists(List<User> current, List<DiscordApiUser> incoming)
-    {
-        foreach (var discordApiUser in new List<DiscordApiUser>(incoming))
-        {
-            string id = "Discord|" + discordApiUser.Id;
-            User? u = current.Find(x => x.Id == id);
-            if (u != null)
-            {
-                incoming.Remove(discordApiUser);
-                current.Remove(u);
-            }
-        }
+        long count = await _bot.Cache();
+        _logger.LogInformation($"Cached {count} discord users");
     }
 }

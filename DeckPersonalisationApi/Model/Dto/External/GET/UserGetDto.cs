@@ -1,4 +1,6 @@
-﻿namespace DeckPersonalisationApi.Model.Dto.External.GET;
+﻿using DeckPersonalisationApi.Services;
+
+namespace DeckPersonalisationApi.Model.Dto.External.GET;
 
 public class UserGetDto
 {
@@ -9,6 +11,7 @@ public class UserGetDto
     public DateTimeOffset LastLoginDate { get; set; }
     public bool Active { get; set; }
     public bool HasDeckKey { get; set; }
+    public string PremiumTier { get; set; }
 
     public UserGetDto(User user)
     {
@@ -19,5 +22,6 @@ public class UserGetDto
         Active = user.Active;
         Avatar = user.GetAvatarUri();
         HasDeckKey = user.ApiToken != null;
+        PremiumTier = DiscordBot.Instance.PermissionStateOfUser(Id);
     }
 }
