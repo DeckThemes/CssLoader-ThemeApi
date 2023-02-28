@@ -123,7 +123,7 @@ public class Startup : BackgroundService
 
     private int UpdateTierUsers(List<DiscordApiUser> tierList, Permissions tier, UserService userService)
     {
-        List<User> tierUsers = userService.GetUsersByIds(tierList.Select(x => x.Id).ToList());
+        List<User> tierUsers = userService.GetUsersByIds(tierList.Select(x => $"Discord|{x.Id}").ToList());
         tierUsers.ForEach(x => x.Permissions |= tier);
         userService.UpdateBulk(tierUsers);
         return tierUsers.Count;

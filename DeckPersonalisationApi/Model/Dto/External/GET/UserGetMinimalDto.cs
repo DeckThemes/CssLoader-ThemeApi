@@ -7,11 +7,14 @@ public class UserGetMinimalDto
     public Uri? Avatar { get; set; }
     public bool Active { get; set; }
 
+    public List<string> Permissions { get; set; } = new();
+
     public UserGetMinimalDto(User user)
     {
         Id = user.Id;
         Username = user.Username;
         Avatar = user.GetAvatarUri();
         Active = user.Active;
+        Permissions = user.Permissions.ToList();
     }
 }
