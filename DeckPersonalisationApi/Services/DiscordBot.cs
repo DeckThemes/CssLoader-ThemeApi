@@ -24,7 +24,8 @@ public class DiscordApiGuildMember
 public class DiscordBot
 {
     private AppConfiguration _configuration;
-    private List<DiscordApiGuildMember> _cache = new();
+    private List<DiscordApiGuildMember> _rawCache = new();
+    private Dictionary<string, DiscordApiGuildMember> _cache = new();
     public static DiscordBot Instance { get; private set; }
 
     public DiscordBot(AppConfiguration config)
@@ -40,20 +41,28 @@ public class DiscordBot
             client.DefaultRequestHeaders.Add("Authorization", $"Bot {_configuration.BotToken}");
             var response = await client.GetAsync($"https://discord.com/api/v10/guilds/{_configuration.DiscordServerId.ToString()}/members?limit=1000");
             // TODO: make sure this doesn't fail
-            _cache = await response.Content.ReadFromJsonAsync<List<DiscordApiGuildMember>>() ?? new();
-            return _cache.Count;
+            _rawCache = await response.Content.ReadFromJsonAsync<List<DiscordApiGuildMember>>() ?? new();
+
+            Dictionary<string, DiscordApiGuildMember> cache = new();
+            _rawCache.ForEach(x => cache.Add(x.User.Id, x));
+            _cache = cache;
+
+            return cache.Count;
         }
     }
 
     public List<DiscordApiUser> GetUsersWithRoles(string roleId)
-        => _cache.Where(x => x.RoleIds.Contains(roleId)).Select(x => x.User).ToList();
+        => _rawCache.Where(x => x.RoleIds.Contains(roleId)).Select(x => x.User).ToList();
 
     public string PermissionStateOfUser(string userId)
     {
         if (userId.StartsWith("Discord|"))
             userId = userId[8..];
 
-        DiscordApiGuildMember? member = _cache.Find(x => x.User.Id == userId);
+        DiscordApiGuildMember? member = null;
+
+        if (_cache.ContainsKey(userId))
+            member = _cache[userId];
 
         if (member != null)
         {
