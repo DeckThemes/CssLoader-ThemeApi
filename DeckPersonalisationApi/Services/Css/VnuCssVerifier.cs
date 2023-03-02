@@ -11,7 +11,7 @@ public class VnuCssVerifier
     public VnuCssVerifier(AppConfiguration config)
     {
         _config = config;
-        _terminal.Silence = true;
+        //_terminal.Silence = true;
     }
 
     public List<string> ValidateCss(List<string> cssFiles, string workDir, List<string> extraErrors)
