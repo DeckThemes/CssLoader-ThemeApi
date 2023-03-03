@@ -8,6 +8,7 @@ public class AppConfiguration
     
     public string ClientId { get; private set; }
     public string ClientSecret { get; private set; }
+    public string BotToken { get; private set; }
     public string DbPath { get; private set; }
     
     public string JwtIssuer { get; private set; }
@@ -31,6 +32,7 @@ public class AppConfiguration
     public string CssToThemeJson { get; private set; }
     public long BlobTtlMinutes { get; private set; }
     public long BackgroundServiceFrequencyMinutes { get; private set; }
+    public long InfrequentBackgroundServiceFrequencyMinutes { get; private set; }
     public bool UseSwagger { get; private set; }
     public long Port { get; private set; }
     public string LegacyUrlBase { get; private set; }
@@ -42,6 +44,10 @@ public class AppConfiguration
     public long MaxDescriptionLength { get; private set; }
     public long MaxCssOnlySubmissionSize { get; private set; }
     public long MaxErrorStoreCharacters { get; private set; }
+    public long DiscordServerId { get; private set; }
+    public long DiscordPremiumTier1Role { get; private set; }
+    public long DiscordPremiumTier2Role { get; private set; }
+    public long DiscordPremiumTier3Role { get; private set; }
 
     public AppConfiguration()
     {
@@ -58,6 +64,7 @@ public class AppConfiguration
     {
         ClientId = GetString("ConnectionStrings:ClientId");
         ClientSecret = GetString("ConnectionStrings:ClientSecret");
+        BotToken = GetString("ConnectionStrings:BotToken");
         DbPath = GetString("ConnectionStrings:DbPath");
 
         JwtIssuer = GetString("Jwt:Issuer") + "/";
@@ -99,6 +106,7 @@ public class AppConfiguration
         CssToThemeJson = GetString("Config:CssToThemeJson");
         BlobTtlMinutes = GetInt("Config:BlobTTLMinutes");
         BackgroundServiceFrequencyMinutes = GetInt("Config:BackgroundServiceFrequencyMinutes");
+        InfrequentBackgroundServiceFrequencyMinutes = GetInt("Config:InfrequentBackgroundServiceFrequencyMinutes");
         UseSwagger = GetBool("Config:UseSwagger");
         Port = GetInt("Config:Port");
         LegacyUrlBase = GetString("Jwt:Audience") + (Port is 80 or 443 ? "" : ":" + Port) + "/";
@@ -111,6 +119,11 @@ public class AppConfiguration
         MaxDescriptionLength = GetInt("Config:MaxDescriptionLength");
         MaxCssOnlySubmissionSize = GetInt("Config:MaxCssOnlySubmissionSize");
         MaxErrorStoreCharacters = GetInt("Config:MaxErrorStoreCharacters");
+
+        DiscordServerId = GetInt("Config:DiscordServerId");
+        DiscordPremiumTier1Role = GetInt("Config:PremiumTier1Role");
+        DiscordPremiumTier2Role = GetInt("Config:PremiumTier2Role");
+        DiscordPremiumTier3Role = GetInt("Config:PremiumTier3Role");
     }
 
     private string GetString(string key)
