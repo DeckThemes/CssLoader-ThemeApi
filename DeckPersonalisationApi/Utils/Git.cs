@@ -8,14 +8,12 @@ public class Git
     public Git(string path)
     {
         Path = path;
-        _terminal.Silence = true;
         _terminal.WorkingDirectory = Path;
     }
 
     public static async Task Clone(string url, string workingDir)
     {
         Terminal t = new();
-        t.Silence = true;
         t.WorkingDirectory = workingDir;
         await t.Exec("git", "clone", url, ".");
 

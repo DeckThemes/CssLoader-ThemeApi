@@ -41,7 +41,15 @@ public class DiscordBot
             client.DefaultRequestHeaders.Add("Authorization", $"Bot {_configuration.BotToken}");
             var response = await client.GetAsync($"https://discord.com/api/v10/guilds/{_configuration.DiscordServerId.ToString()}/members?limit=1000");
             // TODO: make sure this doesn't fail
-            _rawCache = await response.Content.ReadFromJsonAsync<List<DiscordApiGuildMember>>() ?? new();
+            try
+            {
+                _rawCache = await response.Content.ReadFromJsonAsync<List<DiscordApiGuildMember>>() ?? new();
+            }
+            catch
+            {
+                return 0;
+            }
+            
 
             Dictionary<string, DiscordApiGuildMember> cache = new();
             _rawCache.ForEach(x => cache.Add(x.User.Id, x));
