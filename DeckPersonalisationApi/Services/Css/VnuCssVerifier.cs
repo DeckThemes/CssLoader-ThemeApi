@@ -16,6 +16,9 @@ public class VnuCssVerifier
 
     public List<string> ValidateCss(List<string> cssFiles, string workDir, List<string> extraErrors)
     {
+        if (cssFiles.Count <= 0)
+            return new();
+        
         _terminal.WorkingDirectory = workDir;
         string fullWorkDirPath = Path.GetFullPath(workDir);
 
