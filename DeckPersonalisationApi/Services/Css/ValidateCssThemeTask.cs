@@ -103,7 +103,10 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
 
         List<CssTheme> dependencies = _service.GetThemesByName(ThemeDependencies, ThemeType.Css).ToList();
         if (dependencies.Count != ThemeDependencies.Count)
-            throw new TaskFailureException("Not all dependencies were found on this server");
+        {
+            List<string> missingThemeNames = ThemeDependencies.Where(x => dependencies.All(y => y.Name != x)).ToList();
+            throw new TaskFailureException($"Not all dependencies were found on this server: [{string.Join(", ", missingThemeNames)}]");
+        }
 
         string guid = Guid.NewGuid().ToString();
         string internalId = Base?.Id ?? guid;
