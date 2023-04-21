@@ -83,11 +83,9 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
 
         if (ThemeFlags.Contains(CssFlag.Preset))
         {
-            ThemeName += " (P)";
             ThemeTarget = "Preset";
             ThemeVersion = Utils.Utils.GetFixedLengthHexString(4);
             _json.Json!["version"] = ThemeVersion;
-            _json.Json!["name"] = ThemeName;
         }
         else if (ThemeTarget == "Preset")
             throw new TaskFailureException("Target 'Preset' is not a user-pickable value");
