@@ -1,6 +1,7 @@
 name: publish
 permissions:
   packages: write
+  contents: read
   
 on:
   push:
