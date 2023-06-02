@@ -4,8 +4,8 @@ using Newtonsoft.Json.Linq;
 namespace DeckPersonalisationApi.Services.Css;
 
 /*
- * V6 manifests add the ability to define css variables in place of files
- * v1.5.0 -> Present
+ * V6 manifests adds the ability to define flags for a specific theme
+ * v1.6.0 -> Present
  */
 public class CssManifestV6Validator : CssManifestV5Validator
 { 
