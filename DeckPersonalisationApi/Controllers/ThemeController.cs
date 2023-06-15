@@ -36,31 +36,13 @@ public class ThemeController : Controller
     
     [HttpGet("filters")]
     public IActionResult GetThemesFilters(string type = "")
-    {
-        ThemeType? themeType = null;
-
-        if (type.ToLower() == "css")
-            themeType = ThemeType.Css;
-        else if (type.ToLower() == "audio")
-            themeType = ThemeType.Audio;
-
-        return new PaginationFilters(_theme.FiltersWithCount(themeType, null), _theme.Orders().ToList()).Ok();
-    }
+        => new PaginationFilters(_theme.FiltersWithCount(type, null), _theme.Orders().ToList()).Ok();
     
     [HttpGet("awaiting_approval/filters")]
     [Authorize]
     [JwtRoleRequire(Permissions.ViewThemeSubmissions)]
     public IActionResult GetUnapprovedThemesFilters(string type = "")
-    {
-        ThemeType? themeType = null;
-
-        if (type.ToLower() == "css")
-            themeType = ThemeType.Css;
-        else if (type.ToLower() == "audio")
-            themeType = ThemeType.Audio;
-
-        return new PaginationFilters(_theme.FiltersWithCount(themeType, null, visibility: PostVisibility.Private), _theme.Orders().ToList()).Ok();
-    }
+        => new PaginationFilters(_theme.FiltersWithCount(type, null, visibility: PostVisibility.Private), _theme.Orders().ToList()).Ok();
 
     [HttpGet("awaiting_approval")]
     [Authorize]

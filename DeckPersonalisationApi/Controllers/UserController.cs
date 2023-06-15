@@ -70,14 +70,8 @@ public class UserController : Controller
             id = _jwt.DecodeToken(Request).Require().Id;
         
         User user = _user.GetActiveUserById(id).Require();
-        ThemeType? themeType = null;
 
-        if (type.ToLower() == "css")
-            themeType = ThemeType.Css;
-        else if (type.ToLower() == "audio")
-            themeType = ThemeType.Audio;
-        
-        return new PaginationFilters(_theme.FiltersWithCount(themeType, user), _theme.Orders().ToList()).Ok();
+        return new PaginationFilters(_theme.FiltersWithCount(type, user), _theme.Orders().ToList()).Ok();
     }
     
     [HttpGet("{id}/stars/filters")]
@@ -91,12 +85,7 @@ public class UserController : Controller
         User user = _user.GetActiveUserById(id).Require();
         ThemeType? themeType = null;
 
-        if (type.ToLower() == "css")
-            themeType = ThemeType.Css;
-        else if (type.ToLower() == "audio")
-            themeType = ThemeType.Audio;
-        
-        return new PaginationFilters(_theme.FiltersWithCount(themeType, user, true), _theme.Orders().ToList()).Ok();
+        return new PaginationFilters(_theme.FiltersWithCount(type, user, true), _theme.Orders().ToList()).Ok();
     }
 
     [HttpGet("me/stars/filters")]

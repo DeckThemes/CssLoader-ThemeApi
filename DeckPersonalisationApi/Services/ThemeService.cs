@@ -239,15 +239,43 @@ public class ThemeService
         "Least Stars"
     };
 
-    public Dictionary<string, long> FiltersWithCount(ThemeType? type, User? user, bool stars = false, PostVisibility visibility = PostVisibility.Public)
+    public Dictionary<string, long> FiltersWithCount(string? type, User? user, bool stars = false, PostVisibility visibility = PostVisibility.Public)
     {
-        IQueryable<CssTheme> part1 = _ctx.CssThemes
+        IEnumerable<CssTheme> part1 = _ctx.CssThemes
             .Include(x => x.Author)
             .Where(x => x.Visibility == visibility);
-            
-        if (type != null)   
-            part1 = part1.Where(x => x.Type == type.Value);
+        
+        Dictionary<string, long> filters = new();
+        type = type?.ToLower() ?? null;
+        IEnumerable<string> availableFilters;
 
+        switch (type)
+        {
+            case "css":
+                part1 = part1.Where(x => x.Type == ThemeType.Css);
+                availableFilters = CssTargets;
+                break;
+            
+            case "audio":
+                part1 = part1.Where(x => x.Type == ThemeType.Audio);
+                availableFilters = AudioTargets;
+                break;
+            
+            case "bpm-css":
+                part1 = part1.Where(x => x.Type == ThemeType.Css && !x.Target.Contains("Desktop"));
+                availableFilters = CssTargets.Where(x => !x.Contains("Desktop"));
+                break;
+            
+            case "desktop-css":
+                part1 = part1.Where(x => x.Type == ThemeType.Css && x.Target.Contains("Desktop"));
+                availableFilters = CssTargets.Where(x => x.Contains("Desktop"));
+                break;
+            
+            default:
+                availableFilters = CssTargets.Concat(AudioTargets);
+                break;
+        }
+        
         if (user != null)
         {
             if (stars)
@@ -269,22 +297,14 @@ public class ThemeService
             .OrderByDescending(x => x.Item2)
             .ToList();
         
-        Dictionary<string, long> filters = new();
-        items.ForEach(x => filters.Add(x.Item1, x.Item2));
         
-        if (type == ThemeType.Css || type == null)
-            CssTargets.ForEach(x =>
-            {
-                if (!filters.ContainsKey(x))
-                    filters.Add(x, 0);
-            });
-
-        if (type == ThemeType.Audio || type == null)
-            AudioTargets.ForEach(x =>
-            {
-                if (!filters.ContainsKey(x))
-                    filters.Add(x, 0);
-            });
+        items.ForEach(x => filters[x.Item1] = x.Item2);
+        
+        availableFilters.ToList().ForEach(x =>
+        {
+            if (!filters.ContainsKey(x))
+                filters.Add(x, 0);
+        });
 
         return filters;
     }
@@ -313,8 +333,12 @@ public class ThemeService
             part1 = part1.Where(x => x.Type == ThemeType.Css);
         else if (pagination.Filters.Contains("AUDIO"))
             part1 = part1.Where(x => x.Type == ThemeType.Audio);
+        else if (pagination.Filters.Contains("BPM-CSS"))
+            part1 = part1.Where(x => x.Type == ThemeType.Css && !x.Target.Contains("Desktop"));
+        else if (pagination.Filters.Contains("DESKTOP-CSS"))
+            part1 = part1.Where(x => x.Type == ThemeType.Css && x.Target.Contains("Desktop"));
         
-        List<string> filters = pagination.Filters.Where(x => x is not ("CSS" or "AUDIO")).Select(x => x.ToLower()).ToList();
+        List<string> filters = pagination.Filters.Where(x => x is not ("CSS" or "AUDIO" or "BPM-CSS" or "DESKTOP-CSS")).Select(x => x.ToLower()).ToList();
         List<string> negativeFilters = pagination.NegativeFilters.Select(x => x.ToLower()).ToList();
         
         if (filters.Count > 0)
