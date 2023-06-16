@@ -158,6 +158,12 @@ public class CssManifestV1Validator
             throw new Exception($"Flags are not supported on manifest v{ManifestVersion}");
     }
 
+    protected virtual void VerifyTabMappings()
+    {
+        if (_json.ContainsKey("tabs"))
+            throw new Exception($"Tab Mappings are not supported on manifest v{ManifestVersion}");
+    }
+
     public virtual void FullVerify()
     {
         VerifyName();
@@ -169,5 +175,6 @@ public class CssManifestV1Validator
         VerifyInjects();
         VerifyPatches();
         VerifyFlags();
+        VerifyTabMappings();
     }
 }

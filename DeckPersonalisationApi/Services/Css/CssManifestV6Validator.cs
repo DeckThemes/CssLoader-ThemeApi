@@ -5,7 +5,7 @@ namespace DeckPersonalisationApi.Services.Css;
 
 /*
  * V6 manifests adds the ability to define flags for a specific theme
- * v1.6.0 -> Present
+ * v1.6.0 -> v1.6.2
  */
 public class CssManifestV6Validator : CssManifestV5Validator
 { 
