@@ -75,8 +75,6 @@ public class UserController : Controller
     }
     
     [HttpGet("{id}/stars/filters")]
-    [Authorize]
-    [JwtRoleRequire(Permissions.ManageApi)]
     public IActionResult GetCssThemesFiltersStars(string id, string type = "")
     {
         if (id == "me")
@@ -136,8 +134,6 @@ public class UserController : Controller
         => ViewSubmissionsFilters("me", target);
 
     [HttpGet("{id}/stars")]
-    [Authorize]
-    [JwtRoleRequire(Permissions.ManageApi)]
     public IActionResult ViewStarredThemesOfUser(string id, int page = 1, int perPage = 50, string filters = "", string order = "", string search = "")
     {
         User user = _user.GetActiveUserById(id).Require();
