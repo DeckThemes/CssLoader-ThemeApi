@@ -14,6 +14,9 @@ public class DiscordUserGetResponse
     [JsonPropertyName("discriminator")]
     public string Discriminator { get; set; }
     
+    [JsonPropertyName("global_name")]
+    public string? DisplayName { get; set; }
+    
     [JsonPropertyName("id")]
     public string Id { get; set; }
     

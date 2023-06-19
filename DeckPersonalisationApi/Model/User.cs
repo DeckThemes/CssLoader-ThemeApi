@@ -23,8 +23,16 @@ public class User : IToDto<UserGetMinimalDto>, IToDto<UserGetDto>
         {
             if (AvatarToken == null)
             {
-                int discrim = int.Parse(Username.Split("#").Last().Trim());
-                return new Uri($"https://cdn.discordapp.com/embed/avatars/{discrim % 5}.png");
+                if (Username.Contains("#"))
+                {
+                    int discrim = int.Parse(Username.Split("#").Last().Trim());
+                    return new Uri($"https://cdn.discordapp.com/embed/avatars/{discrim % 5}.png");
+                }
+                else
+                {
+                    long id = long.Parse(Id.Substring(8));
+                    return new Uri($"https://cdn.discordapp.com/embed/avatars/{(id >> 22) % 6}.png");
+                }
             }
             
             string userId = Id[8..];

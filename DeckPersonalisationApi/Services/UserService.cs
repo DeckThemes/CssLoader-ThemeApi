@@ -83,7 +83,7 @@ public class UserService
             {
                 Id = id,
                 Permissions = (userResponse.Id == _config.OwnerDiscordId.ToString()) ? Permissions.All : Permissions.None,
-                Username = $"{userResponse.Username}#{userResponse.Discriminator}",
+                Username = userResponse.DisplayName ?? $"{userResponse.Username}#{userResponse.Discriminator}",
                 LastLoginDate = DateTimeOffset.Now,
                 AvatarToken = userResponse.Avatar,
                 ValidationToken = Utils.Utils.GetFixedLengthString(32)
@@ -97,7 +97,7 @@ public class UserService
             if (!user.Active)
                 throw new BadRequestException("Account is inactive");
             
-            user.Username = $"{userResponse.Username}#{userResponse.Discriminator}";
+            user.Username = userResponse.DisplayName ?? $"{userResponse.Username}#{userResponse.Discriminator}";
             user.LastLoginDate = DateTimeOffset.Now;
             user.AvatarToken = userResponse.Avatar;
 
