@@ -172,6 +172,8 @@ public class SubmissionService
         CloneGitTask clone = new CloneGitTask(url, commit, gitContainer);
         PathTransformTask folder = new PathTransformTask(clone, subfolder);
         FolderSizeConstraintTask size = new FolderSizeConstraintTask(folder, _config.MaxAudioPackSize);
+        DeleteAnyFileWithExtensionTask delImages =
+            new DeleteAnyFileWithExtensionTask(folder, new List<string>() {".png", ".jpg", ".jpeg", ".gif"});
         CopyFileTask copy = new CopyFileTask(clone, folder, "LICENSE");
         GetJsonTask jsonGet = new GetJsonTask(folder, "pack.json");
         ValidateAudioPackTask audio = new ValidateAudioPackTask(folder, jsonGet, user, _config.AudioFiles);
@@ -185,7 +187,7 @@ public class SubmissionService
 
         List<ITaskPart> taskParts = new()
         {
-            gitContainer, clone, folder, size, copy, jsonGet, audio, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blob, submission
+            gitContainer, clone, folder, size, delImages, copy, jsonGet, audio, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blob, submission
         };
 
         AppTaskFromParts task = new(taskParts, "Submit audio pack via git", user);
@@ -198,6 +200,8 @@ public class SubmissionService
         ExtractZipTask extractZip = new ExtractZipTask(zipContainer, blob, _config.MaxAudioPackSize);
         FolderSizeConstraintTask size = new FolderSizeConstraintTask(zipContainer, _config.MaxAudioPackSize);
         PathTransformTask path = new PathTransformTask(zipContainer);
+        DeleteAnyFileWithExtensionTask delImages =
+            new DeleteAnyFileWithExtensionTask(path, new List<string>() {".png", ".jpg", ".jpeg", ".gif"});
         GetJsonTask jsonGet = new GetJsonTask(path, "pack.json");
         ValidateAudioPackTask audio = new ValidateAudioPackTask(path, jsonGet, user, _config.AudioFiles);
         WriteJsonTask jsonWrite = new WriteJsonTask(path, "pack.json", jsonGet);
@@ -210,7 +214,7 @@ public class SubmissionService
 
         List<ITaskPart> taskParts = new()
         {
-            zipContainer, extractZip, size, path, jsonGet, audio, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blobSave, submission
+            zipContainer, extractZip, size, path, delImages, jsonGet, audio, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blobSave, submission
         };
 
         AppTaskFromParts task = new(taskParts, "Submit audio pack via zip", user);
