@@ -50,6 +50,9 @@ public class ValidateAudioPackTask : IIdentifierTaskPart
             case 2:
                 validator = new AudioManifestV2Validator(_path.DirPath!, _json.Json!, _user, _validPackTargets);
                 break;
+            case 3:
+                validator = new AudioManifestV3Validator(_path.DirPath!, _json.Json!, _user, _validPackTargets);
+                break;           
             default:
                 throw new TaskFailureException($"Invalid manifest version '{PackManifestVersion}'");
         }

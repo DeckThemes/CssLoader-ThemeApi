@@ -88,6 +88,12 @@ public class AudioManifestV1Validator
         
         _json.Add("ignore", new JArray(Ignore.ToArray()));
     }
+
+    protected virtual void VerifyIntroMusic()
+    {
+        if (File.Exists("intro_music.mp3") || Mappings.ContainsKey("intro_music.mp3"))
+            throw new Exception($"Intro music is not supported on manifest version {ManifestVersion}");
+    }
     
     public virtual void FullVerify()
     {
@@ -98,12 +104,13 @@ public class AudioManifestV1Validator
         VerifyMusicBool();
 
         if (Music)
-            _validFiles = new() { "menu_music.mp3" };
+            _validFiles = new() { "menu_music.mp3", "intro_music.mp3" };
         
         VerifyMappings();
         CalculateIgnores();
+        VerifyIntroMusic();
 
-        if (Music && Ignore.Count >= 1)
+        if (Music && !Ignore.Contains("menu_music.mp3"))
             throw new Exception("menu_music.mp3 is not present and is required for a music pack");
     }
 }
