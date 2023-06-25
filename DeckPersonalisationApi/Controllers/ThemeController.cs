@@ -7,8 +7,11 @@ using DeckPersonalisationApi.Model.Dto.External.GET;
 using DeckPersonalisationApi.Model.Dto.External.POST;
 using DeckPersonalisationApi.Model.Dto.Internal.GET;
 using DeckPersonalisationApi.Services;
+using DeckPersonalisationApi.Services.Css;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace DeckPersonalisationApi.Controllers;
 
@@ -110,9 +113,11 @@ public class ThemeController : Controller
     {
         if (new List<char>(){ '"', '\\', '/', ':', '*', '?', '<', '>', '|'}.Any(themeName.Contains))
             throw new BadRequestException("Theme name cannot include invalid characters");
-        
-        string json = System.IO.File.ReadAllText("csstemplate.json")
+
+        string jsonStr = System.IO.File.ReadAllText("csstemplate.json")
             .Replace("%NAME%", themeName);
+        
+        JObject json = JsonConvert.DeserializeObject<JObject>(jsonStr)!;
 
         var memoryStream = new MemoryStream();
         
@@ -125,7 +130,10 @@ public class ThemeController : Controller
                 streamWriter.Write(json);
             }
             
-            new List<string>(){"desktop.css", "desktopfriends.css", "store.css", "bigpicture.css"}.ForEach(x => archive.CreateEntry($"{themeName}/{x}"));
+            foreach (var x in json["inject"] as JObject)
+            {
+                archive.CreateEntry($"{themeName}/{x.Key}");
+            }
         }
 
         memoryStream.Seek(0, SeekOrigin.Begin);

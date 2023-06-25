@@ -60,6 +60,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
                 validator = new CssManifestV6Validator(_path.DirPath!, _json.Json!, _user, _validThemeTargets);
                 break;
             case 7:
+            case 8:
                 validator = new CssManifestV7Validator(_path.DirPath!, _json.Json!, _user, _validThemeTargets);
                 break;
             default:
