@@ -1,0 +1,12 @@
+{
+    "name": "%NAME%",
+    "manifest_version": 7,
+    "version": "v1.0",
+    "target": "Other",
+    "inject": {
+        "desktop.css": ["^Steam.*", "^OverlayBrowser_Browser", "^SP Overlay:", ".*Menu", ".*Supernav", "^notificationtoasts_.*", "^SteamBrowser_Find", "^OverlayTab\\d+_Find", "^Properties.*"],
+        "desktopfriends.css": ["~minwidth=226&minheight=400~","~minwidth=400&minheight=400~"],
+        "store.css": ["~https://store.steampowered.com~", "~https://steamcommunity.com~"],
+        "bigpicture.css": ["^QuickAccess_.*", "^MainMenu_.*", "^Steam Big Picture Mode"]
+    }
+}

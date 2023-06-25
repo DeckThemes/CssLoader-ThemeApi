@@ -1,4 +1,5 @@
-﻿using DeckPersonalisationApi.Exceptions;
+﻿using System.IO.Compression;
+using DeckPersonalisationApi.Exceptions;
 using DeckPersonalisationApi.Extensions;
 using DeckPersonalisationApi.Middleware.JwtRole;
 using DeckPersonalisationApi.Model;
@@ -103,4 +104,31 @@ public class ThemeController : Controller
     [HttpGet("legacy/css")]
     public IActionResult GetCssThemesAsLegacy(bool approved = true)
         =>  _theme.GetThemesLegacy(ThemeType.Css, approved ? PostVisibility.Public : PostVisibility.Private).Ok();
+
+    [HttpGet("template/css")]
+    public IActionResult GetCssTemplateTheme(string themeName = "New Theme")
+    {
+        if (new List<char>(){ '"', '\\', '/', ':', '*', '?', '<', '>', '|'}.Any(themeName.Contains))
+            throw new BadRequestException("Theme name cannot include invalid characters");
+        
+        string json = System.IO.File.ReadAllText("csstemplate.json")
+            .Replace("%NAME%", themeName);
+
+        var memoryStream = new MemoryStream();
+        
+        using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+        {
+            var jsonFile = archive.CreateEntry($"{themeName}/theme.json");
+            using (var entryStream = jsonFile.Open())
+            using (var streamWriter = new StreamWriter(entryStream))
+            {
+                streamWriter.Write(json);
+            }
+            
+            new List<string>(){"desktop.css", "desktopfriends.css", "store.css", "bigpicture.css"}.ForEach(x => archive.CreateEntry($"{themeName}/{x}"));
+        }
+
+        memoryStream.Seek(0, SeekOrigin.Begin);
+        return new FileStreamResult(memoryStream, "application/zip");
+    }
 }
