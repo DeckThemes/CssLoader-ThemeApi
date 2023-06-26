@@ -42,18 +42,18 @@ public class Utils
 
             if (submission.Status == SubmissionStatus.AwaitingApproval)
             {
-                embed.WithTitle($"New Submission: {submission.New.Name}").WithColor(Color.Blue);
+                embed.WithTitle($"New Submission: {submission.New.Name}").WithColor(Discord.Color.Blue);
             }
             else if (submission.Status == SubmissionStatus.Approved)
             {
-                embed.WithTitle($"Approved: {submission.New.Name}").WithColor(Color.Green);
+                embed.WithTitle($"Approved: {submission.New.Name}").WithColor(Discord.Color.Green);
                 
                 if (submission.New.Images.Count >= 1)
                     embed.WithImageUrl(configuration.LegacyUrlBase + "blobs/" + submission.New.Images.First().Id + ".jpg");
             }
             else
             {
-                embed.WithTitle($"Denied: {submission.New.Name}").WithColor(Color.Red);
+                embed.WithTitle($"Denied: {submission.New.Name}").WithColor(Discord.Color.Red);
             }
 
             client.SendMessageAsync(embeds: new []{embed.Build()}).GetAwaiter().GetResult();

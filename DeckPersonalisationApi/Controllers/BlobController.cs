@@ -6,6 +6,7 @@ using DeckPersonalisationApi.Model.Dto.External.GET;
 using DeckPersonalisationApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SixLabors.ImageSharp.Formats.Webp;
 
 namespace DeckPersonalisationApi.Controllers;
 
@@ -39,6 +40,41 @@ public class BlobController : Controller
         Stream stream = System.IO.File.OpenRead(path);
         _tasks.RegisterDownload(id);
         return new FileStreamResult(stream, image.Type.GetContentType());
+    }
+
+    [HttpGet("{id}/thumb")]
+    public IActionResult GetThumbImage(string id, int maxWidth = 0, int maxHeight = 0)
+    {
+        id = id.Split(".").First();
+        SavedBlob? blob = _service.GetBlob(id);
+
+        if (blob == null || blob.Deleted)
+            throw new NotFoundException($"Could not find blob with id '{id}'");
+
+        if (!(blob.Type is BlobType.Jpg or BlobType.Png))
+            throw new NotFoundException("Blob is not an image");
+
+        if (maxWidth != 0 && maxHeight != 0)
+            throw new BadRequestException("Thumbnail cannot both have a max width and height");
+
+        if (maxWidth == 0 && maxHeight == 0)
+            maxWidth = 400;
+
+        MemoryStream memoryStream = new();
+        
+        using (var fileStream = System.IO.File.OpenRead(_service.GetFullFilePath(blob)))
+        using (Image image = Image.Load(fileStream))
+        {
+            bool resizeNeeded = (maxWidth > 0 && image.Width > maxWidth) || (maxHeight > 0 && image.Height > maxHeight);
+            if (resizeNeeded)
+                image.Mutate(x => x.Resize(maxWidth, maxHeight));
+            
+            image.Save(memoryStream, new WebpEncoder());
+        }
+
+        memoryStream.Seek(0, SeekOrigin.Begin);
+        
+        return new FileStreamResult(memoryStream, "image/webp");
     }
 
     [HttpGet]
