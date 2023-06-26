@@ -19,7 +19,8 @@ public class CacheControlMiddleware
             try
             {
                 if (httpContext.Response.ContentType == BlobType.Jpg.GetContentType() ||
-                    httpContext.Response.ContentType == BlobType.Png.GetContentType())
+                    httpContext.Response.ContentType == BlobType.Png.GetContentType() || 
+                    httpContext.Response.ContentType == "image/webp")
                 {
                     httpContext.Response.Headers.CacheControl = "public, max-age=86400";
                 }
