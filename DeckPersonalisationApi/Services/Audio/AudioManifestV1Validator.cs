@@ -110,7 +110,7 @@ public class AudioManifestV1Validator
         CalculateIgnores();
         VerifyIntroMusic();
 
-        if (Music && !Ignore.Contains("menu_music.mp3"))
+        if (Music && Ignore.Contains("menu_music.mp3"))
             throw new Exception("menu_music.mp3 is not present and is required for a music pack");
     }
 }
