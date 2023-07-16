@@ -12,13 +12,13 @@ public class DeleteAnyFileWithExtensionTask : ITaskPart
 
     private void Exec(string path)
     {
-        foreach (string file in Directory.EnumerateFiles(_dir.DirPath))
+        foreach (string file in Directory.EnumerateFiles(path))
         {
             if (_extensions.Any(path.EndsWith))
                 File.Delete(file);
         }
 
-        foreach (string folder in Directory.EnumerateDirectories(_dir.DirPath))
+        foreach (string folder in Directory.EnumerateDirectories(path))
         {
             Exec(folder);
         }
