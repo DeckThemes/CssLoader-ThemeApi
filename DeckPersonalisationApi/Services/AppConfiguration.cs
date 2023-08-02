@@ -41,6 +41,7 @@ public class AppConfiguration
     public long MaxNameLength { get; private set; }
     public long MaxAuthorLength { get; private set; }
     public long MaxVersionLength { get; private set; }
+    public long MaxEmailLength { get; private set; }
     public long MaxDescriptionLength { get; private set; }
     public long MaxCssOnlySubmissionSize { get; private set; }
     public long MaxErrorStoreCharacters { get; private set; }
@@ -117,6 +118,7 @@ public class AppConfiguration
         MaxAuthorLength = GetInt("Config:MaxAuthorLength");
         MaxVersionLength = GetInt("Config:MaxVersionLength");
         MaxDescriptionLength = GetInt("Config:MaxDescriptionLength");
+        MaxEmailLength = GetInt("Config:MaxEmailLength");
         MaxCssOnlySubmissionSize = GetInt("Config:MaxCssOnlySubmissionSize");
         MaxErrorStoreCharacters = GetInt("Config:MaxErrorStoreCharacters");
 

@@ -33,8 +33,11 @@ public static class PermissionExt
         return perms;
     }
 
-    public static Permissions FromList(List<string> items)
+    public static Permissions? FromList(List<string>? items)
     {
+        if (items == null)
+            return null;
+        
         Permissions permissions = Permissions.None;
         foreach (var item in items)
         {

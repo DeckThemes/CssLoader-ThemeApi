@@ -12,6 +12,7 @@ public class UserGetDto
     public bool Active { get; set; }
     public bool HasDeckKey { get; set; }
     public string PremiumTier { get; set; }
+    public string? Email { get; set; }
 
     public UserGetDto(User user)
     {
@@ -23,5 +24,6 @@ public class UserGetDto
         Avatar = user.GetAvatarUri();
         HasDeckKey = user.ApiToken != null;
         PremiumTier = DiscordBot.Instance.PermissionStateOfUser(Id);
+        Email = user.Email;
     }
 }

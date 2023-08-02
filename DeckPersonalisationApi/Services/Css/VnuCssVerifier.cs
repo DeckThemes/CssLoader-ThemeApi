@@ -28,7 +28,7 @@ public class VnuCssVerifier
         
         _terminal.Exec(_config.VnuPath, new List<string>{"--css", "--asciiquotes", "--verbose"}.Concat(cssFiles).ToList()).GetAwaiter().GetResult();
 
-        List<string> errors = new List<string>(_terminal.StdErr).Where(x => x.Contains("error:")).Select(x => x.Replace(fullWorkDirPath, "")).ToList();
+        List<string> errors = new List<string>(_terminal.StdErr).Where(x => x.Contains("error:")).Select(x => x.Replace("%20", " ").Replace(fullWorkDirPath, "")).ToList();
         
         if (_terminal.ExitCode != 0)
         {

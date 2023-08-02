@@ -1,7 +1,9 @@
-﻿using DeckPersonalisationApi.Extensions;
+﻿using DeckPersonalisationApi.Exceptions;
+using DeckPersonalisationApi.Extensions;
 using DeckPersonalisationApi.Middleware.JwtRole;
 using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Model.Dto.External.GET;
+using DeckPersonalisationApi.Model.Dto.External.PATCH;
 using DeckPersonalisationApi.Model.Dto.Internal.GET;
 using DeckPersonalisationApi.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -218,13 +220,21 @@ public class UserController : Controller
     public IActionResult EditUser(string id, UserPatchDto patch)
     {
         User user = _user.GetUserById(id).Require();
-        if (patch.Active.HasValue)
-            _user.SetUserActiveState(user, patch.Active.Value);
-        
-        if (patch.Permissions != null)
-            _user.SetUserPermissions(user, PermissionExt.FromList(patch.Permissions));
-        
+        _user.SetUserPreferences(user, patch.Email, patch.Active, PermissionExt.FromList(patch.Permissions));
         return new OkResult();
+    }
+
+    [HttpPatch("me")]
+    [Authorize]
+    [JwtRoleReject((Permissions.FromApiToken))]
+    public IActionResult EditUserPreferences(UserPatchDto patch)
+    {
+        UserJwtDto dto = _jwt.DecodeToken(Request).Require();
+
+        if (patch.EditsAdminFields())
+            throw new BadRequestException("Editing Admin fields while not being an admin yourself is disallowed");
+
+        return EditUser(dto.Id, patch);
     }
     
     [HttpGet("{id}/token")]

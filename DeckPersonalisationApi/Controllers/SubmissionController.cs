@@ -203,7 +203,7 @@ public class SubmissionController : Controller
     
     private void CheckIfUserIsAllowedToMakeSubmission(User user)
     {
-        if (_user.GetSubmissionCountByUser(user, SubmissionStatus.AwaitingApproval) > _config.MaxActiveSubmissions)
+        if (_user.GetSubmissionCountByUser(user, SubmissionStatus.AwaitingApproval) >= _config.MaxActiveSubmissions)
             throw new BadRequestException(
                 $"Cannot have more than {_config.MaxActiveSubmissions} submissions awaiting approval");
     }

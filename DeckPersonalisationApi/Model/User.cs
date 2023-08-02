@@ -12,6 +12,7 @@ public class User : IToDto<UserGetMinimalDto>, IToDto<UserGetDto>
     public DateTimeOffset LastLoginDate { get; set; }
     public string ValidationToken { get; set; }
     public string? ApiToken { get; set; }
+    public string? Email { get; set; }
     public bool Active { get; set; } = true;
     public ICollection<CssTheme> CssStars { get; set; }
     [InverseProperty("Author")]

@@ -2,8 +2,10 @@
 
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Web;
 using DeckPersonalisationApi.Exceptions;
+using DeckPersonalisationApi.Extensions;
 using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Model.Dto;
 using DeckPersonalisationApi.Model.Dto.External.GET;
@@ -156,25 +158,49 @@ public class UserService
             _ctx.SaveChanges();
         }
     }
-
+    
     public void RemoveStarFromTheme(User user, CssTheme theme)
     {
         if (user.CssStars.Remove(theme))
             _ctx.SaveChanges();
     }
 
-    public void SetUserActiveState(User user, bool state)
+    public User SetUserPreferences(User user, string? email, bool? active, Permissions? permissions)
     {
-        user.Active = state;
-        _ctx.Users.Update(user);
-        _ctx.SaveChanges();
-    }
+        user = GetUserById(user.Id).Require();
+        bool change = false;
 
-    public void SetUserPermissions(User user, Permissions permissions)
-    {
-        user.Permissions = permissions;
-        _ctx.Users.Update(user);
-        _ctx.SaveChanges();
+        if (email != null) // We do allow unsetting emails by having an empty string
+        {
+            if (email.Length > _config.MaxEmailLength)
+                throw new BadRequestException($"An email can be max {_config.MaxEmailLength} characters");
+
+            if (!Regex.Match(email, "^\\w+([\\.-]?\\w+)*@\\w+([\\.-]?\\w+)*(\\.\\w{2,3})+$").Success)
+                throw new BadRequestException("Submitted email does not pass validation of an email");
+            
+            user.Email = email;
+            change = true;
+        }
+
+        if (active.HasValue)
+        {
+            user.Active = active.Value;
+            change = true;
+        }
+
+        if (permissions.HasValue)
+        {
+            user.Permissions = permissions.Value;
+            change = true;
+        }
+
+        if (change)
+        {
+            _ctx.Users.Update(user);
+            _ctx.SaveChanges();
+        }
+
+        return user;
     }
 
     public bool HasThemeStarred(User user, CssTheme theme)
