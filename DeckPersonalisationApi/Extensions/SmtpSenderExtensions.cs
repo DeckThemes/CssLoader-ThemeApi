@@ -21,7 +21,7 @@ public static class SmtpSenderExtensions
             $"Our automated system has found a few issues with your submission:\n{string.Join("\n", errors.Select(x => $"- {x}"))}\n\n";
 
         string body = $"Hi {author.Username}!\n\n" +
-                      $"We have received your {cssOrAudio} submission called '{submission.New.Name}'\n\n" +
+                      $"We have received your {cssOrAudio} submission '{submission.New.Name}'\n\n" +
                       $"You can view your submission here: {sender.Config.FrontendUrl}/submissions/view?submissionId={submission.Id}\n\n" +
                       $"{errorText}" + 
                       $"We also have a discord, for more instant communication: {sender.Config.DiscordInvite}\n\n" +
@@ -55,7 +55,7 @@ public static class SmtpSenderExtensions
             : "and we are sorry to say to have denied it.";
 
         string body = $"Hi {author.Username}!\n\n" +
-                      $"We have reviewed your {cssOrAudio} submission called '{submission.New.Name}', {state}\n\n" +
+                      $"We have reviewed your {cssOrAudio} submission '{submission.New.Name}', {state}\n\n" +
                       $"You can view your submission here: {sender.Config.FrontendUrl}/submissions/view?submissionId={submission.Id}\n\n" +
                       $"Reviewed by: {submission.ReviewedBy!.Username}\nAttached message:\n{reason}\n\n" + 
                       $"We also have a discord, for more instant communication: {sender.Config.DiscordInvite}\n\n" +
