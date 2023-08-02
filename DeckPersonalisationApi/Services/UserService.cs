@@ -175,7 +175,7 @@ public class UserService
             if (email.Length > _config.MaxEmailLength)
                 throw new BadRequestException($"An email can be max {_config.MaxEmailLength} characters");
 
-            if (!Regex.Match(email, "^\\w+([\\.-]?\\w+)*@\\w+([\\.-]?\\w+)*(\\.\\w{2,3})+$").Success)
+            if (!(email == "" || Regex.Match(email, "^\\w+([\\.-]?\\w+)*@\\w+([\\.-]?\\w+)*(\\.\\w{2,3})+$").Success))
                 throw new BadRequestException("Submitted email does not pass validation of an email");
             
             user.Email = email;

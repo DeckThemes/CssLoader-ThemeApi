@@ -232,7 +232,7 @@ public class UserController : Controller
         UserJwtDto dto = _jwt.DecodeToken(Request).Require();
 
         if (patch.EditsAdminFields())
-            throw new BadRequestException("Editing Admin fields while not being an admin yourself is disallowed");
+            throw new UnauthorisedException("Editing Admin fields while not being an admin yourself is disallowed");
 
         return EditUser(dto.Id, patch);
     }

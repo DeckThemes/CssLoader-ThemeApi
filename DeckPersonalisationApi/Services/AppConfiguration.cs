@@ -10,6 +10,9 @@ public class AppConfiguration
     public string ClientSecret { get; private set; }
     public string BotToken { get; private set; }
     public string DbPath { get; private set; }
+    public string EmailServer { get; private set; }
+    public string EmailUser { get; private set; }
+    public string EmailPassword { get; private set; }
     
     public string JwtIssuer { get; private set; }
     public string JwtAudience { get; private set; }
@@ -49,6 +52,8 @@ public class AppConfiguration
     public long DiscordPremiumTier1Role { get; private set; }
     public long DiscordPremiumTier2Role { get; private set; }
     public long DiscordPremiumTier3Role { get; private set; }
+    public string FrontendUrl { get; private set; }
+    public string DiscordInvite { get; private set; }
 
     public AppConfiguration()
     {
@@ -67,6 +72,9 @@ public class AppConfiguration
         ClientSecret = GetString("ConnectionStrings:ClientSecret");
         BotToken = GetString("ConnectionStrings:BotToken");
         DbPath = GetString("ConnectionStrings:DbPath");
+        EmailServer = GetString("ConnectionStrings:EmailServer");
+        EmailUser = GetString("ConnectionStrings:EmailUser");
+        EmailPassword = GetString("ConnectionStrings:EmailPassword");
 
         JwtIssuer = GetString("Jwt:Issuer") + "/";
         JwtAudience = GetString("Jwt:Audience") + "/";
@@ -126,6 +134,9 @@ public class AppConfiguration
         DiscordPremiumTier1Role = GetInt("Config:PremiumTier1Role");
         DiscordPremiumTier2Role = GetInt("Config:PremiumTier2Role");
         DiscordPremiumTier3Role = GetInt("Config:PremiumTier3Role");
+
+        FrontendUrl = GetString("Config:FrontendUrl");
+        DiscordInvite = GetString("Config:DiscordInvite");
     }
 
     private string GetString(string key)

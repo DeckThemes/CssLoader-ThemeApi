@@ -21,6 +21,7 @@ public class SubmissionService
     private UserService _user;
     private AppConfiguration _config;
     private TaskService _task;
+    private SmtpSender _email;
     
     public SubmissionService(ApplicationContext ctx, BlobService blob, ThemeService themes, UserService user, AppConfiguration config, TaskService task)
     {
@@ -30,6 +31,7 @@ public class SubmissionService
         _user = user;
         _config = config;
         _task = task;
+        _email = new(_config);
     }
     
     public void ApproveTheme(string id, string? message, User reviewer)
@@ -59,6 +61,7 @@ public class SubmissionService
         _ctx.CssSubmissions.Update(submission);
         _ctx.SaveChanges();
         
+        _email.DenyOrApproveSubmissionEmail(submission);
         Utils.Utils.SendDiscordWebhook(_config, submission);
     }
 
@@ -83,6 +86,7 @@ public class SubmissionService
         _ctx.CssSubmissions.Update(submission);
         _ctx.SaveChanges();
         
+        _email.DenyOrApproveSubmissionEmail(submission);
         Utils.Utils.SendDiscordWebhook(_config, submission);
     }
     
@@ -251,7 +255,8 @@ public class SubmissionService
 
         _ctx.CssSubmissions.Add(submission);
         _ctx.SaveChanges();
-        
+
+        _email.SendNewSubmissionEmail(submission, errors);
         Utils.Utils.SendDiscordWebhook(_config, submission);
         
         return submission;

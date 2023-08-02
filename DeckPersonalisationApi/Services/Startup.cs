@@ -1,4 +1,5 @@
-﻿using DeckPersonalisationApi.Model;
+﻿using System.Net.Mail;
+using DeckPersonalisationApi.Model;
 
 namespace DeckPersonalisationApi.Services;
 
