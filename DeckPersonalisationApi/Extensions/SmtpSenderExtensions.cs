@@ -18,14 +18,15 @@ public static class SmtpSenderExtensions
 
         string cssOrAudio = submission.New.Type == ThemeType.Css ? "CSS theme" : "audio pack";
         string errorText =
-            $"Our automated system has found a few issues with your submission:\n{string.Join("\n", errors.Select(x => $"- {x}"))}\n\n";
+            (errors.Count > 0) ? $"Our automated system has found a few issues with your submission:\n{string.Join("\n", errors.Select(x => $"- {x}"))}\n\n" : "";
 
         string body = $"Hi {author.Username}!\n\n" +
                       $"We have received your {cssOrAudio} submission '{submission.New.Name}'\n\n" +
                       $"You can view your submission here: {sender.Config.FrontendUrl}/submissions/view?submissionId={submission.Id}\n\n" +
                       $"{errorText}" + 
                       $"We also have a discord, for more instant communication: {sender.Config.DiscordInvite}\n\n" +
-                      "Cheers,\nThe DeckThemes team";
+                      "Cheers,\nThe DeckThemes team\n\n" + 
+                      $"If you'd like to unsubscribe from these emails, please remove your email from {sender.Config.FrontendUrl}/users/me";
 
         try
         {
@@ -59,7 +60,8 @@ public static class SmtpSenderExtensions
                       $"You can view your submission here: {sender.Config.FrontendUrl}/submissions/view?submissionId={submission.Id}\n\n" +
                       $"Reviewed by: {submission.ReviewedBy!.Username}\nAttached message:\n{reason}\n\n" + 
                       $"We also have a discord, for more instant communication: {sender.Config.DiscordInvite}\n\n" +
-                      "Cheers,\nThe DeckThemes team";
+                      "Cheers,\nThe DeckThemes team\n\n" +
+                      $"If you'd like to unsubscribe from these emails, please remove your email from {sender.Config.FrontendUrl}/users/me";
 
         try
         {
