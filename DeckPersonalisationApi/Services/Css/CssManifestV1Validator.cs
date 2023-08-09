@@ -27,7 +27,7 @@ public class CssManifestV1Validator
                 return null;
             return Targets.First();
         }
-        private set
+        protected set
         {
             Targets.Clear();
             if (value != null)
