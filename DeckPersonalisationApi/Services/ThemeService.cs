@@ -30,7 +30,7 @@ public class ThemeService
 
     public CssTheme CreateTheme(string id, string name, List<string> imageIds, string blobId, string version,
         string? source, string authorId, List<string> targets, int manifestVersion, string description,
-        List<string> dependencyNames, string specifiedAuthor, ThemeType type)
+        List<string> dependencyNames, string specifiedAuthor, ThemeType type, string? displayName = null)
     {
         _ctx.ChangeTracker.Clear();
         
@@ -52,6 +52,7 @@ public class ThemeService
         {
             Id = id,
             Name = name,
+            DisplayName = displayName,
             Images = imageBlobs,
             Download = blob,
             Version = version,
@@ -92,6 +93,7 @@ public class ThemeService
         _blob.DeleteBlobs(original.Images.Where(x => overlay.Images.All(y => y.Id != x.Id)).ToList());
         
         original.Images = overlay.Images;
+        original.DisplayName = overlay.DisplayName;
         original.Download = overlay.Download;
         original.Version = overlay.Version;
         original.Source = overlay.Source;

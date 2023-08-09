@@ -15,6 +15,7 @@ public class CssManifestV1Validator
     protected List<string> _validTargets;
 
     public string Name { get; protected set; } = "";
+    public string? DisplayName { get; protected set; }
     public string Author { get; protected set; }
     public string Version { get; protected set; } = "v1.0";
 

@@ -4,6 +4,7 @@ public class PartialCssThemeDto
 {
     public string Id { get; }
     public string Name { get; }
+    public string DisplayName { get; }
     public string Type { get; }
     public List<SavedBlobDto> Images { get; }
     public SavedBlobDto Download { get; }
@@ -21,6 +22,7 @@ public class PartialCssThemeDto
     {
         Id = theme.Id;
         Name = theme.Name;
+        DisplayName = theme.DisplayName ?? Name;
         Version = theme.Version;
         Targets = theme.ToReadableTargets();
         Target = Targets.First();

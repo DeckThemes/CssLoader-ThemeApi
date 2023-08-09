@@ -36,7 +36,7 @@ public class CreateCssSubmissionTask : ITaskPart
         
         CssTheme theme = _service.CreateTheme(_validation.ThemeId, _validation.ThemeName, blobs, _download.Blob.Id, _validation.ThemeVersion,
             _source, _author.Id, targets, _validation.ThemeManifestVersion, description,
-            _validation.ThemeDependencies, _validation.ThemeAuthor, ThemeType.Css);
+            _validation.ThemeDependencies, _validation.ThemeAuthor, ThemeType.Css, _validation.ThemeDisplayName);
 
         _submission.CreateSubmission(_validation.Base?.Id ?? null, theme.Id,
             _validation.Base == null ? CssSubmissionIntent.NewTheme : CssSubmissionIntent.UpdateTheme, _author.Id, _validation.Errors);

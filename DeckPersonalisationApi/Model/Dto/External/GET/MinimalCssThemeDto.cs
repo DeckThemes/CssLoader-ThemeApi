@@ -4,6 +4,7 @@ public class MinimalCssThemeDto
 {
     public string Id { get; }
     public string Name { get; }
+    public string DisplayName { get; }
     public string Type { get; }
     public string Version { get; }
     public string Target { get; }
@@ -15,6 +16,7 @@ public class MinimalCssThemeDto
     {
         Id = theme.Id;
         Name = theme.Name;
+        DisplayName = theme.DisplayName ?? Name;
         Version = theme.Version;
         Targets = theme.ToReadableTargets();
         Target = Targets.First();

@@ -4,6 +4,7 @@ public class FullCssThemeDto
 {
     public string Id { get; set; }
     public string Name { get; set; }
+    public string DisplayName { get; set; }
     public string Type { get; set; }
     public List<SavedBlobDto> Images { get; set; }
     public SavedBlobDto Download { get; set; }
@@ -31,6 +32,7 @@ public class FullCssThemeDto
     {
         Id = theme.Id;
         Name = theme.Name;
+        DisplayName = theme.DisplayName ?? Name;
         Images = theme.Images.Select(x => x.ToDto()).ToList();
         Download = theme.Download.ToDto();
         Version = theme.Version;

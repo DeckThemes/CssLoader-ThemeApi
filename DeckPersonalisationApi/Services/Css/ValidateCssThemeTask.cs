@@ -20,6 +20,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
 
     public string ThemeId { get; private set; }
     public string ThemeName { get; private set; }
+    public string? ThemeDisplayName { get; private set; }
     public string ThemeAuthor { get; private set; }
     public string ThemeVersion { get; private set; }
     public List<string> ThemeTargets { get; private set; }
@@ -80,7 +81,8 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
         ThemeTargets = validator.Targets.Count > 0
             ? validator.Targets
             : (Base?.Targets == null ? new List<string>() { "Other" } : Base.ToReadableTargets());
-        
+
+        ThemeDisplayName = validator.DisplayName;
         ThemeFlags = validator.Flags;
         ThemeAuthor = validator.Author;
         ThemeVersion = validator.Version;

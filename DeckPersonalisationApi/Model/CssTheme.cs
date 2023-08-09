@@ -8,6 +8,7 @@ public class CssTheme : IToDto<PartialCssThemeDto>, IToDto<MinimalCssThemeDto>, 
 {
     public string Id { get; set; }
     public string Name { get; set; }
+    public string? DisplayName { get; set; }
     public ThemeType Type { get; set; }
     public List<SavedBlob> Images { get; set; }
     public SavedBlob Download { get; set; }
@@ -17,7 +18,6 @@ public class CssTheme : IToDto<PartialCssThemeDto>, IToDto<MinimalCssThemeDto>, 
     public string SpecifiedAuthor { get; set; }
     public DateTimeOffset Submitted { get; set; }
     public DateTimeOffset Updated { get; set; }
-    //public string Target { get; set; }
     public long Targets { get; set; }
     public int ManifestVersion { get; set; }
     public string Description { get; set; }
@@ -57,9 +57,6 @@ public class CssTheme : IToDto<PartialCssThemeDto>, IToDto<MinimalCssThemeDto>, 
 
         return resolvedTargets;
     }
-
-    public long ToBitfieldTargets(List<string> appliedTargets)
-        => ToBitfieldTargets(appliedTargets, Type);
 
     public static long ToBitfieldTargets(List<string> appliedTargets)
     {
