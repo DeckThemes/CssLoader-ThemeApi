@@ -25,7 +25,6 @@ public class AppConfiguration
     public long MaxUnconfirmedBlobs { get; private set; }
     public long MaxActiveSubmissions { get; private set; }
     public long MaxImagesPerSubmission { get; private set; }
-    public List<string> CssTargets { get; private set; }
     public List<string> AudioFiles { get; private set; }
     public Dictionary<string, long> ValidFileTypesAndMaxSizes { get; private set; }
     public long MaxCssThemeSize { get; private set; }
@@ -55,6 +54,10 @@ public class AppConfiguration
     public string FrontendUrl { get; private set; }
     public string DiscordInvite { get; private set; }
 
+    // Sadly needs to be static, otherwise the model can't be easily converted to a DTO.
+    public static List<string> CssTargets { get; private set; } = new();
+    public static List<string> AudioTargets { get; private set; } = new();
+
     public AppConfiguration()
     {
         _config = new ConfigurationBuilder()
@@ -62,6 +65,8 @@ public class AppConfiguration
             .AddJsonFile($"appsettings.json", optional: true)
             .AddEnvironmentVariables()
             .Build();
+        
+        AudioTargets = new() { "Music", "Audio" };
         
         SetValues();
     }

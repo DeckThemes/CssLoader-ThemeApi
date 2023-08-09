@@ -9,6 +9,7 @@ public class PartialCssThemeDto
     public SavedBlobDto Download { get; }
     public string Version { get; }
     public string Target { get; }
+    public List<string> Targets { get; }
     public int ManifestVersion { get; }
     public UserGetMinimalDto Author { get; }
     public string SpecifiedAuthor { get; }
@@ -21,7 +22,8 @@ public class PartialCssThemeDto
         Id = theme.Id;
         Name = theme.Name;
         Version = theme.Version;
-        Target = theme.Target;
+        Targets = theme.ToReadableTargets();
+        Target = Targets.First();
         ManifestVersion = theme.ManifestVersion;
         Images = theme.Images.Select(x => x.ToDto()).ToList();
         Download = theme.Download.ToDto();

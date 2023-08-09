@@ -41,10 +41,11 @@ public class LegacyThemesDto
         Version = theme.Version;
         Author = theme.SpecifiedAuthor;
         LastChanged = theme.Updated.ToString();
-        Target = theme.Target;
+        
+        Target = theme.ToReadableTargets().First();
         Source = theme.Source ?? "";
         ManifestVersion = theme.ManifestVersion;
         Description = theme.Description;
-        MusicPack = theme.Target == "Music";
+        MusicPack = Target == "Music";
     }
 }

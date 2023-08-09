@@ -29,13 +29,13 @@ public class CreateCssSubmissionTask : ITaskPart
             blobs = _validation.Base.Images.Select(x => _blob.CopyBlob(x)).Select(x => x.Id).ToList();
 
         string description = _meta.Description ?? _validation.ThemeDescription;
-        string target = _meta.Target ?? _validation.ThemeTarget;
+        List<string> targets = _meta.Target == null ? _validation.ThemeTargets : new List<string>() { _meta.Target };
 
         if (_validation.ThemeFlags.Contains(CssFlag.Preset))
-            target = _validation.ThemeTarget;
+            targets = _validation.ThemeTargets;
         
         CssTheme theme = _service.CreateTheme(_validation.ThemeId, _validation.ThemeName, blobs, _download.Blob.Id, _validation.ThemeVersion,
-            _source, _author.Id, target, _validation.ThemeManifestVersion, description,
+            _source, _author.Id, targets, _validation.ThemeManifestVersion, description,
             _validation.ThemeDependencies, _validation.ThemeAuthor, ThemeType.Css);
 
         _submission.CreateSubmission(_validation.Base?.Id ?? null, theme.Id,

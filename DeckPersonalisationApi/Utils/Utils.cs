@@ -38,7 +38,7 @@ public class Utils
 
             EmbedBuilder embed = new EmbedBuilder()
                 .WithAuthor(submission.Owner.Username, submission.Owner.GetAvatarUri()!.AbsoluteUri)
-                .WithFooter($"Target: {submission.New.Target} | Version: {submission.New.Version} | By: {submission.New.SpecifiedAuthor} | Type: {submission.New.Type.ToString()}");
+                .WithFooter($"Target: {submission.New.ToReadableTargets().First()} | Version: {submission.New.Version} | By: {submission.New.SpecifiedAuthor} | Type: {submission.New.Type.ToString()}");
 
             if (submission.Status == SubmissionStatus.AwaitingApproval)
             {

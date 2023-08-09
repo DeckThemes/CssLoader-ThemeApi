@@ -14,6 +14,7 @@ public class FullCssThemeDto
     public DateTimeOffset Submitted { get; set; }
     public DateTimeOffset Updated { get; set; }
     public string Target { get; set; }
+    public List<string> Targets { get; set; }
     public int ManifestVersion { get; set; }
     public string Description { get; set; }
     public List<MinimalCssThemeDto> Dependencies { get; set; }
@@ -37,7 +38,8 @@ public class FullCssThemeDto
         Author = theme.Author.ToDto();
         Submitted = theme.Submitted;
         Updated = theme.Updated;
-        Target = theme.Target;
+        Targets = theme.ToReadableTargets();
+        Target = Targets.First();
         ManifestVersion = theme.ManifestVersion;
         Description = theme.Description;
         Dependencies = theme.Dependencies.Select(x => ((IToDto<MinimalCssThemeDto>)x).ToDto()).ToList();
