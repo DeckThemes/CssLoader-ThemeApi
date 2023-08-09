@@ -18,6 +18,7 @@ public class CssTheme : IToDto<PartialCssThemeDto>, IToDto<MinimalCssThemeDto>, 
     public string SpecifiedAuthor { get; set; }
     public DateTimeOffset Submitted { get; set; }
     public DateTimeOffset Updated { get; set; }
+    public string Target { get; set; }
     public long Targets { get; set; }
     public int ManifestVersion { get; set; }
     public string Description { get; set; }
