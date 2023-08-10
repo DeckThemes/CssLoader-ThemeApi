@@ -354,7 +354,7 @@ public class ThemeService
             part1 = part1.Where(x => (x.Targets & negativeFilters) == 0);
 
         if (!string.IsNullOrWhiteSpace(pagination.Search))
-            part1 = part1.Where(x => (x.Name.ToLower().Contains(pagination.Search) || x.SpecifiedAuthor.ToLower().Contains(pagination.Search)));
+            part1 = part1.Where(x => (x.Name.ToLower().Contains(pagination.Search) || x.SpecifiedAuthor.ToLower().Contains(pagination.Search) || (x.DisplayName != null && x.DisplayName.ToLower().Contains(pagination.Search))));
         
         switch (pagination.Order)
         {
