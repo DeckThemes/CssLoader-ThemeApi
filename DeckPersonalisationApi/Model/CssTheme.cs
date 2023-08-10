@@ -74,10 +74,10 @@ public class CssTheme : IToDto<PartialCssThemeDto>, IToDto<MinimalCssThemeDto>, 
         {
             if (appliedTargets.Contains(allTargets[i]))
             {
-                n |= 1 << 1;
+                n |= 1L << i;
             }
         }
-
+        
         return n;
     }
 
