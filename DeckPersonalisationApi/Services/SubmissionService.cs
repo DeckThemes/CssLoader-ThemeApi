@@ -100,7 +100,7 @@ public class SubmissionService
         DeleteFileTask delUserConfig = new DeleteFileTask(folder, "config_USER.json");
         DeleteFileTask delRootConfig = new DeleteFileTask(folder, "config_ROOT.json");
         GetJsonTask jsonGet = new GetJsonTask(folder, "theme.json");
-        ValidateCssThemeTask css = new ValidateCssThemeTask(folder, jsonGet, user, _config.CssTargets);
+        ValidateCssThemeTask css = new ValidateCssThemeTask(folder, jsonGet, user, AppConfiguration.CssTargets);
         WriteJsonTask jsonWrite = new WriteJsonTask(folder, "theme.json", jsonGet);
         CreateTempFolderTask themeContainer = new CreateTempFolderTask();
         CreateFolderTask themeFolder = new CreateFolderTask(themeContainer, css);
@@ -127,7 +127,7 @@ public class SubmissionService
         DeleteFileTask delUserConfig = new DeleteFileTask(path, "config_USER.json");
         DeleteFileTask delRootConfig = new DeleteFileTask(path, "config_ROOT.json");
         GetJsonTask jsonGet = new GetJsonTask(path, "theme.json");
-        ValidateCssThemeTask css = new ValidateCssThemeTask(path, jsonGet, user, _config.CssTargets);
+        ValidateCssThemeTask css = new ValidateCssThemeTask(path, jsonGet, user, AppConfiguration.CssTargets);
         WriteJsonTask jsonWrite = new WriteJsonTask(path, "theme.json", jsonGet);
         CreateTempFolderTask themeContainer = new CreateTempFolderTask();
         CreateFolderTask themeFolder = new CreateFolderTask(themeContainer, css);
@@ -152,7 +152,7 @@ public class SubmissionService
         WriteStringToFileTask writeJson = new WriteStringToFileTask(cssContainer, "theme.json", CreateCssJson(name, Utils.Utils.GetFixedLengthHexString(4)));
         FolderSizeConstraintTask size = new FolderSizeConstraintTask(cssContainer, _config.MaxCssThemeSize);
         GetJsonTask jsonGet = new GetJsonTask(cssContainer, "theme.json");
-        ValidateCssThemeTask css = new ValidateCssThemeTask(cssContainer, jsonGet, user, _config.CssTargets);
+        ValidateCssThemeTask css = new ValidateCssThemeTask(cssContainer, jsonGet, user, AppConfiguration.CssTargets);
         WriteJsonTask jsonWrite = new WriteJsonTask(cssContainer, "theme.json", jsonGet);
         CreateTempFolderTask themeContainer = new CreateTempFolderTask();
         CreateFolderTask themeFolder = new CreateFolderTask(themeContainer, css);
@@ -270,7 +270,7 @@ public class SubmissionService
     
     public Dictionary<string, long> FiltersWithCount(ThemeType? type, User? user)
     {
-        IEnumerable<CssSubmission> part1 = _ctx.CssSubmissions
+        IQueryable<CssSubmission> part1 = _ctx.CssSubmissions
             .Include(x => x.Owner)
             .Include(x => x.New);
 
@@ -322,7 +322,7 @@ public class SubmissionService
     public PaginatedResponse<CssSubmission> GetSubmissionsFromUser(PaginationDto pagination, User user)
         => GetSubmissionsInternal(pagination, x => x.Where(y => y.Owner == user));
 
-    private PaginatedResponse<CssSubmission> GetSubmissionsInternal(PaginationDto pagination, Func<IEnumerable<CssSubmission>, IEnumerable<CssSubmission>> middleware)
+    private PaginatedResponse<CssSubmission> GetSubmissionsInternal(PaginationDto pagination, Func<IQueryable<CssSubmission>, IQueryable<CssSubmission>> middleware)
     {
         List<SubmissionStatus> status =
             pagination.Filters.Select(x =>
@@ -342,7 +342,7 @@ public class SubmissionService
                 return a;
             }).Where(x => x != null).Select(x => x!.Value).ToList();
 
-        IEnumerable<CssSubmission> part1 = _ctx.CssSubmissions
+        IQueryable<CssSubmission> part1 = _ctx.CssSubmissions
             .Include(x => x.ReviewedBy)
             .Include(x => x.Owner)
             .Include(x => x.New)
@@ -371,10 +371,10 @@ public class SubmissionService
         {
             case "":
             case "Last to First":
-                part1 = part1.OrderByDescending(x => x.Submitted);
+                part1 = part1.OrderByDescending(x => x.Submitted.ToString());
                 break;
             case "First to Last":
-                part1 = part1.OrderBy(x => x.Submitted);
+                part1 = part1.OrderBy(x => x.Submitted.ToString());
                 break;
             default:
                 throw new BadRequestException($"Order type '{pagination.Order}' not found");

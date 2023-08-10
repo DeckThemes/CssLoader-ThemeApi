@@ -19,9 +19,6 @@ public class ThemeService
     private UserService _user;
     private AppConfiguration _config;
 
-    public List<string> CssTargets => _config.CssTargets;
-    public List<string> AudioTargets => new() { "Music", "Audio" };
-
     public ThemeService(TaskService task, ApplicationContext ctx, BlobService blob, UserService user, AppConfiguration config)
     {
         _task = task;
@@ -32,8 +29,8 @@ public class ThemeService
     }
 
     public CssTheme CreateTheme(string id, string name, List<string> imageIds, string blobId, string version,
-        string? source, string authorId, string target, int manifestVersion, string description,
-        List<string> dependencyNames, string specifiedAuthor, ThemeType type)
+        string? source, string authorId, List<string> targets, int manifestVersion, string description,
+        List<string> dependencyNames, string specifiedAuthor, ThemeType type, string? displayName = null)
     {
         _ctx.ChangeTracker.Clear();
         
@@ -47,7 +44,6 @@ public class ThemeService
 
         if (type == ThemeType.Css && dependencyNames.Count > 0)
             dependencies = GetThemesByName(dependencyNames, ThemeType.Css).ToList();
-        
 
         _blob.ConfirmBlobs(imageBlobs);
         _blob.ConfirmBlob(blob);
@@ -56,6 +52,7 @@ public class ThemeService
         {
             Id = id,
             Name = name,
+            DisplayName = displayName,
             Images = imageBlobs,
             Download = blob,
             Version = version,
@@ -64,7 +61,8 @@ public class ThemeService
             Submitted = DateTimeOffset.Now,
             Updated = DateTimeOffset.Now,
             SpecifiedAuthor = specifiedAuthor,
-            Target =  target,
+            Target = "",
+            Targets = CssTheme.ToBitfieldTargets(targets, type),
             ManifestVersion = manifestVersion,
             Description = description,
             Dependencies = dependencies,
@@ -96,12 +94,13 @@ public class ThemeService
         _blob.DeleteBlobs(original.Images.Where(x => overlay.Images.All(y => y.Id != x.Id)).ToList());
         
         original.Images = overlay.Images;
+        original.DisplayName = overlay.DisplayName;
         original.Download = overlay.Download;
         original.Version = overlay.Version;
         original.Source = overlay.Source;
         original.Updated = overlay.Updated;
         original.SpecifiedAuthor = overlay.SpecifiedAuthor;
-        original.Target = overlay.Target;
+        original.Targets = overlay.Targets;
         original.ManifestVersion = overlay.ManifestVersion;
         original.Description = overlay.Description;
         original.Dependencies = overlay.Dependencies;
@@ -136,10 +135,10 @@ public class ThemeService
     {
         if (target != null)
         {
-            if (!_config.CssTargets.Contains(target))
+            if (!AppConfiguration.CssTargets.Contains(target))
                 throw new BadRequestException("Target is not a valid target type");
             
-            theme.Target = target;
+            theme.Targets = CssTheme.ToBitfieldTargets(target, ThemeType.Css);
         }
         
         if (description != null)
@@ -241,38 +240,40 @@ public class ThemeService
 
     public Dictionary<string, long> FiltersWithCount(string? type, User? user, bool stars = false, PostVisibility visibility = PostVisibility.Public)
     {
-        IEnumerable<CssTheme> part1 = _ctx.CssThemes
+        IQueryable<CssTheme> part1 = _ctx.CssThemes
             .Include(x => x.Author)
             .Where(x => x.Visibility == visibility);
         
         Dictionary<string, long> filters = new();
         type = type?.ToLower() ?? null;
         IEnumerable<string> availableFilters;
+        long desktopBitfieldTargets = CssTheme.ToBitfieldTargets(
+            AppConfiguration.CssTargets.Where(x => x.Contains("Desktop")).ToList(), ThemeType.Css);
 
         switch (type)
         {
             case "css":
                 part1 = part1.Where(x => x.Type == ThemeType.Css);
-                availableFilters = CssTargets;
+                availableFilters = AppConfiguration.CssTargets;
                 break;
             
             case "audio":
                 part1 = part1.Where(x => x.Type == ThemeType.Audio);
-                availableFilters = AudioTargets;
+                availableFilters = AppConfiguration.AudioTargets;
                 break;
             
             case "bpm-css":
-                part1 = part1.Where(x => x.Type == ThemeType.Css && !x.Target.Contains("Desktop"));
-                availableFilters = CssTargets.Where(x => !x.Contains("Desktop"));
+                part1 = part1.Where(x => x.Type == ThemeType.Css && (x.Targets & desktopBitfieldTargets) == 0);
+                availableFilters = AppConfiguration.CssTargets.Where(x => !x.Contains("Desktop"));
                 break;
             
             case "desktop-css":
-                part1 = part1.Where(x => x.Type == ThemeType.Css && x.Target.Contains("Desktop"));
-                availableFilters = CssTargets.Where(x => x.Contains("Desktop"));
+                part1 = part1.Where(x => x.Type == ThemeType.Css && (x.Targets & desktopBitfieldTargets) != 0);
+                availableFilters = AppConfiguration.CssTargets.Where(x => x.Contains("Desktop"));
                 break;
             
             default:
-                availableFilters = CssTargets.Concat(AudioTargets);
+                availableFilters = AppConfiguration.CssTargets.Concat(AppConfiguration.AudioTargets);
                 break;
         }
         
@@ -290,16 +291,19 @@ public class ThemeService
             }
         }
 
-        var items = part1
-            .GroupBy(x => x.Target)
-            .Select(x => new Tuple<string, long>(x.Key, x.Count()))
-            .ToList()
-            .OrderByDescending(x => x.Item2)
-            .ToList();
-        
-        
-        items.ForEach(x => filters[x.Item1] = x.Item2);
-        
+        foreach (var cssTheme in part1.ToList())
+        {
+            cssTheme.ToReadableTargets().ForEach(x =>
+            {
+                if (filters.ContainsKey(x))
+                    filters[x]++;
+                else
+                    filters[x] = 1;
+            });
+        }
+
+        filters = filters.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
+
         availableFilters.ToList().ForEach(x =>
         {
             if (!filters.ContainsKey(x))
@@ -309,9 +313,9 @@ public class ThemeService
         return filters;
     }
 
-    private PaginatedResponse<CssTheme> GetThemesInternal(PaginationDto pagination, Func<IEnumerable<CssTheme>, IEnumerable<CssTheme>>? middleware = null, PostVisibility? status = PostVisibility.Public)
+    private PaginatedResponse<CssTheme> GetThemesInternal(PaginationDto pagination, Func<IQueryable<CssTheme>, IQueryable<CssTheme>>? middleware = null, PostVisibility? status = PostVisibility.Public)
     {
-        IEnumerable<CssTheme> part1 = _ctx.CssThemes
+        IQueryable<CssTheme> part1 = _ctx.CssThemes
             .Include(x => x.Author)
             .Include(x => x.Download)
             .Include(x => x.Images);
@@ -325,29 +329,33 @@ public class ThemeService
         {
             part1 = part1.Where(x => x.Visibility != PostVisibility.Deleted);
         }
-        
+
         if (middleware != null)
             part1 = middleware(part1);
+        
+        long desktopBitfieldTargets = CssTheme.ToBitfieldTargets(
+            AppConfiguration.CssTargets.Where(x => x.Contains("Desktop")).ToList(), ThemeType.Css);
         
         if (pagination.Filters.Contains("CSS"))
             part1 = part1.Where(x => x.Type == ThemeType.Css);
         else if (pagination.Filters.Contains("AUDIO"))
             part1 = part1.Where(x => x.Type == ThemeType.Audio);
         else if (pagination.Filters.Contains("BPM-CSS"))
-            part1 = part1.Where(x => x.Type == ThemeType.Css && !x.Target.Contains("Desktop"));
+            part1 = part1.Where(x => x.Type == ThemeType.Css && (x.Targets & desktopBitfieldTargets) == 0);
         else if (pagination.Filters.Contains("DESKTOP-CSS"))
-            part1 = part1.Where(x => x.Type == ThemeType.Css && x.Target.Contains("Desktop"));
+            part1 = part1.Where(x => x.Type == ThemeType.Css && (x.Targets & desktopBitfieldTargets) != 0);
+
+        List<string> allTargets = AppConfiguration.CssTargets.Concat(AppConfiguration.AudioTargets).ToList();
+        long filters = CssTheme.ToBitfieldTargets(pagination.Filters.Select(x => allTargets.Find(y => string.Equals(y, x, StringComparison.CurrentCultureIgnoreCase))).Where(x => x != null).ToList()!);
+        long negativeFilters = CssTheme.ToBitfieldTargets(pagination.NegativeFilters.Select(x => allTargets.Find(y => string.Equals(y, x, StringComparison.CurrentCultureIgnoreCase))).Where(x => x != null).ToList()!);
         
-        List<string> filters = pagination.Filters.Where(x => x is not ("CSS" or "AUDIO" or "BPM-CSS" or "DESKTOP-CSS")).Select(x => x.ToLower()).ToList();
-        List<string> negativeFilters = pagination.NegativeFilters.Select(x => x.ToLower()).ToList();
-        
-        if (filters.Count > 0)
-            part1 = part1.Where(x => filters.Contains(x.Target.ToLower()));
-        else if (negativeFilters.Count > 0)
-            part1 = part1.Where(x => !negativeFilters.Contains(x.Target.ToLower()));
+        if (filters != 0)
+            part1 = part1.Where(x => (x.Targets & filters) != 0);
+        else if (negativeFilters != 0)
+            part1 = part1.Where(x => (x.Targets & negativeFilters) == 0);
 
         if (!string.IsNullOrWhiteSpace(pagination.Search))
-            part1 = part1.Where(x => (x.Name.ToLower().Contains(pagination.Search) || x.SpecifiedAuthor.ToLower().Contains(pagination.Search)));
+            part1 = part1.Where(x => (x.Name.ToLower().Contains(pagination.Search) || x.SpecifiedAuthor.ToLower().Contains(pagination.Search) || (x.DisplayName != null && x.DisplayName.ToLower().Contains(pagination.Search))));
         
         switch (pagination.Order)
         {
@@ -359,10 +367,10 @@ public class ThemeService
                 break;
             case "":
             case "Last Updated":
-                part1 = part1.OrderByDescending(x => x.Updated);
+                part1 = part1.OrderByDescending(x => x.Updated.ToString());
                 break;
             case "First Updated":
-                part1 = part1.OrderBy(x => x.Updated);
+                part1 = part1.OrderBy(x => x.Updated.ToString());
                 break;
             case "Most Downloaded":
                 part1 = part1.OrderByDescending(x => x.Download.DownloadCount);

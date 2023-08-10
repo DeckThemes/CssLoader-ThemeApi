@@ -1,5 +1,6 @@
 ﻿using System.Net.Mail;
 using DeckPersonalisationApi.Model;
+using Microsoft.EntityFrameworkCore;
 
 namespace DeckPersonalisationApi.Services;
 
@@ -28,6 +29,18 @@ public class Startup : BackgroundService
                     .GetRequiredService<ApplicationContext>();
 
             await ctx.Database.EnsureCreatedAsync(stoppingToken);
+            
+            // Migrate the targets field
+            foreach (var x in await ctx.CssThemes.ToListAsync())
+            {
+                if (x.Targets == 0)
+                {
+                    x.Targets = CssTheme.ToBitfieldTargets(new List<string>() { x.Target }, x.Type);
+                    ctx.CssThemes.Update(x);
+                }
+            }
+
+            await ctx.SaveChangesAsync();
         }
 
         _premiumCheck = new Timer(_ => InfrequentTask(), null, TimeSpan.FromSeconds(10),

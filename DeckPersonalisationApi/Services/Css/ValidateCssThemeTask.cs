@@ -20,9 +20,10 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
 
     public string ThemeId { get; private set; }
     public string ThemeName { get; private set; }
+    public string? ThemeDisplayName { get; private set; }
     public string ThemeAuthor { get; private set; }
     public string ThemeVersion { get; private set; }
-    public string ThemeTarget { get; private set; }
+    public List<string> ThemeTargets { get; private set; }
     public CssTheme? Base { get; private set; }
     public int ThemeManifestVersion { get; private set; }
     public string ThemeDescription { get; private set; }
@@ -63,6 +64,9 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
             case 8:
                 validator = new CssManifestV7Validator(_path.DirPath!, _json.Json!, _user, _validThemeTargets);
                 break;
+            case 9:
+                validator = new CssManifestV9Validator(_path.DirPath!, _json.Json!, _user, _validThemeTargets);
+                break;
             default:
                 throw new TaskFailureException($"Invalid manifest version '{manifestVersion}'");
         }
@@ -77,7 +81,11 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
         }
         
         ThemeName = validator.Name;
-        ThemeTarget = validator.Target ?? Base?.Target ?? "Other";
+        ThemeTargets = validator.Targets.Count > 0
+            ? validator.Targets
+            : (Base?.Targets == null ? new List<string>() { "Other" } : Base.ToReadableTargets());
+
+        ThemeDisplayName = validator.DisplayName;
         ThemeFlags = validator.Flags;
         ThemeAuthor = validator.Author;
         ThemeVersion = validator.Version;
@@ -87,11 +95,11 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
 
         if (ThemeFlags.Contains(CssFlag.Preset))
         {
-            ThemeTarget = "Preset";
+            ThemeTargets = new() { "Preset" };
             ThemeVersion = Utils.Utils.GetFixedLengthHexString(4);
             _json.Json!["version"] = ThemeVersion;
         }
-        else if (ThemeTarget == "Preset")
+        else if (ThemeTargets.Contains("Preset"))
             throw new TaskFailureException("Target 'Preset' is not a user-pickable value");
 
         List<CssTheme> t = _service.GetAnyThemesByAuthorWithName(_user, ThemeName, ThemeType.Css).ToList();

@@ -232,7 +232,7 @@ public class SubmissionController : Controller
         if (target == null)
             return;
         
-        if (!_config.CssTargets.Contains(target))
+        if (!AppConfiguration.CssTargets.Contains(target))
             throw new BadRequestException($"Invalid CSS target {target}");
 
         if (target == "Preset")
