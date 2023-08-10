@@ -61,6 +61,7 @@ public class ThemeService
             Submitted = DateTimeOffset.Now,
             Updated = DateTimeOffset.Now,
             SpecifiedAuthor = specifiedAuthor,
+            Target = "",
             Targets = CssTheme.ToBitfieldTargets(targets, type),
             ManifestVersion = manifestVersion,
             Description = description,
