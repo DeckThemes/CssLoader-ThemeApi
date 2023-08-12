@@ -71,6 +71,9 @@ public class CssManifestV1Validator
             throw new Exception("No name was found");
 
         Name = _json["name"]!.ToObject<string>()!;
+        
+        if (_json.ContainsKey("display_name"))
+            throw new Exception($"Display name is not supported on manifest v{ManifestVersion}");
     }
 
     protected virtual void VerifyAuthor()
