@@ -18,6 +18,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
     private ThemeService _service;
     private SubmissionService _submissionService;
     private VnuCssVerifier _vnu;
+    private UserService _userService;
 
     public string ThemeId { get; private set; }
     public string ThemeName { get; private set; }
@@ -110,7 +111,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
             CssSubmission? pendingSubmission = _submissionService.GetSubmissionByThemeId(pendingSubmissionTheme.Id);
             if (pendingSubmission != null)
             {
-                _submissionService.DenyTheme(pendingSubmission.Id, "Automatically denied due to re-submission.", _user);
+                _submissionService.DenyTheme(pendingSubmission.Id, "Automatically denied due to re-submission.", _userService.GetUserById(_user.Id)!);
             }
         }
 
@@ -170,6 +171,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
         _vnu = provider.GetRequiredService<VnuCssVerifier>();
         _config = provider.GetRequiredService<AppConfiguration>();
         _submissionService = provider.GetRequiredService<SubmissionService>();
+        _userService = provider.GetRequiredService<UserService>();
     }
 
     public string Identifier => ThemeName;
