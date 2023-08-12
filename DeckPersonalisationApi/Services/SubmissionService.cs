@@ -304,6 +304,18 @@ public class SubmissionService
         return filters;
     }
 
+    public CssSubmission? GetSubmissionByThemeId(string themeId)
+        => _ctx.CssSubmissions
+            .Include(x => x.ReviewedBy)
+            .Include(x => x.Owner)
+            .Include(x => x.New)
+            .Include(x => x.New.Dependencies)
+            .Include(x => x.New.Author)
+            .Include(x => x.New.Download)
+            .Include(x => x.New.Images)
+            .Include(x => x.Old)
+            .FirstOrDefault(x => x.New.Id == themeId);
+    
     public CssSubmission? GetSubmissionById(string id)
         => _ctx.CssSubmissions
             .Include(x => x.ReviewedBy)

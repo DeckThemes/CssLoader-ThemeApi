@@ -16,6 +16,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
     private List<string> _validThemeTargets = new();
     private AppConfiguration _config;
     private ThemeService _service;
+    private SubmissionService _submissionService;
     private VnuCssVerifier _vnu;
 
     public string ThemeId { get; private set; }
@@ -103,10 +104,17 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
             throw new TaskFailureException("Target 'Preset' is not a user-pickable value");
 
         List<CssTheme> t = _service.GetAnyThemesByAuthorWithName(_user, ThemeName, ThemeType.Css).ToList();
-        if (t.Any(x => x.Visibility == PostVisibility.Private))
-            throw new TaskFailureException("Theme seems to already be a pending submission for this theme");
-        
-        Base = t.FirstOrDefault();
+        CssTheme? pendingSubmissionTheme = t.FirstOrDefault(x => x.Visibility == PostVisibility.Private);
+        if (pendingSubmissionTheme != null)
+        {
+            CssSubmission? pendingSubmission = _submissionService.GetSubmissionByThemeId(pendingSubmissionTheme.Id);
+            if (pendingSubmission != null)
+            {
+                _submissionService.DenyTheme(pendingSubmission.Id, "Automatically denied due to re-submission.", _user);
+            }
+        }
+
+        Base = t.FirstOrDefault(x => x.Visibility == PostVisibility.Public);
 
         if (_service.ThemeNameExists(ThemeName, ThemeType.Css) && Base == null)
             throw new TaskFailureException($"Theme '{ThemeName}' already exists");
@@ -161,6 +169,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
         _service = provider.GetRequiredService<ThemeService>();
         _vnu = provider.GetRequiredService<VnuCssVerifier>();
         _config = provider.GetRequiredService<AppConfiguration>();
+        _submissionService = provider.GetRequiredService<SubmissionService>();
     }
 
     public string Identifier => ThemeName;
