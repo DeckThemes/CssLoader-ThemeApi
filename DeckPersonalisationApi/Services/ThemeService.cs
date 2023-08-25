@@ -211,7 +211,9 @@ public class ThemeService
 
     public void UpdateStars()
     {
-        IEnumerable<Tuple<CssTheme, long>> themes = _ctx.CssThemes.Include(x => x.UserStars)
+        IEnumerable<Tuple<CssTheme, long>> themes = _ctx.CssThemes
+            .Include(x => x.UserStars)
+            .Where(x => x.Visibility == PostVisibility.Public)
             .Select(x => new Tuple<CssTheme, long>(x, x.UserStars.Count));
 
         foreach (var (item1, item2) in themes)

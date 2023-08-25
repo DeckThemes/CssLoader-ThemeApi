@@ -97,12 +97,12 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
 
         if (ThemeFlags.Contains(CssFlag.Preset))
         {
-            ThemeTargets = new() { "Preset" };
+            ThemeTargets = new() { "Profile" };
             ThemeVersion = Utils.Utils.GetFixedLengthHexString(4);
             _json.Json!["version"] = ThemeVersion;
         }
-        else if (ThemeTargets.Contains("Preset"))
-            throw new TaskFailureException("Target 'Preset' is not a user-pickable value");
+        else if (ThemeTargets.Contains("Preset") || ThemeTargets.Contains("Profile"))
+            throw new TaskFailureException("Target 'Profile' is not a user-pickable value");
 
         List<CssTheme> t = _service.GetAnyThemesByAuthorWithName(_user, ThemeName, ThemeType.Css).ToList();
         CssTheme? pendingSubmissionTheme = t.FirstOrDefault(x => x.Visibility == PostVisibility.Private);

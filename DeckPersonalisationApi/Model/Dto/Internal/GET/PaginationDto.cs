@@ -16,8 +16,8 @@ public class PaginationDto
         Page = page;
         PerPage = perPage;
         List<string> unsortedFilters = filters.Split('.').Select(x => x.Trim()).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
-        Filters = unsortedFilters.Where(x => !x.StartsWith("-")).ToList();
-        NegativeFilters = unsortedFilters.Where(x => x.StartsWith("-")).Select(x => x.Substring(1)).ToList();
+        Filters = unsortedFilters.Where(x => !x.StartsWith("-")).Select(x => x.Replace("Preset", "Profile")).ToList();
+        NegativeFilters = unsortedFilters.Where(x => x.StartsWith("-")).Select(x => x.Substring(1).Replace("Preset", "Profile")).ToList();
         Order = order;
         Search = search.ToLower();
 

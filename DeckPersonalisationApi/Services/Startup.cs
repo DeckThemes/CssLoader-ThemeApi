@@ -30,6 +30,7 @@ public class Startup : BackgroundService
 
             await ctx.Database.EnsureCreatedAsync(stoppingToken);
             
+            /*
             // Migrate the targets field
             foreach (var x in await ctx.CssThemes.ToListAsync())
             {
@@ -41,6 +42,7 @@ public class Startup : BackgroundService
             }
 
             await ctx.SaveChangesAsync();
+            */
         }
 
         _premiumCheck = new Timer(_ => InfrequentTask(), null, TimeSpan.FromSeconds(10),
