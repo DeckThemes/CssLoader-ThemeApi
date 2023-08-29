@@ -347,6 +347,14 @@ public class ThemeService
         else if (pagination.Filters.Contains("DESKTOP-CSS"))
             part1 = part1.Where(x => x.Type == ThemeType.Css && (x.Targets & desktopBitfieldTargets) != 0);
 
+        pagination.Filters.RemoveAll(x => new List<string>()
+        {
+            "CSS",
+            "AUDIO",
+            "BPM-CSS",
+            "DESKTOP-CSS"
+        }.Contains(x));
+
         List<string> allTargets = AppConfiguration.CssTargets.Concat(AppConfiguration.AudioTargets).ToList();
         long filters = CssTheme.ToBitfieldTargets(pagination.Filters.Select(x => allTargets.Find(y => string.Equals(y, x, StringComparison.CurrentCultureIgnoreCase))).Where(x => x != null).ToList()!);
         long negativeFilters = CssTheme.ToBitfieldTargets(pagination.NegativeFilters.Select(x => allTargets.Find(y => string.Equals(y, x, StringComparison.CurrentCultureIgnoreCase))).Where(x => x != null).ToList()!);
