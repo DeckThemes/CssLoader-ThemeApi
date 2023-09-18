@@ -72,6 +72,9 @@ public class CssManifestV1Validator
 
         Name = _json["name"]!.ToObject<string>()!;
         
+        if (Name.Contains('/'))
+            throw new Exception("Illegal character in theme name");
+        
         if (_json.ContainsKey("display_name"))
             throw new Exception($"Display name is not supported on manifest v{ManifestVersion}");
     }

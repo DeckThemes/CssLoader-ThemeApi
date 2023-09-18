@@ -33,6 +33,9 @@ public class AudioManifestV1Validator
             throw new Exception("No name was found");
 
         Name = _json["name"]!.ToObject<string>()!;
+        
+        if (Name.Contains('/'))
+            throw new Exception("Illegal character in pack name");
     }
 
     protected virtual void VerifyAuthor()
@@ -112,5 +115,8 @@ public class AudioManifestV1Validator
 
         if (Music && Ignore.Contains("menu_music.mp3"))
             throw new Exception("menu_music.mp3 is not present and is required for a music pack");
+
+        if (!Music && Ignore.Count == _validFiles.Count)
+            throw new Exception("All audio files are ignored. Please check if your submission contains audio files with the right name and location");
     }
 }

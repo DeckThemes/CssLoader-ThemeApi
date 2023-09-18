@@ -17,6 +17,9 @@ public class CssManifestV9Validator : CssManifestV7Validator
 
         Name = _json["name"]!.ToObject<string>()!;
         
+        if (Name.Contains('/'))
+            throw new Exception("Illegal character in theme name");
+        
         if (_json.ContainsKey("display_name"))
             DisplayName = _json["display_name"]!.ToObject<string>()!;
     }
