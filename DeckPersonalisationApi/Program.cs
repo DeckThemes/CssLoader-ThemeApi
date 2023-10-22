@@ -3,6 +3,7 @@
 using System.Text;
 using DeckPersonalisationApi;
 using DeckPersonalisationApi.Exceptions;
+using DeckPersonalisationApi.Middleware;
 using DeckPersonalisationApi.Middleware.CacheControl;
 using DeckPersonalisationApi.Middleware.CookieConverter;
 using DeckPersonalisationApi.Middleware.JwtRole;
@@ -21,7 +22,7 @@ using Microsoft.OpenApi.Models;
 AppConfiguration configuration = new();
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(x => x.JsonSerializerOptions.Converters.Add(new TrimStringConverter()));
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
