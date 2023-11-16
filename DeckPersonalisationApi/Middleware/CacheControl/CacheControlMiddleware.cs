@@ -15,18 +15,21 @@ public class CacheControlMiddleware
     {
         context.Response.OnStarting(state => {
             var httpContext = (HttpContext)state;
-
+            
             try
             {
-                if (httpContext.Response.ContentType == BlobType.Jpg.GetContentType() ||
-                    httpContext.Response.ContentType == BlobType.Png.GetContentType() || 
-                    httpContext.Response.ContentType == "image/webp")
+                if (!httpContext.Response.Headers.ContainsKey("cache-control"))
                 {
-                    httpContext.Response.Headers.CacheControl = "public, max-age=86400";
-                }
-                else
-                {
-                    httpContext.Response.Headers.CacheControl = "no-store";
+                    if (httpContext.Response.ContentType == BlobType.Jpg.GetContentType() ||
+                        httpContext.Response.ContentType == BlobType.Png.GetContentType() || 
+                        httpContext.Response.ContentType == "image/webp")
+                    {
+                        httpContext.Response.Headers.CacheControl = "public, max-age=86400";
+                    }
+                    else
+                    {
+                        httpContext.Response.Headers.CacheControl = "no-store";
+                    }
                 }
             }
             catch (Exception e)

@@ -15,6 +15,7 @@ public class MotdController(MotdService service) : Controller
     public IActionResult Get()
     {
         var motd = service.Get();
+        Response.Headers.CacheControl = "public, max-age=86400";
         return motd == null ? new NotFoundResult() : motd.Ok();
     }
 
@@ -23,18 +24,21 @@ public class MotdController(MotdService service) : Controller
     [HttpPost]
     [Authorize]
     [JwtRoleRequire(Permissions.ManageApi)]
+    [JwtRoleReject(Permissions.FromApiToken)]
     public IActionResult Post(CreateMotd motd)
         => service.Set(motd.Name, motd.Description, motd.Severity).Ok();
     
     [HttpPut]
     [Authorize]
     [JwtRoleRequire(Permissions.ManageApi)]
+    [JwtRoleReject(Permissions.FromApiToken)]
     public IActionResult Update(CreateMotd motd)
         => service.Update(motd.Name, motd.Description, motd.Severity).Ok();
 
     [HttpDelete]
     [Authorize]
     [JwtRoleRequire(Permissions.ManageApi)]
+    [JwtRoleReject(Permissions.FromApiToken)]
     public IActionResult Delete()
     {
         service.Delete();
