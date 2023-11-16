@@ -16,6 +16,7 @@ public class ApplicationContext : DbContext
     public DbSet<SavedBlob> Blobs { get; set; }
     public DbSet<CssTheme> CssThemes { get; set; }
     public DbSet<CssSubmission> CssSubmissions { get; set; }
+    public DbSet<MessageOfTheDay> MessageOfTheDay { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

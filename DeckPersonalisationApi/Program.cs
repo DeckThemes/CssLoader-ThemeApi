@@ -51,6 +51,7 @@ builder.Services.AddScoped<ThemeService>();
 builder.Services.AddSingleton<TaskService>();
 builder.Services.AddScoped<VnuCssVerifier>();
 builder.Services.AddScoped<SubmissionService>();
+builder.Services.AddScoped<MotdService>();
 builder.Services.AddHostedService<Startup>();
 builder.Services.AddDbContext<ApplicationContext>(x =>
 {
