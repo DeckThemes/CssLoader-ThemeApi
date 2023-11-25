@@ -12,6 +12,9 @@ public class PathTransformTask : IDirTaskPart
     {
         if (_subPath != null)
         {
+            if (_subPath.StartsWith("/"))
+                throw new TaskFailureException("Illegal start character: /");
+            
             DirPath = Path.Join(_dir.DirPath, _subPath);
         }
         else

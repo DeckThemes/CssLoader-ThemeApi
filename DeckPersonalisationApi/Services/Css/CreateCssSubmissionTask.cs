@@ -17,6 +17,7 @@ public class CreateCssSubmissionTask : ITaskPart
     private string? _source;
     private User _author;
     private CloneGitTask? _gitSrc;
+    public CssSubmission? Submission { get; private set; }
     public void Execute()
     {
         if (_gitSrc != null)
@@ -38,7 +39,7 @@ public class CreateCssSubmissionTask : ITaskPart
             _source, _author.Id, targets, _validation.ThemeManifestVersion, description,
             _validation.ThemeDependencies, _validation.ThemeAuthor, ThemeType.Css, _validation.ThemeDisplayName);
 
-        _submission.CreateSubmission(_validation.Base?.Id ?? null, theme.Id,
+        Submission = _submission.CreateSubmission(_validation.Base?.Id ?? null, theme.Id,
             _validation.Base == null ? CssSubmissionIntent.NewTheme : CssSubmissionIntent.UpdateTheme, _author.Id, _validation.Errors);
     }
 

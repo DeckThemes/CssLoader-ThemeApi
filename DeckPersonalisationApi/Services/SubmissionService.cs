@@ -108,10 +108,11 @@ public class SubmissionService
         ZipTask zip = new ZipTask(themeContainer, gitContainer);
         WriteAsBlobTask blob = new WriteAsBlobTask(user, zip);
         CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blob, meta, clone, user);
+        AutoApproveCssSubmissionTask autoApproval = new AutoApproveCssSubmissionTask(submission, css);
 
         List<ITaskPart> taskParts = new()
         {
-            gitContainer, clone, folder, size, copy, delUserConfig, delRootConfig, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blob, submission
+            gitContainer, clone, folder, size, copy, delUserConfig, delRootConfig, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blob, submission, autoApproval
         };
 
         AppTaskFromParts task = new(taskParts, "Submit css theme via git", user);
@@ -135,10 +136,11 @@ public class SubmissionService
         ZipTask zip = new ZipTask(themeContainer, path);
         WriteAsBlobTask blobSave = new WriteAsBlobTask(user, zip);
         CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blobSave, meta, "[Zip Deploy]", user);
+        AutoApproveCssSubmissionTask autoApproval = new AutoApproveCssSubmissionTask(submission, css);
 
         List<ITaskPart> taskParts = new()
         {
-            zipContainer, extractZip, size, path, delUserConfig, delRootConfig, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blobSave, submission
+            zipContainer, extractZip, size, path, delUserConfig, delRootConfig, jsonGet, css, jsonWrite, themeContainer, themeFolder, copyToThemeFolder, zip, blobSave, submission, autoApproval
         };
 
         AppTaskFromParts task = new(taskParts, "Submit css theme via zip", user);

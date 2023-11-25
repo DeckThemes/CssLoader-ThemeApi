@@ -32,6 +32,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
     public List<string> ThemeDependencies { get; private set; } = new();
     public List<string> Errors { get; private set; } = new();
     public List<CssFlag> ThemeFlags { get; private set; } = new();
+    public int FileCount { get; private set; } = 0;
     
     public void Execute()
     {
@@ -151,6 +152,7 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
             throw new TaskFailureException($"Description field can only be max {_config.MaxNameLength} characters");
         
         Errors = _vnu.ValidateCss(validator.CssPaths, _path.DirPath, extraErrors);
+        FileCount = Directory.GetFiles(_path.DirPath!, "*.*", SearchOption.AllDirectories).Count();
     }
 
     public void Cleanup(bool success)
