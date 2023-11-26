@@ -227,6 +227,19 @@ public class SubmissionService
         return _task.RegisterTask(task);
     }
 
+    public CssSubmission? GetLastSubmission(User? user, SubmissionStatus? status)
+    {
+        IQueryable<CssSubmission> submissions = _ctx.CssSubmissions.OrderByDescending(x => x.Submitted.ToString());
+
+        if (user != null)
+            submissions = submissions.Where(x => x.Owner == user);
+
+        if (status != null)
+            submissions = submissions.Where(x => x.Status == status.Value);
+        
+        return submissions.FirstOrDefault();
+    }
+
     public CssSubmission CreateSubmission(string? oldThemeId, string newThemeId, CssSubmissionIntent intent,
         string authorId, List<string> errors)
     {

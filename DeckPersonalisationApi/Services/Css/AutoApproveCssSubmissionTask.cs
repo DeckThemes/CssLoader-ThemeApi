@@ -1,4 +1,5 @@
-﻿using DeckPersonalisationApi.Services.Tasks;
+﻿using DeckPersonalisationApi.Model;
+using DeckPersonalisationApi.Services.Tasks;
 
 namespace DeckPersonalisationApi.Services.Css;
 
@@ -14,6 +15,12 @@ public class AutoApproveCssSubmissionTask : ITaskPart
     public void Execute()
     {
         if (!_validateTask.ThemeFlags.Contains(CssFlag.Preset) || _submissionTask.Submission == null || _validateTask.FileCount != 1)
+            return;
+
+        CssSubmission? lastSubmission =
+            _submission.GetLastSubmission(_submissionTask.Submission.Owner, SubmissionStatus.Approved);
+
+        if (lastSubmission == null || (lastSubmission.Submitted + TimeSpan.FromDays(1)) > DateTimeOffset.Now)
             return;
         
         _submission.ApproveTheme(_submissionTask.Submission.Id, "API: Auto-Approval of Profile", _submissionTask.Submission.Owner);
