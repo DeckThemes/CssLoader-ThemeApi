@@ -45,6 +45,17 @@ public class UserController : Controller
         UserJwtDto user = _jwt.DecodeToken(Request).Require();
         return GetCssThemes(user.Id, page, perPage, filters, order, search);
     }
+    
+    [HttpGet("me/themes/private")]
+    [Authorize]
+    public IActionResult GetCssThemesMePrivate(int page = 1, int perPage = 50, string filters = "", string order = "", string search = "")
+    {
+        UserJwtDto userJwt = _jwt.DecodeToken(Request).Require();
+        User user = _user.GetActiveUserById(userJwt.Id).Require();
+        PaginationDto paginationDto = new(page, perPage, filters, order, search);
+        PaginatedResponse<CssTheme> response = _theme.GetUsersThemes(user, paginationDto, PostVisibility.Private);
+        return response.Ok();
+    }
 
     [HttpPost("{id}/logout_all")]
     [Authorize]

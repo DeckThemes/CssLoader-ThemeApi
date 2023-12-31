@@ -76,6 +76,48 @@ public class ThemeService
         return newTheme;
     }
 
+    public void ApplyThemeUpdate(string baseId, List<string> imageIds, string blobId, string version,
+        string? source, string authorId, List<string> targets, int manifestVersion, string description,
+        List<string> dependencyNames, string specifiedAuthor, ThemeType type, string? displayName = null)
+    {
+        _ctx.ChangeTracker.Clear();
+        CssTheme theme = GetThemeById(baseId).Require("Failed to find original theme");
+        User author = _user.GetActiveUserById(authorId).Require("User not found");
+        List<SavedBlob> imageBlobs = _blob.GetBlobs(imageIds).ToList();
+        SavedBlob blob = _blob.GetBlob(blobId).Require();
+        List<CssTheme> dependencies = new();
+        
+        if (theme.Author.Id != author.Id)
+            throw new BadRequestException("Cannot overlay theme from another author");
+        
+        _blob.ConfirmBlobs(imageBlobs);
+        _blob.ConfirmBlob(blob);
+        
+        if (theme.Download.Id != blob.Id)
+        {
+            blob.DownloadCount = theme.Download.DownloadCount;
+            _ctx.Blobs.Update(blob);
+            _blob.DeleteBlob(theme.Download);
+        }
+        
+        _blob.DeleteBlobs(theme.Images.Where(x => imageBlobs.All(y => y.Id != x.Id)).ToList());
+        
+        theme.Images = imageBlobs;
+        theme.DisplayName = displayName;
+        theme.Download = blob;
+        theme.Version = version;
+        theme.Source = source;
+        theme.Updated = DateTimeOffset.Now;
+        theme.SpecifiedAuthor = specifiedAuthor;
+        theme.Targets = CssTheme.ToBitfieldTargets(targets, type);
+        theme.ManifestVersion = manifestVersion;
+        theme.Description = description;
+        theme.Dependencies = dependencies;
+        
+        _ctx.CssThemes.Update(theme);
+        _ctx.SaveChanges();
+    }
+
     public void ApplyThemeUpdate(CssTheme original, CssTheme overlay)
     {
         original = GetThemeById(original.Id).Require("Failed to find original theme");
@@ -197,8 +239,8 @@ public class ThemeService
         => _ctx.CssThemes.Include(x => x.Author).Include(x => x.Images).Include(x => x.Download)
             .Where(x => x.Type == type).Where(x => x.Name == name && x.Author.Id == user.Id && x.Visibility != PostVisibility.Deleted).ToList();
 
-    public PaginatedResponse<CssTheme> GetUsersThemes(User user, PaginationDto pagination)
-        => GetThemesInternal(pagination, x => x.Where(y => y.Author == user), PostVisibility.Public);
+    public PaginatedResponse<CssTheme> GetUsersThemes(User user, PaginationDto pagination, PostVisibility visibility = PostVisibility.Public)
+        => GetThemesInternal(pagination, x => x.Where(y => y.Author == user), visibility);
 
     public PaginatedResponse<CssTheme> GetApprovedThemes(PaginationDto pagination)
         => GetThemesInternal(pagination, null, PostVisibility.Public);

@@ -100,14 +100,18 @@ public class SubmissionService
         DeleteFileTask delUserConfig = new DeleteFileTask(folder, "config_USER.json");
         DeleteFileTask delRootConfig = new DeleteFileTask(folder, "config_ROOT.json");
         GetJsonTask jsonGet = new GetJsonTask(folder, "theme.json");
-        ValidateCssThemeTask css = new ValidateCssThemeTask(folder, jsonGet, user, AppConfiguration.CssTargets);
+        ValidateCssThemeTask css = (meta.PrivateSubmission) 
+            ? new ValidatePrivateCssThemeTask(folder, jsonGet, user, AppConfiguration.CssTargets)
+            : new ValidatePublicCssThemeTask(folder, jsonGet, user, AppConfiguration.CssTargets);
         WriteJsonTask jsonWrite = new WriteJsonTask(folder, "theme.json", jsonGet);
         CreateTempFolderTask themeContainer = new CreateTempFolderTask();
         CreateFolderTask themeFolder = new CreateFolderTask(themeContainer, css);
         CopyFileTask copyToThemeFolder = new CopyFileTask(folder, themeFolder, "*");
         ZipTask zip = new ZipTask(themeContainer, gitContainer);
         WriteAsBlobTask blob = new WriteAsBlobTask(user, zip);
-        CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blob, meta, clone, user);
+        CreateCssSubmissionTask submission = (meta.PrivateSubmission)
+            ? new CreatePrivateCssSubmissionTask(css, blob, meta, clone, user)
+            : new CreatePublicCssSubmissionTask(css, blob, meta, clone, user);
         AutoApproveCssSubmissionTask autoApproval = new AutoApproveCssSubmissionTask(submission, css);
 
         List<ITaskPart> taskParts = new()
@@ -128,14 +132,18 @@ public class SubmissionService
         DeleteFileTask delUserConfig = new DeleteFileTask(path, "config_USER.json");
         DeleteFileTask delRootConfig = new DeleteFileTask(path, "config_ROOT.json");
         GetJsonTask jsonGet = new GetJsonTask(path, "theme.json");
-        ValidateCssThemeTask css = new ValidateCssThemeTask(path, jsonGet, user, AppConfiguration.CssTargets);
+        ValidateCssThemeTask css = (meta.PrivateSubmission) 
+            ? new ValidatePrivateCssThemeTask(path, jsonGet, user, AppConfiguration.CssTargets)
+            : new ValidatePublicCssThemeTask(path, jsonGet, user, AppConfiguration.CssTargets);
         WriteJsonTask jsonWrite = new WriteJsonTask(path, "theme.json", jsonGet);
         CreateTempFolderTask themeContainer = new CreateTempFolderTask();
         CreateFolderTask themeFolder = new CreateFolderTask(themeContainer, css);
         CopyFileTask copyToThemeFolder = new CopyFileTask(path, themeFolder, "*");
         ZipTask zip = new ZipTask(themeContainer, path);
         WriteAsBlobTask blobSave = new WriteAsBlobTask(user, zip);
-        CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blobSave, meta, "[Zip Deploy]", user);
+        CreateCssSubmissionTask submission = (meta.PrivateSubmission) 
+            ? new CreatePrivateCssSubmissionTask(css, blobSave, meta, "[Zip Deploy]", user)
+            : new CreatePublicCssSubmissionTask(css, blobSave, meta, "[Zip Deploy]", user);
         AutoApproveCssSubmissionTask autoApproval = new AutoApproveCssSubmissionTask(submission, css);
 
         List<ITaskPart> taskParts = new()
@@ -149,19 +157,22 @@ public class SubmissionService
 
     public string SubmitCssThemeViaCss(string cssContent, string name, SubmissionMeta meta, User user)
     {
+        if (meta.PrivateSubmission)
+            throw new BadRequestException("Cannot create a private css-only theme");
+        
         CreateTempFolderTask cssContainer = new CreateTempFolderTask();
         WriteStringToFileTask writeCss = new WriteStringToFileTask(cssContainer, "shared.css", cssContent);
         WriteStringToFileTask writeJson = new WriteStringToFileTask(cssContainer, "theme.json", CreateCssJson(name, Utils.Utils.GetFixedLengthHexString(4)));
         FolderSizeConstraintTask size = new FolderSizeConstraintTask(cssContainer, _config.MaxCssThemeSize);
         GetJsonTask jsonGet = new GetJsonTask(cssContainer, "theme.json");
-        ValidateCssThemeTask css = new ValidateCssThemeTask(cssContainer, jsonGet, user, AppConfiguration.CssTargets);
+        ValidateCssThemeTask css = new ValidatePublicCssThemeTask(cssContainer, jsonGet, user, AppConfiguration.CssTargets);
         WriteJsonTask jsonWrite = new WriteJsonTask(cssContainer, "theme.json", jsonGet);
         CreateTempFolderTask themeContainer = new CreateTempFolderTask();
         CreateFolderTask themeFolder = new CreateFolderTask(themeContainer, css);
         CopyFileTask copyToThemeFolder = new CopyFileTask(cssContainer, themeFolder, "*");
         ZipTask zip = new ZipTask(themeContainer, cssContainer);
         WriteAsBlobTask blobSave = new WriteAsBlobTask(user, zip);
-        CreateCssSubmissionTask submission = new CreateCssSubmissionTask(css, blobSave, meta, "[Css Only Deploy]", user);
+        CreateCssSubmissionTask submission = new CreatePublicCssSubmissionTask(css, blobSave, meta, "[Css Only Deploy]", user);
 
         List<ITaskPart> taskParts = new()
         {

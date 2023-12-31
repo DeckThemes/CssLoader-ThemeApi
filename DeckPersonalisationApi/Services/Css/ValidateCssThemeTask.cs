@@ -7,20 +7,21 @@ using DeckPersonalisationApi.Services.Tasks.Common;
 
 namespace DeckPersonalisationApi.Services.Css;
 
-public class ValidateCssThemeTask : IIdentifierTaskPart
+public abstract class ValidateCssThemeTask : IIdentifierTaskPart
 {
     public string Name => "Validating css theme";
-    private IDirTaskPart _path;
-    private GetJsonTask _json;
-    private User _user;
-    private List<string> _validThemeTargets = new();
-    private AppConfiguration _config;
-    private ThemeService _service;
-    private SubmissionService _submissionService;
-    private VnuCssVerifier _vnu;
-    private UserService _userService;
+    protected IDirTaskPart _path;
+    protected GetJsonTask _json;
+    protected User _user;
+    protected List<string> _validThemeTargets = new();
+    protected AppConfiguration _config;
+    protected ThemeService _service;
+    protected SubmissionService _submissionService;
+    protected VnuCssVerifier _vnu;
+    protected UserService _userService;
 
     public string ThemeId { get; private set; }
+    public string ExistingThemeId { get; private set; }
     public string ThemeName { get; private set; }
     public string? ThemeDisplayName { get; private set; }
     public string ThemeAuthor { get; private set; }
@@ -84,6 +85,8 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
         }
         
         ThemeName = validator.Name;
+        ThrowIfThemeExists();
+        Base = GetBaseTheme();
         ThemeTargets = validator.Targets.Count > 0
             ? validator.Targets
             : (Base?.Targets == null ? new List<string>() { "Other" } : Base.ToReadableTargets());
@@ -105,22 +108,6 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
         else if (ThemeTargets.Contains("Preset") || ThemeTargets.Contains("Profile"))
             throw new TaskFailureException("Target 'Profile' is not a user-pickable value");
 
-        List<CssTheme> t = _service.GetAnyThemesByAuthorWithName(_user, ThemeName, ThemeType.Css).ToList();
-        CssTheme? pendingSubmissionTheme = t.FirstOrDefault(x => x.Visibility == PostVisibility.Private);
-        if (pendingSubmissionTheme != null)
-        {
-            CssSubmission? pendingSubmission = _submissionService.GetSubmissionByThemeId(pendingSubmissionTheme.Id);
-            if (pendingSubmission != null)
-            {
-                _submissionService.DenyTheme(pendingSubmission.Id, "Automatically denied due to re-submission.", _userService.GetUserById(_user.Id)!);
-            }
-        }
-
-        Base = t.FirstOrDefault(x => x.Visibility == PostVisibility.Public);
-
-        if (_service.ThemeNameExists(ThemeName, ThemeType.Css) && Base == null)
-            throw new TaskFailureException($"Theme '{ThemeName}' already exists");
-
         List<CssTheme> dependencies = _service.GetThemesByName(ThemeDependencies, ThemeType.Css).ToList();
         if (dependencies.Count != ThemeDependencies.Count)
         {
@@ -128,11 +115,9 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
             throw new TaskFailureException($"Not all dependencies were found on this server: [{string.Join(", ", missingThemeNames)}]");
         }
 
-        string guid = Guid.NewGuid().ToString();
-        string internalId = Base?.Id ?? guid;
-        ThemeId = guid;
-        
-        _json.Json!["id"] = internalId;
+        ThemeId = Guid.NewGuid().ToString();
+        ExistingThemeId = Base?.Id ?? ThemeId;
+        _json.Json!["id"] = ExistingThemeId;
 
         List<string> extraErrors = new();
         
@@ -159,6 +144,9 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
     {
     }
 
+    public abstract CssTheme? GetBaseTheme();
+    public abstract void ThrowIfThemeExists();
+
     public ValidateCssThemeTask(IDirTaskPart path, GetJsonTask json, User user, List<string> validThemeTargets)
     {
         _path = path;
@@ -177,4 +165,64 @@ public class ValidateCssThemeTask : IIdentifierTaskPart
     }
 
     public string Identifier => ThemeName;
+}
+
+public class ValidatePublicCssThemeTask : ValidateCssThemeTask
+{
+    public ValidatePublicCssThemeTask(IDirTaskPart path, GetJsonTask json, User user, List<string> validThemeTargets) : base(path, json, user, validThemeTargets)
+    {
+    }
+
+    public override CssTheme? GetBaseTheme()
+    {
+        List<CssTheme> t = _service.GetAnyThemesByAuthorWithName(_user, ThemeName, ThemeType.Css).ToList();
+        CssTheme? pendingSubmissionTheme = t.FirstOrDefault(x => x.Visibility == PostVisibility.Private);
+        if (pendingSubmissionTheme != null)
+        {
+            CssSubmission? pendingSubmission = _submissionService.GetSubmissionByThemeId(pendingSubmissionTheme.Id);
+            if (pendingSubmission != null)
+            {
+                _submissionService.DenyTheme(pendingSubmission.Id, "Automatically denied due to re-submission.", _userService.GetUserById(_user.Id)!);
+            }
+        }
+
+        return t.FirstOrDefault(x => x.Visibility == PostVisibility.Public);
+    }
+
+    public override void ThrowIfThemeExists()
+    {
+        if (_service.ThemeNameExists(ThemeName, ThemeType.Css) && Base == null)
+            throw new TaskFailureException($"Theme '{ThemeName}' already exists");
+    }
+}
+
+public class ValidatePrivateCssThemeTask : ValidateCssThemeTask
+{
+    public ValidatePrivateCssThemeTask(IDirTaskPart path, GetJsonTask json, User user, List<string> validThemeTargets) : base(path, json, user, validThemeTargets)
+    {
+    }
+
+    public override CssTheme? GetBaseTheme()
+    {
+        List<CssTheme> t = _service.GetAnyThemesByAuthorWithName(_user, ThemeName, ThemeType.Css).ToList();
+
+        if (t.Any(x => x.Visibility == PostVisibility.Public))
+            throw new Exception("Cannot update a theme privately when it's public");
+        
+        CssTheme? privateTheme = t.FirstOrDefault(x => x.Visibility == PostVisibility.Private);
+        if (privateTheme != null)
+        {
+            CssSubmission? pendingSubmission = _submissionService.GetSubmissionByThemeId(privateTheme.Id);
+            if (pendingSubmission != null)
+            {
+                throw new TaskFailureException("Cannot update a theme privately when it's under review");
+            }
+        }
+
+        return privateTheme;
+    }
+
+    public override void ThrowIfThemeExists()
+    {
+    }
 }
