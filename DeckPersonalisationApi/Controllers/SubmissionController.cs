@@ -199,6 +199,9 @@ public class SubmissionController : Controller
         
         if (type == ThemeType.Css)
             ValidateMetaTarget(meta.Target);
+
+        if (meta.PrivateSubmission && DiscordBot.Instance.PermissionStateOfUser(user.Id) == "None")
+            throw new BadRequestException("Can only create private themes on premium account");
     }
     
     private void CheckIfUserIsAllowedToMakeSubmission(User user)
