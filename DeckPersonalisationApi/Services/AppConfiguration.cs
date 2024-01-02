@@ -46,6 +46,7 @@ public class AppConfiguration
     public long MaxEmailLength { get; private set; }
     public long MaxDescriptionLength { get; private set; }
     public long MaxCssOnlySubmissionSize { get; private set; }
+    public long MaxThemeCount { get; private set; }
     public long MaxErrorStoreCharacters { get; private set; }
     public long DiscordServerId { get; private set; }
     public long DiscordPremiumTier1Role { get; private set; }
@@ -134,6 +135,7 @@ public class AppConfiguration
         MaxEmailLength = GetInt("Config:MaxEmailLength");
         MaxCssOnlySubmissionSize = GetInt("Config:MaxCssOnlySubmissionSize");
         MaxErrorStoreCharacters = GetInt("Config:MaxErrorStoreCharacters");
+        MaxThemeCount = GetInt("Config:MaxThemeCountPerUser");
 
         DiscordServerId = GetInt("Config:DiscordServerId");
         DiscordPremiumTier1Role = GetInt("Config:PremiumTier1Role");

@@ -222,6 +222,9 @@ public class ThemeService
     public bool ThemeNameExists(string name, ThemeType type)
         => _ctx.CssThemes.Any(x => x.Name == name && x.Visibility == PostVisibility.Public && x.Type == type);
 
+    public int GetThemeCountOfUser(User user)
+        => _ctx.CssThemes.Count(x => x.Author.Id == user.Id && x.Visibility != PostVisibility.Deleted);
+
     public List<LegacyThemesDto> GetThemesLegacy(ThemeType type, PostVisibility visibility)
         => _ctx.CssThemes
             .Include(x => x.Images)

@@ -20,14 +20,16 @@ public class SubmissionController : Controller
     private UserService _user;
     private BlobService _blob;
     private AppConfiguration _config;
+    private ThemeService _themes;
     
-    public SubmissionController(JwtService jwt, SubmissionService submission, UserService user, BlobService blob, AppConfiguration config)
+    public SubmissionController(JwtService jwt, SubmissionService submission, UserService user, BlobService blob, AppConfiguration config, ThemeService themes)
     {
         _jwt = jwt;
         _submission = submission;
         _user = user;
         _blob = blob;
         _config = config;
+        _themes = themes;
     }
 
     [HttpPost("css_git")]
@@ -202,6 +204,9 @@ public class SubmissionController : Controller
 
         if (meta.PrivateSubmission && DiscordBot.Instance.PermissionStateOfUser(user.Id) == "None")
             throw new BadRequestException("Can only create private themes on premium account");
+        
+        if (_themes.GetThemeCountOfUser(user) >= _config.MaxThemeCount)
+            throw new BadRequestException("Theme limit reached");
     }
     
     private void CheckIfUserIsAllowedToMakeSubmission(User user)
