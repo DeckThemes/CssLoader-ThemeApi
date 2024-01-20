@@ -195,7 +195,9 @@ public class SubmissionController : Controller
 
     private void ValidateMeta(User user, SubmissionMeta meta, ThemeType type)
     {
-        CheckIfUserIsAllowedToMakeSubmission(user);
+        if (!meta.PrivateSubmission)
+            CheckIfUserIsAllowedToMakeSubmission(user);
+        
         CheckImageBlobs(user, meta.ImageBlobs);
         ValidateMetaDescription(meta.Description);
         
