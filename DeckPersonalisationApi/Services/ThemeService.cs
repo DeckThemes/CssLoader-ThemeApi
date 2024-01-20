@@ -205,7 +205,12 @@ public class ThemeService
             .Include(x => x.Download)
             .Include(x => x.Images);
 
-        return (strict) ? db.FirstOrDefault(x => x.Id == id) : db.FirstOrDefault(x => x.Id == id || x.Name == id);
+        CssTheme? theme = db.FirstOrDefault(x => x.Id == id);
+
+        if (!strict)
+            theme ??= db.FirstOrDefault(x => x.Name == id && x.Visibility == PostVisibility.Public);
+
+        return theme;
     }
 
     public IEnumerable<CssTheme> GetThemesByIds(List<string> ids, bool strict = true)
