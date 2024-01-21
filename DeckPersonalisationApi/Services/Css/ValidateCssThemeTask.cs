@@ -85,8 +85,8 @@ public abstract class ValidateCssThemeTask : IIdentifierTaskPart
         }
         
         ThemeName = validator.Name;
-        ThrowIfThemeExists();
         Base = GetBaseTheme();
+        ThrowIfThemeExists();
         ThemeTargets = validator.Targets.Count > 0
             ? validator.Targets
             : (Base?.Targets == null ? new List<string>() { "Other" } : Base.ToReadableTargets());
