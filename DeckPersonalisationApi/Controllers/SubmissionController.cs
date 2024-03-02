@@ -64,7 +64,7 @@ public class SubmissionController : Controller
     
     [HttpPost("css_zip")]
     [Authorize]
-    [JwtRoleReject(Permissions.FromApiToken)]
+    [JwtRoleReject(Permissions.FromApiToken, true)]
     public IActionResult SubmitCssThemeViaZip(ZipSubmissionPostDto post)
     {
         UserJwtDto dto = _jwt.DecodeToken(Request).Require("Could not find user");

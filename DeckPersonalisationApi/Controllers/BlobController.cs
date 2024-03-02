@@ -88,7 +88,7 @@ public class BlobController : Controller
 
     [HttpPost]
     [Authorize]
-    [JwtRoleReject(Permissions.FromApiToken)]
+    [JwtRoleReject(Permissions.FromApiToken, true)]
     public IActionResult PostBlob(IFormFile file)
     {
         UserJwtDto dto = _jwt.DecodeToken(Request).Require();

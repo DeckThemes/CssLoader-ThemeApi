@@ -10,6 +10,7 @@ public enum Permissions
     ManageApi = 0x4,
     FromApiToken = 0x8,
     ViewThemeSubmissions = 0x10,
+    IsPremium = 0x20,
 }
 
 public static class PermissionExt

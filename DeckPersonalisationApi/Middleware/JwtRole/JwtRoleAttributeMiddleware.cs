@@ -1,4 +1,5 @@
 ﻿using DeckPersonalisationApi.Exceptions;
+using DeckPersonalisationApi.Model;
 using DeckPersonalisationApi.Model.Dto.External.GET;
 using DeckPersonalisationApi.Services;
 using Microsoft.AspNetCore.Http.Features;
@@ -30,7 +31,7 @@ public class JwtRoleAttributeMiddleware
                 if (user == null)
                     throw new UnauthorisedException("Failed to decode JWT");
                 
-                if (reject != null)
+                if (reject != null && !(reject.OnlyIfNotPremium && user.HasPermission(Permissions.IsPremium)))
                     user.RejectPermission(reject.Reject);
                 
                 if (require != null)

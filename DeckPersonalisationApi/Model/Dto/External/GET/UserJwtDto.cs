@@ -1,4 +1,5 @@
 ﻿using DeckPersonalisationApi.Exceptions;
+using DeckPersonalisationApi.Services;
 
 namespace DeckPersonalisationApi.Model.Dto.External.GET;
 
@@ -31,6 +32,9 @@ public class UserJwtDto : IToDto<UserJwtExtDto>
         Permissions = user.Permissions;
         Avatar = user.GetAvatarUri()?.AbsoluteUri ?? "";
         ValidationToken = user.ValidationToken;
+
+        if (DiscordBot.Instance.PermissionStateOfUser(Id) != "None")
+            Permissions |= Permissions.IsPremium;
     }
 
     public bool HasPermission(Permissions permission)
