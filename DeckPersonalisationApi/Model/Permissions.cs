@@ -11,6 +11,7 @@ public enum Permissions
     FromApiToken = 0x8,
     ViewThemeSubmissions = 0x10,
     IsPremium = 0x20,
+    SubmitMusicPacks = 0x40,
 }
 
 public static class PermissionExt
@@ -30,6 +31,9 @@ public static class PermissionExt
         
         if (permissions.HasPermission(Permissions.ManageApi))
             perms.Add(Permissions.ManageApi.ToString());
+        
+        if (permissions.HasPermission(Permissions.SubmitMusicPacks))
+            perms.Add(Permissions.SubmitMusicPacks.ToString());
 
         return perms;
     }

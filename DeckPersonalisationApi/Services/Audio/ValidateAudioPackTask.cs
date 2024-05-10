@@ -99,6 +99,9 @@ public class ValidateAudioPackTask : IIdentifierTaskPart
         
         if (PackDescription.Length > _config.MaxDescriptionLength)
             throw new TaskFailureException($"Description field can only be max {_config.MaxNameLength} characters");
+
+        if (IsMusicPack && !_user.Permissions.HasPermission(Permissions.SubmitMusicPacks))
+            throw new TaskFailureException($"User is not allowed to submit music packs");
     }
     public void SetupServices(IServiceProvider provider)
     {
