@@ -182,7 +182,7 @@ public class ValidatePublicCssThemeTask : ValidateCssThemeTask
             CssSubmission? pendingSubmission = _submissionService.GetSubmissionByThemeId(pendingSubmissionTheme.Id);
             if (pendingSubmission != null)
             {
-                _submissionService.DenyTheme(pendingSubmission.Id, "Automatically denied due to re-submission.", _userService.GetUserById(_user.Id)!);
+                _submissionService.DenyTheme(pendingSubmission.Id, "Automatically denied older version due to re-submission.", _userService.GetUserById(_user.Id)!);
             }
         }
 
