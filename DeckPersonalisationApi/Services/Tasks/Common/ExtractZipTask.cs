@@ -43,7 +43,7 @@ public class ExtractZipTask : ITaskPart
         }
         catch (Exception e)
         {
-            throw new TaskFailureException("Unzipping zip failed");
+            throw new TaskFailureException($"Unzipping zip failed: {e.Message}");
         }
         
         Console.WriteLine($"[Zip] Extracted to {_target.DirPath} with size {totalSize}");
