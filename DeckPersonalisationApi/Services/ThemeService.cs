@@ -135,7 +135,8 @@ public class ThemeService
         
         _blob.DeleteBlobs(original.Images.Where(x => overlay.Images.All(y => y.Id != x.Id)).ToList());
         
-        original.Images = overlay.Images;
+        original.Images.Clear();
+        original.Images.AddRange(overlay.Images);
         original.DisplayName = overlay.DisplayName;
         original.Download = overlay.Download;
         original.Version = overlay.Version;
